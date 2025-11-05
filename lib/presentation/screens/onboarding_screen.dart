@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tasky/presentation/screens/home_screen.dart';
 
 class OnboardingScreen extends StatelessWidget {
@@ -8,6 +9,8 @@ class OnboardingScreen extends StatelessWidget {
   OnboardingScreen({super.key});
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    
     return Scaffold(
       backgroundColor: const Color(0xFF181818),
       body: Padding(
@@ -130,9 +133,15 @@ class OnboardingScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 24),
                         ElevatedButton(
-                          onPressed: () {
+                          onPressed: () async {
                             if (_formKey.currentState?.validate() ?? false) {
-                              Navigator.push(
+                              final prefs =
+                                  await SharedPreferences.getInstance();
+                              await prefs.setString(
+                                'name',
+                                controller.value.text,
+                              );
+                              Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => HomeScreen(),
@@ -142,10 +151,7 @@ class OnboardingScreen extends StatelessWidget {
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Color(0xFF15B86C),
-                            fixedSize: Size(
-                              MediaQuery.of(context).size.width,
-                              40,
-                            ),
+                            fixedSize: Size(screenWidth, 40),
                           ),
                           child: Text(
                             'Let’s Get Started',

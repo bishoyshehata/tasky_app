@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tasky/presentation/screens/home_screen.dart';
 import 'onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -17,7 +19,9 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   _navigateToOnboarding() async {
-    await Future.delayed(const Duration(seconds: 3), () {});
+    await Future.delayed(const Duration(seconds: 1), () {
+      _initialRoute();
+    });
     if (mounted) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => OnboardingScreen()),
@@ -47,5 +51,20 @@ class _SplashScreenState extends State<SplashScreen> {
         ),
       ),
     );
+  }
+
+  void _initialRoute() async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.clear();
+    final name = prefs.getString('name');
+    if (name != null) {
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (context) => HomeScreen()));
+    } else {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => OnboardingScreen()),
+      );
+    }
   }
 }

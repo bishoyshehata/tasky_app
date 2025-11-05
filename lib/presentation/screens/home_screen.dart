@@ -97,6 +97,17 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {},
+
+        backgroundColor: const Color(0xff15B86C),
+        foregroundColor: Color(0xffFFFCFC),
+        label: const Text(
+          '+ Add New Task',
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+      ),
     );
   }
 }

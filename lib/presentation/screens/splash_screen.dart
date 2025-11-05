@@ -55,7 +55,6 @@ class _SplashScreenState extends State<SplashScreen> {
 
   void _initialRoute() async {
     final prefs = await SharedPreferences.getInstance();
-    prefs.clear();
     final name = prefs.getString('name');
     if (name != null) {
       Navigator.of(

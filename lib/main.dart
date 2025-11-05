@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tasky/presentation/screens/onboarding_screen.dart';
+import 'package:tasky/presentation/screens/splash_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: OnboardingScreen(),
+      home: const SplashScreen(),
     );
   }
 }

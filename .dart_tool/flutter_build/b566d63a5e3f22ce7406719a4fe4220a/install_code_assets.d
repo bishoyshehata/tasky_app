@@ -1,0 +1,1 @@
+ /Volumes/SSD/GitHub/tasky_app/.dart_tool/flutter_build/b566d63a5e3f22ce7406719a4fe4220a/native_assets.json: 

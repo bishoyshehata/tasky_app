@@ -12,8 +12,18 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   final TextEditingController taskNameController = TextEditingController();
   final TextEditingController taskDescriptionController =
       TextEditingController();
+  final FocusNode taskNameFocus = FocusNode();
+  final FocusNode taskDescriptionFocus = FocusNode();
 
   bool isHighPriority = true;
+  @override
+  void dispose() {
+    taskNameFocus.dispose();
+    taskDescriptionFocus.dispose();
+    taskNameController.dispose();
+    taskDescriptionController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,117 +43,131 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Column(
             children: [
-              Text(
-                'Task Name',
-                style: TextStyle(
-                  color: Color(0xffFFFCFC),
-                  fontSize: 16,
-                  fontWeight: FontWeight.w400,
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Task Name',
+                        style: TextStyle(
+                          color: Color(0xffFFFCFC),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      TextFormField(
+                        textInputAction: TextInputAction.next,
+
+                        focusNode: taskNameFocus,
+                        controller: taskNameController,
+                        cursorColor: Colors.white,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w400,
+                        ),
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                          fillColor: Color(0xFF282828),
+                          filled: true,
+                          hintText: 'Finish UI design for login screen',
+                          hintStyle: TextStyle(
+                            color: Color(0xFF6D6D6D),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value?.trim().isEmpty ?? false) {
+                            return 'Please Enter Your Task Name';
+                          }
+                          return null;
+                        },
+                      ),
+                      SizedBox(height: 20),
+                      Text(
+                        'Task Description',
+                        style: TextStyle(
+                          color: Color(0xffFFFCFC),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      TextFormField(
+                        focusNode: taskDescriptionFocus,
+                        textInputAction: TextInputAction.done,
+                        maxLines: 5,
+                        controller: taskDescriptionController,
+                        cursorColor: Colors.white,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w400,
+                        ),
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                          fillColor: Color(0xFF282828),
+                          filled: true,
+                          hintText:
+                              'Finish onboarding UI and hand off to devs by Thursday.',
+                          hintStyle: TextStyle(
+                            color: Color(0xFF6D6D6D),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value?.trim().isEmpty ?? false) {
+                            return 'Please Enter The Task Description';
+                          }
+                          return null;
+                        },
+                      ),
+                      SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'High Priority',
+                            style: TextStyle(
+                              color: Color(0xffFFFCFC),
+                              fontSize: 16,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                          Switch(
+                            value: isHighPriority,
+                            onChanged: (value) {
+                              isHighPriority = value;
+                              setState(() {});
+                            },
+                            activeTrackColor: Color(0xFF15B86C),
+                            activeThumbColor: Color(0xFFFFFCFC),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              SizedBox(height: 8),
-              TextFormField(
-                controller: taskDescriptionController,
-                cursorColor: Colors.white,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w400,
-                ),
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
-                  ),
-                  fillColor: Color(0xFF282828),
-                  filled: true,
-                  hintText: 'Finish UI design for login screen',
-                  hintStyle: TextStyle(
-                    color: Color(0xFF6D6D6D),
-                    fontSize: 16,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-                validator: (value) {
-                  if (value?.trim().isEmpty ?? false) {
-                    return 'Please Enter Your Task Name';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 20),
-              Text(
-                'Task Description',
-                style: TextStyle(
-                  color: Color(0xffFFFCFC),
-                  fontSize: 16,
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-              SizedBox(height: 8),
-              TextFormField(
-                maxLines: 5,
-                controller: taskNameController,
-                cursorColor: Colors.white,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w400,
-                ),
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
-                  ),
-                  fillColor: Color(0xFF282828),
-                  filled: true,
-                  hintText:
-                      'Finish onboarding UI and hand off to devs by Thursday.',
-                  hintStyle: TextStyle(
-                    color: Color(0xFF6D6D6D),
-                    fontSize: 16,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-                validator: (value) {
-                  if (value?.trim().isEmpty ?? false) {
-                    return 'Please Enter The Task Description';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'High Priority',
-                    style: TextStyle(
-                      color: Color(0xffFFFCFC),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                  Switch(
-                    value: isHighPriority,
-                    onChanged: (value) {
-                      isHighPriority = value;
-                      setState(() {});
-                    },
-                    activeTrackColor: Color(0xFF15B86C),
-                    activeColor: Color(0xFFFFFCFC),
-                  ),
-                ],
-              ),
-              Spacer(),
+
               ElevatedButton.icon(
                 onPressed: () {
                   if (_formKey.currentState?.validate() ?? false) {

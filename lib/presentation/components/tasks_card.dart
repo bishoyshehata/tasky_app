@@ -42,7 +42,6 @@ class _TaskCardState extends State<TaskCard> {
             onChanged: (value) {
               setState(() {
                 widget.task.isDone = value!;
-                _saveTasks();
               });
               widget.onChanged();
             },
@@ -123,10 +122,4 @@ class _TaskCardState extends State<TaskCard> {
     );
   }
 
-  void _saveTasks() async {
-    final prefs = await SharedPreferences.getInstance();
-    List<String> tasksJson = prefs.getStringList('tasks')!;
-    tasksJson[widget.index] = jsonEncode(widget.task.toJson());
-    prefs.setStringList('tasks', tasksJson);
-  }
 }

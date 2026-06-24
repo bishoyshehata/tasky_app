@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tasky/data/models/task_model.dart';
-import 'package:tasky/presentation/screens/home_screen.dart';
 
 class AddTaskScreen extends StatefulWidget {
   const AddTaskScreen({super.key});
@@ -203,7 +202,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                         .toList();
                     await prefs.setStringList('tasks', updatedTasksJson);
 
-                    print(updatedTasksJson);
                     if (mounted) {
                       Navigator.pop(context, true);
                     }

@@ -63,12 +63,12 @@ class AchievedTasks extends StatelessWidget {
             animation: true,
             animationDuration: 500,
             animateFromLastPercent: true,
-            percent: achievedTasks / allTasks,
+            percent: allTasks == 0 ? 0 : achievedTasks / allTasks,
             circularStrokeCap: CircularStrokeCap.round,
             backgroundColor: Color(0xffA0A0A0),
             progressColor: Color(0xff15B86C),
             center: Text(
-              '${(achievedTasks / allTasks * 100).toStringAsFixed(0)}%',
+              '${(allTasks == 0 ? 0 : achievedTasks / allTasks * 100).toStringAsFixed(0)}%',
               style: TextStyle(
                 color: Color(0xffFFFCFC),
                 fontSize: 20,

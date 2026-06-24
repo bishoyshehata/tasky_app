@@ -1,6 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tasky/data/models/task_model.dart';
+import 'package:tasky/presentation/components/tasks_card.dart';
 import 'package:tasky/presentation/screens/add_task._screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -11,11 +15,13 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  List<TaskModel> tasks = [];
   String name = '';
   @override
   void initState() {
     super.initState();
     _loadUserName();
+    _loadTasks();
   }
 
   void _loadUserName() async {
@@ -23,6 +29,20 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       name = prefs.getString('name')!;
     });
+  }
+
+  void _loadTasks() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final tasksJson = prefs.getStringList('tasks');
+
+    if (tasksJson != null) {
+      setState(() {
+        tasks = tasksJson
+            .map((taskJson) => TaskModel.fromJson(jsonDecode(taskJson)))
+            .toList();
+      });
+    }
   }
 
   @override
@@ -94,6 +114,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
+              SizedBox(height: 20),
+
+              buildTaskCards(),
             ],
           ),
         ),
@@ -119,6 +142,18 @@ class _HomeScreenState extends State<HomeScreen> {
             borderRadius: BorderRadius.circular(30),
           ),
         ),
+      ),
+    );
+  }
+
+  buildTaskCards() {
+    return Expanded(
+      child: ListView.builder(
+        itemCount: tasks.length,
+        itemBuilder: (context, index) {
+          final task = tasks[index];
+          return TaskCard(task: task);
+        },
       ),
     );
   }

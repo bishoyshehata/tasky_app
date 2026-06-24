@@ -1,4 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tasky/data/models/task_model.dart';
+import 'package:tasky/presentation/screens/home_screen.dart';
 
 class AddTaskScreen extends StatefulWidget {
   const AddTaskScreen({super.key});
@@ -169,10 +174,42 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               ),
 
               ElevatedButton.icon(
-                onPressed: () {
+                onPressed: () async {
                   if (_formKey.currentState?.validate() ?? false) {
-                    Navigator.pop(context);
+                    String taskName = taskNameController.text;
+                    String taskDescription = taskDescriptionController.text;
+                    bool isHighPriorityVal = isHighPriority;
+                    final task = TaskModel(
+                      taskName: taskName,
+                      taskDescription: taskDescription,
+                      isHighPriority: isHighPriorityVal,
+                      dateTime: DateTime.now().toIso8601String(),
+                    );
+                    final prefs = await SharedPreferences.getInstance();
+                    final tasksJson = prefs.getStringList('tasks');
+                    List<TaskModel> tasksList = [];
+                    if (tasksJson != null) {
+                      tasksList = tasksJson
+                          .map(
+                            (taskJson) =>
+                                TaskModel.fromJson(jsonDecode(taskJson)),
+                          )
+                          .toList();
+                    }
+                    tasksList.add(task);
+
+                    final updatedTasksJson = tasksList
+                        .map((task) => jsonEncode(task))
+                        .toList();
+                    await prefs.setStringList('tasks', updatedTasksJson);
+
+                    print(updatedTasksJson);
                   }
+
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => HomeScreen()),
+                  );
                 },
                 label: Text('Add Task', style: TextStyle(fontSize: 14)),
 

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tasky/data/models/task_model.dart';
+import 'package:tasky/presentation/components/achieved_tasks.dart';
 import 'package:tasky/presentation/components/tasks_card.dart';
 import 'package:tasky/presentation/screens/add_task._screen.dart';
 
@@ -115,6 +116,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               SizedBox(height: 20),
+              AchievedTasks(
+                allTasks: tasks.length,
+                achievedTasks: tasks.where((task) => task.isDone).length,
+              ),
+              SizedBox(height: 20),
 
               buildTaskCards(),
             ],
@@ -124,11 +130,12 @@ class _HomeScreenState extends State<HomeScreen> {
       floatingActionButton: SizedBox(
         height: 40,
         child: FloatingActionButton.extended(
-          onPressed: () {
-            Navigator.push(
+          onPressed: () async {
+            await Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => AddTaskScreen()),
             );
+            _loadTasks();
           },
 
           backgroundColor: const Color(0xff15B86C),
@@ -148,11 +155,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
   buildTaskCards() {
     return Expanded(
-      child: ListView.builder(
+      child: ListView.separated(
         itemCount: tasks.length,
         itemBuilder: (context, index) {
           final task = tasks[index];
-          return TaskCard(task: task);
+          return TaskCard(
+            task: task,
+            index: index,
+            onChanged: () {
+              setState(() {});
+            },
+          );
+        },
+        separatorBuilder: (context, index) {
+          return SizedBox(height: 12);
         },
       ),
     );

@@ -138,12 +138,12 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                             fontWeight: FontWeight.w400,
                           ),
                         ),
-                        validator: (value) {
-                          if (value?.trim().isEmpty ?? false) {
-                            return 'Please Enter The Task Description';
-                          }
-                          return null;
-                        },
+                        // validator: (value) {
+                        //   if (value?.trim().isEmpty ?? false) {
+                        //     return 'Please Enter The Task Description';
+                        //   }
+                        //   return null;
+                        // },
                       ),
                       SizedBox(height: 20),
                       Row(

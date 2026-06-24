@@ -3,12 +3,14 @@ class TaskModel {
   final String taskDescription;
   final bool isHighPriority;
   final String dateTime;
+  bool isDone;
 
   TaskModel({
     required this.taskName,
     required this.taskDescription,
     required this.isHighPriority,
     required this.dateTime,
+    this.isDone = false,
   });
 
   factory TaskModel.fromJson(Map<String, dynamic> json) {
@@ -17,6 +19,7 @@ class TaskModel {
       taskDescription: json['taskDescription'],
       isHighPriority: json['isHighPriority'],
       dateTime: json['dateTime'],
+      isDone: json['isDone'] ?? false,
     );
   }
 
@@ -27,6 +30,7 @@ class TaskModel {
       'taskDescription': taskDescription,
       'isHighPriority': isHighPriority,
       'dateTime': dateTime,
+      'isDone': isDone,
     };
   }
 }

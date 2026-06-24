@@ -1,10 +1,26 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tasky/data/models/task_model.dart';
 
-class TaskCard extends StatelessWidget {
-  const TaskCard({super.key, required this.task});
+class TaskCard extends StatefulWidget {
+  const TaskCard({
+    super.key,
+    required this.task,
+    required this.index,
+    required this.onChanged,
+  });
   final TaskModel task;
+  final int index;
+  final VoidCallback onChanged;
+
+  @override
+  State<TaskCard> createState() => _TaskCardState();
+}
+
+class _TaskCardState extends State<TaskCard> {
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -18,12 +34,18 @@ class TaskCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Checkbox(
-            value: true,
+            value: widget.task.isDone,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(5),
             ),
 
-            onChanged: (value) {},
+            onChanged: (value) {
+              setState(() {
+                widget.task.isDone = value!;
+                _saveTasks();
+              });
+              widget.onChanged();
+            },
             activeColor: const Color(0xff15B86C),
           ),
 
@@ -35,13 +57,20 @@ class TaskCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        task.taskName,
+                        widget.task.taskName,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          color: Color(0xffFFFCFC),
+                          color: widget.task.isDone
+                              ? Color(0xffA0A0A0)
+                              : Color(0xffFFFCFC),
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
+                          decoration: widget.task.isDone
+                              ? TextDecoration.lineThrough
+                              : null,
+                          decorationColor: Color(0xffA0A0A0),
+                          decorationThickness: 2,
                         ),
                       ),
                     ),
@@ -49,19 +78,26 @@ class TaskCard extends StatelessWidget {
                 ),
 
                 Text(
-                  task.taskDescription,
+                  widget.task.taskDescription,
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: Color(0xffC6C6C6),
+                    color: widget.task.isDone
+                        ? Color(0xffA0A0A0)
+                        : Color(0xffC6C6C6),
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
+                    decoration: widget.task.isDone
+                        ? TextDecoration.lineThrough
+                        : null,
+                    decorationColor: Color(0xffA0A0A0),
+                    decorationThickness: 1,
                   ),
                 ),
                 Text(
                   DateFormat(
                     'dd MMM yyyy • hh:mm a',
-                  ).format(DateTime.parse(task.dateTime)),
+                  ).format(DateTime.parse(widget.task.dateTime)),
                   style: TextStyle(
                     color: Color(0xffC6C6C6),
                     fontSize: 12,
@@ -82,5 +118,12 @@ class TaskCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  void _saveTasks() async {
+    final prefs = await SharedPreferences.getInstance();
+    List<String> tasksJson = prefs.getStringList('tasks')!;
+    tasksJson[widget.index] = jsonEncode(widget.task.toJson());
+    prefs.setStringList('tasks', tasksJson);
   }
 }

@@ -182,6 +182,12 @@
       "languageVersion": "3.2"
     },
     {
+      "name": "percent_indicator",
+      "rootUri": "file:///Users/bsh-dev/.pub-cache/hosted/pub.dev/percent_indicator-4.2.5",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
       "name": "petitparser",
       "rootUri": "file:///Users/bsh-dev/.pub-cache/hosted/pub.dev/petitparser-7.0.1",
       "packageUri": "lib/",

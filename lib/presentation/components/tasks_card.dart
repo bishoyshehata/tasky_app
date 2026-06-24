@@ -65,7 +65,7 @@ class _TaskCardState extends State<TaskCard> {
                               ? Color(0xffA0A0A0)
                               : Color(0xffFFFCFC),
                           fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w400,
                           decoration: widget.task.isDone
                               ? TextDecoration.lineThrough
                               : null,
@@ -77,23 +77,26 @@ class _TaskCardState extends State<TaskCard> {
                   ],
                 ),
 
-                Text(
-                  widget.task.taskDescription,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: widget.task.isDone
-                        ? Color(0xffA0A0A0)
-                        : Color(0xffC6C6C6),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    decoration: widget.task.isDone
-                        ? TextDecoration.lineThrough
-                        : null,
-                    decorationColor: Color(0xffA0A0A0),
-                    decorationThickness: 1,
+                if (widget.task.taskDescription != '') ...[
+                  Text(
+                    widget.task.taskDescription!,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: widget.task.isDone
+                          ? Color(0xffA0A0A0)
+                          : Color(0xffC6C6C6),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      decoration: widget.task.isDone
+                          ? TextDecoration.lineThrough
+                          : null,
+                      decorationColor: Color(0xffA0A0A0),
+                      decorationThickness: 1,
+                    ),
                   ),
-                ),
+                ] else
+                  SizedBox.shrink(),
                 Text(
                   DateFormat(
                     'dd MMM yyyy • hh:mm a',

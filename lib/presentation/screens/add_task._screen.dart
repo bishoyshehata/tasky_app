@@ -199,17 +199,15 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                     tasksList.add(task);
 
                     final updatedTasksJson = tasksList
-                        .map((task) => jsonEncode(task))
+                        .map((task) => jsonEncode(task.toJson()))
                         .toList();
                     await prefs.setStringList('tasks', updatedTasksJson);
 
                     print(updatedTasksJson);
+                    if (mounted) {
+                      Navigator.pop(context, true);
+                    }
                   }
-
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => HomeScreen()),
-                  );
                 },
                 label: Text('Add Task', style: TextStyle(fontSize: 14)),
 

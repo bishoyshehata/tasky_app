@@ -11,6 +11,7 @@
         "flutter",
         "flutter_svg",
         "intl",
+        "percent_indicator",
         "shared_preferences"
       ],
       "devDependencies": [
@@ -41,6 +42,13 @@
         "stream_channel",
         "test_api",
         "vector_math"
+      ]
+    },
+    {
+      "name": "percent_indicator",
+      "version": "4.2.5",
+      "dependencies": [
+        "flutter"
       ]
     },
     {

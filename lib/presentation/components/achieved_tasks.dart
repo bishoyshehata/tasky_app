@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:percent_indicator/circular_percent_indicator.dart';
 
 class AchievedTasks extends StatelessWidget {
   final int allTasks;
@@ -13,7 +14,7 @@ class AchievedTasks extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
 
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
@@ -35,8 +36,8 @@ class AchievedTasks extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: Color(0xffFFFCFC),
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w400,
                         ),
                       ),
                     ),
@@ -54,6 +55,25 @@ class AchievedTasks extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ),
+          CircularPercentIndicator(
+            radius: 35.0,
+            lineWidth: 5.0,
+            animation: true,
+            animationDuration: 500,
+            animateFromLastPercent: true,
+            percent: achievedTasks / allTasks,
+            circularStrokeCap: CircularStrokeCap.round,
+            backgroundColor: Color(0xffA0A0A0),
+            progressColor: Color(0xff15B86C),
+            center: Text(
+              '${(achievedTasks / allTasks * 100).toStringAsFixed(0)}%',
+              style: TextStyle(
+                color: Color(0xffFFFCFC),
+                fontSize: 20,
+                fontWeight: FontWeight.w400,
+              ),
             ),
           ),
         ],

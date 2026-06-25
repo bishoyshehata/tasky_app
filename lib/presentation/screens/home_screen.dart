@@ -9,20 +9,25 @@ import 'package:tasky/presentation/components/tasks_card.dart';
 import 'package:tasky/presentation/screens/add_task._screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final List<TaskModel> tasks;
+  final ValueChanged<List<TaskModel>> onTasksChanged;
+
+  const HomeScreen({
+    super.key,
+    required this.tasks,
+    required this.onTasksChanged,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List<TaskModel> tasks = [];
   String name = '';
   @override
   void initState() {
     super.initState();
     _loadUserName();
-    _loadTasks();
   }
 
   void _loadUserName() async {
@@ -30,28 +35,6 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       name = prefs.getString('name') ?? '';
     });
-  }
-
-  void _loadTasks() async {
-    final prefs = await SharedPreferences.getInstance();
-
-    final tasksJson = prefs.getStringList('tasks');
-
-    if (tasksJson != null) {
-      setState(() {
-        tasks = tasksJson != null
-            ? tasksJson
-                  .map((taskJson) => TaskModel.fromJson(jsonDecode(taskJson)))
-                  .toList()
-            : [];
-      });
-    }
-  }
-
-  void _saveAllTasks() async {
-    final prefs = await SharedPreferences.getInstance();
-    final tasksJson = tasks.map((task) => jsonEncode(task.toJson())).toList();
-    await prefs.setStringList('tasks', tasksJson);
   }
 
   @override
@@ -125,14 +108,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ],
                 ),
-                SizedBox(height: 20),
+                SizedBox(height: 10),
                 AchievedTasks(
-                  allTasks: tasks.length,
-                  achievedTasks: tasks.where((task) => task.isDone).length,
+                  allTasks: widget.tasks.length,
+                  achievedTasks: widget.tasks.where((task) => task.isDone).length,
                 ),
-                SizedBox(height: 20),
+                SizedBox(height: 10),
                 buildHighPrioritySection(),
-                SizedBox(height: 20),
+                SizedBox(height: 10),
                 buildTaskCards(),
               ],
             ),
@@ -148,8 +131,9 @@ class _HomeScreenState extends State<HomeScreen> {
               MaterialPageRoute(builder: (context) => const AddTaskScreen()),
             );
 
-            if (result == true) {
-              _loadTasks();
+            if (result is TaskModel) {
+              final updatedTasks = List<TaskModel>.from(widget.tasks)..add(result);
+              widget.onTasksChanged(updatedTasks);
             }
           },
           backgroundColor: const Color(0xff15B86C),
@@ -165,7 +149,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget buildTaskCards() {
-    final reversedTasks = tasks
+    final reversedTasks = widget.tasks
         .where((task) => !task.isHighPriority)
         .toList()
         .reversed
@@ -173,7 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (reversedTasks.isEmpty) {
       return const Center(
         child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 20),
+          padding: EdgeInsets.symmetric(vertical: 60),
           child: Text(
             'No Tasks Yet',
             style: TextStyle(color: Colors.white54, fontSize: 18),
@@ -185,17 +169,21 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Your Tasks',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Color(0xff15B86C),
+        Padding(
+          padding: const EdgeInsets.only(left: 16.0),
+          child: Text(
+            'My Tasks',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w400,
+              color: Colors.white,
+            ),
           ),
         ),
         SizedBox(height: 12),
         ListView.separated(
           shrinkWrap: true,
+          padding: EdgeInsets.only(bottom: 65),
           physics: const NeverScrollableScrollPhysics(),
           itemCount: reversedTasks.length,
           itemBuilder: (context, index) {
@@ -203,8 +191,7 @@ class _HomeScreenState extends State<HomeScreen> {
               task: reversedTasks[index],
               index: index,
               onChanged: () {
-                setState(() {});
-                _saveAllTasks();
+                widget.onTasksChanged(widget.tasks);
               },
             );
           },
@@ -215,44 +202,52 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   buildHighPrioritySection() {
-    List<TaskModel> highPriorityTasks = tasks
+    List<TaskModel> highPriorityTasks = widget.tasks
         .where((task) => task.isHighPriority)
         .toList()
         .reversed
         .toList();
     return highPriorityTasks.isNotEmpty
-        ? Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'High Priority',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xff15B86C),
+        ? Container(
+            decoration: BoxDecoration(
+              color: Color(0xff282828),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0, left: 16.0),
+                  child: Text(
+                    'High Priority Tasks',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w400,
+                      color: Color(0xff15B86C),
+                    ),
+                  ),
                 ),
-              ),
-              SizedBox(height: 12),
-              ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: highPriorityTasks.length,
-                itemBuilder: (context, index) {
-                  final task = highPriorityTasks[index];
-                  return TaskCard(
-                    task: task,
-                    index: index,
-                    onChanged: () {
-                      setState(() {});
-                      _saveAllTasks();
-                    },
-                  );
-                },
-                separatorBuilder: (context, index) {
-                  return SizedBox(height: 12);
-                },
-              ),
-            ],
+                SizedBox(height: 6),
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: highPriorityTasks.length,
+                  itemBuilder: (context, index) {
+                    final task = highPriorityTasks[index];
+                    return TaskCard(
+                      task: task,
+                      index: index,
+                      onChanged: () {
+                        widget.onTasksChanged(widget.tasks);
+                      },
+                    );
+                  },
+                  separatorBuilder: (context, index) {
+                    return SizedBox(height: 12);
+                  },
+                ),
+              ],
+            ),
           )
         : SizedBox.shrink();
   }

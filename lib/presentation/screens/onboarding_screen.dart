@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tasky/presentation/screens/home_screen.dart';
+import 'package:tasky/presentation/screens/main_navigation_Screen.dart';
 
 class OnboardingScreen extends StatelessWidget {
   final TextEditingController controller = TextEditingController();
@@ -10,7 +11,7 @@ class OnboardingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    
+
     return Scaffold(
       backgroundColor: const Color(0xFF181818),
       body: Padding(
@@ -144,7 +145,7 @@ class OnboardingScreen extends StatelessWidget {
                               Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => HomeScreen(),
+                                  builder: (context) => MainNavigationScreen(),
                                 ),
                               );
                             }

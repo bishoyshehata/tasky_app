@@ -1,8 +1,5 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tasky/data/models/task_model.dart';
 
 class TaskCard extends StatefulWidget {
@@ -24,7 +21,7 @@ class _TaskCardState extends State<TaskCard> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
 
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
@@ -121,5 +118,4 @@ class _TaskCardState extends State<TaskCard> {
       ),
     );
   }
-
 }

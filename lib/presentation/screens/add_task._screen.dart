@@ -184,26 +184,8 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                       isHighPriority: isHighPriorityVal,
                       dateTime: DateTime.now().toIso8601String(),
                     );
-                    final prefs = await SharedPreferences.getInstance();
-                    final tasksJson = prefs.getStringList('tasks');
-                    List<TaskModel> tasksList = [];
-                    if (tasksJson != null) {
-                      tasksList = tasksJson
-                          .map(
-                            (taskJson) =>
-                                TaskModel.fromJson(jsonDecode(taskJson)),
-                          )
-                          .toList();
-                    }
-                    tasksList.add(task);
-
-                    final updatedTasksJson = tasksList
-                        .map((task) => jsonEncode(task.toJson()))
-                        .toList();
-                    await prefs.setStringList('tasks', updatedTasksJson);
-
                     if (mounted) {
-                      Navigator.pop(context, true);
+                      Navigator.pop(context, task);
                     }
                   }
                 },

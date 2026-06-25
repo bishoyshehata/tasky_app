@@ -1,0 +1,76 @@
+import 'package:flutter/material.dart';
+import 'package:tasky/data/models/task_model.dart';
+import 'package:tasky/presentation/components/tasks_card.dart';
+
+class CompletedTasksScreen extends StatefulWidget {
+  final List<TaskModel> tasks;
+  final ValueChanged<List<TaskModel>> onTasksChanged;
+
+  const CompletedTasksScreen({
+    super.key,
+    required this.tasks,
+    required this.onTasksChanged,
+  });
+
+  @override
+  State<CompletedTasksScreen> createState() => _CompletedTasksScreenState();
+}
+
+class _CompletedTasksScreenState extends State<CompletedTasksScreen> {
+  @override
+  Widget build(BuildContext context) {
+    final completedTasks = widget.tasks.where((task) => task.isDone).toList();
+    return Scaffold(
+      backgroundColor: Color(0xff181818),
+      appBar: AppBar(
+        elevation: 4,
+        title: Text(
+          'Completed Tasks',
+          style: TextStyle(color: Color(0xffFFFCFC), fontSize: 20),
+        ),
+        backgroundColor: Color(0xff181818),
+        iconTheme: IconThemeData(color: Colors.white),
+      ),
+      body: Container(
+        margin: EdgeInsets.only(left: 12.0, right: 12.0),
+        child: buildTaskCards(),
+      ),
+    );
+  }
+
+  Widget buildTaskCards() {
+    final completedTasks = widget.tasks.where((task) => task.isDone).toList();
+
+    if (completedTasks.isEmpty) {
+      return Center(
+        child: Text(
+          'No Completed Tasks Yet',
+          style: TextStyle(color: Colors.white54, fontSize: 18),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(height: 12),
+        ListView.separated(
+          shrinkWrap: true,
+          padding: EdgeInsets.only(bottom: 65),
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: completedTasks.length,
+          itemBuilder: (context, index) {
+            return TaskCard(
+              task: completedTasks[index],
+              index: index,
+              onChanged: () {
+                widget.onTasksChanged(widget.tasks);
+              },
+            );
+          },
+          separatorBuilder: (_, __) => const SizedBox(height: 12),
+        ),
+      ],
+    );
+  }
+}

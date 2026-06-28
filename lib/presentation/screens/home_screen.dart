@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tasky/data/models/task_model.dart';
+import 'package:tasky/data/models/user_model.dart';
 import 'package:tasky/presentation/components/achieved_tasks.dart';
 import 'package:tasky/presentation/components/tasks_card.dart';
 import 'package:tasky/presentation/screens/add_task._screen.dart';
@@ -23,7 +24,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  String name = '';
+  UserModel? userModel;
   @override
   void initState() {
     super.initState();
@@ -33,7 +34,10 @@ class _HomeScreenState extends State<HomeScreen> {
   void _loadUserName() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      name = prefs.getString('name') ?? '';
+      final userJson = prefs.getString('user');
+      if (userJson != null) {
+        userModel = UserModel.fromJson(jsonDecode(userJson));
+      }
     });
   }
 
@@ -63,7 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Good Evening ,$name ',
+                            'Good Evening , ${userModel?.name ?? ''} ',
                             style: TextStyle(
                               color: Color(0xffFFFCFC),
                               fontSize: 18,

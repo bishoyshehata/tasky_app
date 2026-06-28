@@ -7,6 +7,7 @@ import 'package:tasky/core/utils/picker_manager.dart';
 import 'package:tasky/data/models/user_model.dart';
 import 'dart:convert';
 import 'package:tasky/presentation/screens/splash_screen.dart';
+import 'package:tasky/presentation/screens/user_details_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -87,8 +88,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                 // Camera Icon Overlay
                 Positioned(
-                  bottom: 4,
-                  right: 4,
+                  bottom: 0,
+                  right: 0,
                   child: IconButton(
                     style: IconButton.styleFrom(
                       backgroundColor: const Color(0xFF2A2A2A),
@@ -147,7 +148,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _buildMenuItem(
               icon: Icons.person_outline,
               title: 'User Details',
-              onTap: () {},
+              onTap: () async {
+                final result = await Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => UserDetailsScreen()),
+                );
+
+                if (result != null) {
+                  _loadData();
+                }
+              },
             ),
             _buildMenuItem(
               icon: Icons.dark_mode_outlined,
@@ -256,6 +265,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _showImagePickerDialog() {
     showModalBottomSheet(
+      backgroundColor: const Color(0xFF1E1E1E),
       context: context,
       builder: (context) => Container(
         padding: const EdgeInsets.all(20),
@@ -263,16 +273,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: Icon(Icons.photo),
-              title: Text('Choose from Gallery'),
+              tileColor: const Color(0xFF2A2A2A),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              leading: Icon(Icons.photo, color: Colors.white),
+              title: Text(
+                'Choose from Gallery',
+                style: TextStyle(color: Colors.white),
+              ),
               onTap: () async {
                 Navigator.pop(context);
                 await pickImageFromGallery();
               },
             ),
+            const SizedBox(height: 6),
             ListTile(
-              leading: Icon(Icons.camera_alt),
-              title: Text('Take from Camera'),
+              tileColor: const Color(0xFF2A2A2A),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              leading: Icon(Icons.camera_alt, color: Colors.white),
+              title: Text(
+                'Take from Camera',
+                style: TextStyle(color: Colors.white),
+              ),
               onTap: () async {
                 Navigator.pop(context);
                 await pickImageFromCamera();

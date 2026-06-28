@@ -8,15 +8,18 @@ import 'package:tasky/data/models/user_model.dart';
 import 'package:tasky/presentation/components/achieved_tasks.dart';
 import 'package:tasky/presentation/components/tasks_card.dart';
 import 'package:tasky/presentation/screens/add_task._screen.dart';
+import 'dart:io';
 
 class HomeScreen extends StatefulWidget {
   final List<TaskModel> tasks;
   final ValueChanged<List<TaskModel>> onTasksChanged;
+  final UserModel? userModel;
 
   const HomeScreen({
     super.key,
     required this.tasks,
     required this.onTasksChanged,
+    this.userModel,
   });
 
   @override
@@ -24,23 +27,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  UserModel? userModel;
-  @override
-  void initState() {
-    super.initState();
-    _loadUserName();
-  }
-
-  void _loadUserName() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      final userJson = prefs.getString('user');
-      if (userJson != null) {
-        userModel = UserModel.fromJson(jsonDecode(userJson));
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -58,7 +44,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     CircleAvatar(
                       radius: 25,
-                      backgroundImage: AssetImage('assets/images/file.jpg'),
+                      backgroundImage:
+                          widget.userModel?.profileImagePath != null
+                          ? FileImage(File(widget.userModel!.profileImagePath!))
+                          : const AssetImage('assets/images/file.jpg')
+                                as ImageProvider,
                     ),
                     SizedBox(width: 4),
                     SizedBox(
@@ -67,14 +57,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Good Evening , ${userModel?.name ?? ''} ',
+                            'Good Evening , ${widget.userModel?.name ?? ''} ',
                             style: TextStyle(
                               color: Color(0xffFFFCFC),
                               fontSize: 18,
                             ),
                           ),
                           Text(
-                            'One task at a time.One step closer.',
+                            widget.userModel?.motivationQuote ??
+                                'One task at a time.One step closer.',
                             style: TextStyle(
                               color: Color(0xffC6C6C6),
                               fontSize: 16,

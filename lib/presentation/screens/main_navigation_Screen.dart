@@ -6,6 +6,7 @@ import 'package:tasky/presentation/screens/to_do_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:tasky/data/models/task_model.dart';
+import 'package:tasky/data/models/user_model.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -17,11 +18,23 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _selectedIndex = 0;
   List<TaskModel> tasks = [];
+  UserModel? userModel;
 
   @override
   void initState() {
     super.initState();
     _loadTasks();
+    _loadUser();
+  }
+
+  void _loadUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userJson = prefs.getString('user');
+    if (userJson != null) {
+      setState(() {
+        userModel = UserModel.fromJson(jsonDecode(userJson));
+      });
+    }
   }
 
   void _loadTasks() async {
@@ -85,10 +98,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       body: IndexedStack(
         index: _selectedIndex,
         children: [
-          HomeScreen(tasks: tasks, onTasksChanged: _onTasksChanged),
+          HomeScreen(tasks: tasks, onTasksChanged: _onTasksChanged, userModel: userModel),
           TodoScreen(tasks: tasks, onTasksChanged: _onTasksChanged),
           CompletedTasksScreen(tasks: tasks, onTasksChanged: _onTasksChanged),
-          ProfileScreen(),
+          ProfileScreen(onUserChanged: _loadUser),
         ],
       ),
     );

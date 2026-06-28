@@ -10,7 +10,9 @@ import 'package:tasky/presentation/screens/splash_screen.dart';
 import 'package:tasky/presentation/screens/user_details_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final VoidCallback onUserChanged;
+
+  const ProfileScreen({super.key, required this.onUserChanged});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -155,6 +157,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                 if (result != null) {
                   _loadData();
+                  widget.onUserChanged();
                 }
               },
             ),
@@ -249,6 +252,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
 
     await _saveUserData();
+    widget.onUserChanged();
   }
 
   Future<void> pickImageFromCamera() async {
@@ -261,6 +265,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
 
     await _saveUserData();
+    widget.onUserChanged();
   }
 
   void _showImagePickerDialog() {

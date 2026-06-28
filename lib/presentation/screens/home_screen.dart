@@ -1,8 +1,6 @@
-import 'dart:convert';
-
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tasky/data/models/task_model.dart';
 import 'package:tasky/data/models/user_model.dart';
 import 'package:tasky/presentation/components/achieved_tasks.dart';
@@ -56,12 +54,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Good Evening , ${widget.userModel?.name ?? ''} ',
+                          AutoSizeText(
+                            '${getGreeting()}, ${widget.userModel?.name ?? ''} ',
                             style: TextStyle(
                               color: Color(0xffFFFCFC),
                               fontSize: 18,
                             ),
+                            minFontSize: 14,
+
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                           Text(
                             widget.userModel?.motivationQuote ??
@@ -248,5 +250,17 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           )
         : SizedBox.shrink();
+  }
+
+  String getGreeting() {
+    final hour = DateTime.now().hour;
+
+    if (hour >= 5 && hour < 12) {
+      return 'Good Morning';
+    } else if (hour >= 12 && hour < 17) {
+      return 'Good Afternoon';
+    } else {
+      return 'Good Evening';
+    }
   }
 }

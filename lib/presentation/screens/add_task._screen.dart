@@ -16,7 +16,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   final FocusNode taskNameFocus = FocusNode();
   final FocusNode taskDescriptionFocus = FocusNode();
 
-  bool isHighPriority = true;
+  bool isHighPriority = false;
   @override
   void dispose() {
     taskNameFocus.dispose();

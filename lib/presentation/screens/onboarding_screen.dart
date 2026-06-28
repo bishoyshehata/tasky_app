@@ -143,7 +143,7 @@ class OnboardingScreen extends StatelessWidget {
                                 name: controller.value.text,
                                 motivationQuote:
                                     'You got this, Just do your best',
-                                profileImage: null,
+                                profileImagePath: null,
                               );
                               final prefs =
                                   await SharedPreferences.getInstance();

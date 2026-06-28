@@ -24,7 +24,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   UserModel? userModel;
-  File? profileImage;
 
   Future<void> _loadData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -73,11 +72,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     border: Border.all(color: Colors.transparent, width: 2),
                   ),
                   child: ClipOval(
-                    child: userModel?.profileImage != null
-                        ? Image.file(userModel!.profileImage!)
-                        : Icon(Icons.person, size: 48, color: Colors.white),
+                    child: (userModel?.profileImagePath != null)
+                        ? Image.file(
+                            File(userModel!.profileImagePath!),
+                            fit: BoxFit.cover,
+                          )
+                        : const Icon(
+                            Icons.person,
+                            size: 48,
+                            color: Colors.white,
+                          ),
                   ),
                 ),
+
                 // Camera Icon Overlay
                 Positioned(
                   bottom: 4,
@@ -229,8 +236,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (image == null) return;
 
     setState(() {
-      profileImage = image;
+      userModel = userModel!.copyWith(profileImagePath: image.path);
     });
+
+    await _saveUserData();
   }
 
   Future<void> pickImageFromCamera() async {
@@ -239,8 +248,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (image == null) return;
 
     setState(() {
-      profileImage = image;
+      userModel = userModel!.copyWith(profileImagePath: image.path);
     });
+
+    await _saveUserData();
   }
 
   void _showImagePickerDialog() {
@@ -254,22 +265,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ListTile(
               leading: Icon(Icons.photo),
               title: Text('Choose from Gallery'),
-              onTap: () {
-                pickImageFromGallery();
+              onTap: () async {
                 Navigator.pop(context);
+                await pickImageFromGallery();
               },
             ),
             ListTile(
               leading: Icon(Icons.camera_alt),
               title: Text('Take from Camera'),
-              onTap: () {
-                pickImageFromCamera();
+              onTap: () async {
                 Navigator.pop(context);
+                await pickImageFromCamera();
               },
             ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _saveUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    if (userModel == null) return;
+
+    await prefs.setString('user', jsonEncode(userModel!.toJson()));
   }
 }

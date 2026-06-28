@@ -16,15 +16,26 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
   final quoteController = TextEditingController();
   final nameFocus = FocusNode();
   final quoteFocus = FocusNode();
+  bool _isButtonEnabled = false;
+
   @override
   void initState() {
     super.initState();
-
+    nameController.addListener(_updateButtonState);
+    quoteController.addListener(_updateButtonState);
     _loadData();
+  }
+
+  void _updateButtonState() {
+    setState(() {
+      _isButtonEnabled = nameController.text.isNotEmpty || quoteController.text.isNotEmpty;
+    });
   }
 
   @override
   void dispose() {
+    nameController.removeListener(_updateButtonState);
+    quoteController.removeListener(_updateButtonState);
     nameController.dispose();
     quoteController.dispose();
     nameFocus.dispose();
@@ -152,35 +163,39 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
             ),
           ),
           ElevatedButton.icon(
-            onPressed: () async {
-              String name = nameController.text;
-              String quote = quoteController.text;
-              final user = UserModel(
-                name: name.isNotEmpty
-                    ? name
-                    : userModel?.name ?? 'Write Your Name',
-                motivationQuote: quote.isNotEmpty
-                    ? quote
-                    : userModel?.motivationQuote,
-                profileImagePath: userModel?.profileImagePath ?? '',
-              );
-              SharedPreferences prefs = await SharedPreferences.getInstance();
-              prefs.setString('user', jsonEncode(user.toJson()));
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('User details updated successfully'),
-                    backgroundColor: Color(0xFF15B86C),
-                  ),
-                );
-                Navigator.pop(context, user);
-              }
-            },
+            onPressed: _isButtonEnabled
+                ? () async {
+                    String name = nameController.text;
+                    String quote = quoteController.text;
+                    final user = UserModel(
+                      name: name.isNotEmpty
+                          ? name
+                          : userModel?.name ?? 'Write Your Name',
+                      motivationQuote: quote.isNotEmpty
+                          ? quote
+                          : userModel?.motivationQuote,
+                      profileImagePath: userModel?.profileImagePath ?? '',
+                    );
+                    SharedPreferences prefs =
+                        await SharedPreferences.getInstance();
+                    prefs.setString('user', jsonEncode(user.toJson()));
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('User details updated successfully'),
+                          backgroundColor: Color(0xFF15B86C),
+                        ),
+                      );
+                      Navigator.pop(context, user);
+                    }
+                  }
+                : null,
             label: Text('Save Changes', style: TextStyle(fontSize: 14)),
-
             style: ElevatedButton.styleFrom(
               backgroundColor: Color(0xFF15B86C),
               foregroundColor: Color(0xffFFFCFC),
+              disabledBackgroundColor: Color(0xFF15B86C).withOpacity(0.5),
+              disabledForegroundColor: Color(0xffFFFCFC).withOpacity(0.5),
               fixedSize: Size(346, 40),
             ),
           ),

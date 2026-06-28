@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tasky/data/models/user_model.dart';
 import 'package:tasky/presentation/screens/home_screen.dart';
 import 'package:tasky/presentation/screens/main_navigation_Screen.dart';
 
@@ -136,11 +139,17 @@ class OnboardingScreen extends StatelessWidget {
                         ElevatedButton(
                           onPressed: () async {
                             if (_formKey.currentState?.validate() ?? false) {
+                              final user = UserModel(
+                                name: controller.value.text,
+                                motivationQuote:
+                                    'You got this, Just do your best',
+                                profileImage: null,
+                              );
                               final prefs =
                                   await SharedPreferences.getInstance();
                               await prefs.setString(
-                                'name',
-                                controller.value.text,
+                                'user',
+                                jsonEncode(user.toJson()),
                               );
                               Navigator.pushReplacement(
                                 context,

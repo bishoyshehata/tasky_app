@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tasky/presentation/screens/comleted_tasks.dart';
 import 'package:tasky/presentation/screens/home_screen.dart';
+import 'package:tasky/presentation/screens/profile_screen.dart';
 import 'package:tasky/presentation/screens/to_do_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -87,7 +88,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           HomeScreen(tasks: tasks, onTasksChanged: _onTasksChanged),
           TodoScreen(tasks: tasks, onTasksChanged: _onTasksChanged),
           CompletedTasksScreen(tasks: tasks, onTasksChanged: _onTasksChanged),
-          Container(color: Colors.green),
+          ProfileScreen(),
         ],
       ),
     );

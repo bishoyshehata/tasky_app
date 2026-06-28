@@ -40,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF181818),
+      backgroundColor: const Color(0xFF121212),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(12.0),
@@ -111,7 +111,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 SizedBox(height: 10),
                 AchievedTasks(
                   allTasks: widget.tasks.length,
-                  achievedTasks: widget.tasks.where((task) => task.isDone).length,
+                  achievedTasks: widget.tasks
+                      .where((task) => task.isDone)
+                      .length,
                 ),
                 SizedBox(height: 10),
                 buildHighPrioritySection(),
@@ -132,7 +134,8 @@ class _HomeScreenState extends State<HomeScreen> {
             );
 
             if (result is TaskModel) {
-              final updatedTasks = List<TaskModel>.from(widget.tasks)..add(result);
+              final updatedTasks = List<TaskModel>.from(widget.tasks)
+                ..add(result);
               widget.onTasksChanged(updatedTasks);
             }
           },

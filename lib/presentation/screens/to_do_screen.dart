@@ -20,14 +20,13 @@ class _TodoScreenState extends State<TodoScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xff181818),
+      backgroundColor: const Color(0xFF121212),
       appBar: AppBar(
-        elevation: 4,
         title: Text(
           'To Do Tasks',
           style: TextStyle(color: Color(0xffFFFCFC), fontSize: 20),
         ),
-        backgroundColor: Color(0xff181818),
+        backgroundColor: const Color(0xFF121212),
         iconTheme: IconThemeData(color: Colors.white),
       ),
       body: Container(

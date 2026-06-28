@@ -55,8 +55,8 @@ class _SplashScreenState extends State<SplashScreen> {
 
   void _initialRoute() async {
     final prefs = await SharedPreferences.getInstance();
-    final name = prefs.getString('name');
-    if (name != null) {
+    final user = prefs.getString('user');
+    if (user != null) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => MainNavigationScreen()),
       );

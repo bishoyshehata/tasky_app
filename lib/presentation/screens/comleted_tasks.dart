@@ -19,16 +19,14 @@ class CompletedTasksScreen extends StatefulWidget {
 class _CompletedTasksScreenState extends State<CompletedTasksScreen> {
   @override
   Widget build(BuildContext context) {
-    final completedTasks = widget.tasks.where((task) => task.isDone).toList();
     return Scaffold(
-      backgroundColor: Color(0xff181818),
+      backgroundColor: const Color(0xFF121212),
       appBar: AppBar(
-        elevation: 4,
         title: Text(
           'Completed Tasks',
           style: TextStyle(color: Color(0xffFFFCFC), fontSize: 20),
         ),
-        backgroundColor: Color(0xff181818),
+        backgroundColor: const Color(0xFF121212),
         iconTheme: IconThemeData(color: Colors.white),
       ),
       body: Container(

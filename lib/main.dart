@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tasky/presentation/screens/splash_screen.dart';
+import 'presentation/screens/splash_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();

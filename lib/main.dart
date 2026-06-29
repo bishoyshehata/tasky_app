@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'core/theme/app_theme.dart';
 import 'presentation/screens/splash_screen.dart';
 
 void main() {
@@ -14,16 +15,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Tasky',
-      theme: ThemeData(
-        scaffoldBackgroundColor: const Color(0xFF121212),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF121212),
-          titleTextStyle: TextStyle(color: Color(0xffFFFCFC), fontSize: 20),
-          iconTheme: IconThemeData(color: Color(0xffFFFCFC)),
-        ),
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
+      theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: ThemeMode.dark, // switch to ThemeMode.system when light is ready
       home: const SplashScreen(),
     );
   }

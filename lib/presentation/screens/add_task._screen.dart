@@ -44,7 +44,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                       Text(
                         'Task Name',
                         style: TextStyle(
-                          color: Color(0xffFFFCFC),
                           fontSize: 16,
                           fontWeight: FontWeight.w400,
                         ),
@@ -151,8 +150,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                               isHighPriority = value;
                               setState(() {});
                             },
-                            activeTrackColor: Color(0xFF15B86C),
-                            activeThumbColor: Color(0xFFFFFCFC),
                           ),
                         ],
                       ),

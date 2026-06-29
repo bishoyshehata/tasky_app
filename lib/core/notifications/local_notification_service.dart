@@ -42,7 +42,7 @@ class LocalNotificationService implements NotificationService {
   LocalNotificationService._();
   static final LocalNotificationService instance = LocalNotificationService._();
 
-  static const _channelIdBase = 'tasky_reminders';
+  static const _channelIdBase = 'tasky_alarms_v3';
   static const _channelName = 'Task Reminders';
   static const _channelDescription = 'Scheduled reminders for your tasks';
 
@@ -67,8 +67,13 @@ class LocalNotificationService implements NotificationService {
     String channelId = '${_channelIdBase}_${uri.hashCode}';
     
     AndroidNotificationSound? sound;
+    bool playSound = true;
     if (uri != 'default') {
-      sound = UriAndroidNotificationSound(uri);
+      if (uri.startsWith('content://')) {
+        sound = UriAndroidNotificationSound(uri);
+      } else {
+        playSound = false;
+      }
     }
 
     // Dynamically create this specific channel to bypass Android limits
@@ -83,6 +88,7 @@ class LocalNotificationService implements NotificationService {
           importance: Importance.high,
           enableVibration: true,
           sound: sound,
+          playSound: playSound,
         ),
       );
     }
@@ -96,6 +102,7 @@ class LocalNotificationService implements NotificationService {
           priority: Priority.high,
           enableVibration: true,
           sound: sound,
+          playSound: playSound,
           icon: '@mipmap/ic_launcher',
           fullScreenIntent: true,
           category: AndroidNotificationCategory.alarm,

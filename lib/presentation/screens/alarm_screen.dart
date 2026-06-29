@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:intl/intl.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/services.dart';
 
 class AlarmScreen extends StatefulWidget {
   final String title;
@@ -25,6 +26,8 @@ class AlarmScreen extends StatefulWidget {
 
 class _AlarmScreenState extends State<AlarmScreen>
     with SingleTickerProviderStateMixin {
+  static const _pickerChannel = MethodChannel('com.bsh.tasky/ringtone_picker');
+  
   late AnimationController _controller;
   late Animation<double> _animation;
   final AudioPlayer _audioPlayer = AudioPlayer();
@@ -48,12 +51,19 @@ class _AlarmScreenState extends State<AlarmScreen>
     final soundData = widget.alarmSound;
     if (soundData.contains('|')) {
       final uri = soundData.split('|')[0];
-      try {
-        await _audioPlayer.setReleaseMode(ReleaseMode.loop);
-        await _audioPlayer.play(UrlSource(uri));
-      } catch (e) {
-        // Fallback to default system alarm
-        FlutterRingtonePlayer().playAlarm(looping: true, asAlarm: true);
+      if (Theme.of(context).platform == TargetPlatform.android) {
+        try {
+          await _pickerChannel.invokeMethod('playRingtone', {'uri': uri});
+        } catch (e) {
+          FlutterRingtonePlayer().playAlarm(looping: true, asAlarm: true);
+        }
+      } else {
+        try {
+          await _audioPlayer.setReleaseMode(ReleaseMode.loop);
+          await _audioPlayer.play(DeviceFileSource(uri));
+        } catch (e) {
+          FlutterRingtonePlayer().playAlarm(looping: true, asAlarm: true);
+        }
       }
     } else {
       // Play default system alarm
@@ -61,25 +71,30 @@ class _AlarmScreenState extends State<AlarmScreen>
     }
   }
 
+  void _stopRingtone() {
+    if (Theme.of(context).platform == TargetPlatform.android) {
+      _pickerChannel.invokeMethod('stopRingtone');
+    }
+    _audioPlayer.stop();
+    FlutterRingtonePlayer().stop();
+  }
+
   @override
   void dispose() {
-    _audioPlayer.stop();
+    _stopRingtone();
     _audioPlayer.dispose();
-    FlutterRingtonePlayer().stop();
     _controller.dispose();
     super.dispose();
   }
 
   void _stop() {
-    _audioPlayer.stop();
-    FlutterRingtonePlayer().stop();
+    _stopRingtone();
     widget.onStop();
     Navigator.of(context).pop();
   }
 
   void _snooze() {
-    _audioPlayer.stop();
-    FlutterRingtonePlayer().stop();
+    _stopRingtone();
     widget.onSnooze();
     Navigator.of(context).pop();
   }

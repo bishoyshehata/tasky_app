@@ -16,7 +16,11 @@ class MyApp extends StatelessWidget {
       title: 'Tasky',
       theme: ThemeData(
         scaffoldBackgroundColor: const Color(0xFF121212),
-        appBarTheme: const AppBarTheme(backgroundColor: Color(0xFF121212)),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF121212),
+          titleTextStyle: TextStyle(color: Color(0xffFFFCFC), fontSize: 20),
+          iconTheme: IconThemeData(color: Color(0xffFFFCFC)),
+        ),
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),

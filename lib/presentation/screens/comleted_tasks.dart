@@ -21,10 +21,7 @@ class _CompletedTasksScreenState extends State<CompletedTasksScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Completed Tasks',
-          style: TextStyle(color: Color(0xffFFFCFC), fontSize: 20),
-        ),
+        title: Text('Completed Tasks'),
         iconTheme: IconThemeData(color: Colors.white),
       ),
       body: Container(

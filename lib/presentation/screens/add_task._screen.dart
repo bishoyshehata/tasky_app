@@ -29,13 +29,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        iconTheme: IconThemeData(color: Color(0xffFFFCFC)),
-        title: Text(
-          "New Task",
-          style: TextStyle(color: Color(0xffFFFCFC), fontSize: 20),
-        ),
-      ),
+      appBar: AppBar(title: Text("New Task")),
       body: Form(
         key: _formKey,
         child: Padding(

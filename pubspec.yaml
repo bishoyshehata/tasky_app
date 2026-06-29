@@ -41,7 +41,10 @@ dependencies:
   lottie: ^3.3.3
   image_picker: ^1.2.2
   auto_size_text: ^3.0.0
-  
+  flutter_local_notifications: ^18.0.1
+  timezone: ^0.10.0
+  flutter_timezone: ^3.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -8,11 +8,22 @@ class TaskCard extends StatefulWidget {
     required this.task,
     required this.index,
     required this.onChanged,
+    required this.onDelete,
+    this.onMarkComplete,
   });
 
   final TaskModel task;
   final int index;
+
+  /// Called whenever isDone is toggled — triggers a save in the parent.
   final VoidCallback onChanged;
+
+  /// Called when the user confirms deletion — parent handles list update
+  /// and notification cancellation.
+  final VoidCallback onDelete;
+
+  /// Called when isDone changes to true — parent cancels the reminder.
+  final VoidCallback? onMarkComplete;
 
   @override
   State<TaskCard> createState() => _TaskCardState();
@@ -22,10 +33,9 @@ class _TaskCardState extends State<TaskCard> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-
-    // Semantic colours for done/active state — derived from theme
-    final activeTextColor = colorScheme.onSurface;
-    final doneTextColor = colorScheme.onSurfaceVariant;
+    final isDone = widget.task.isDone;
+    final activeColor = colorScheme.onSurface;
+    final doneColor = colorScheme.onSurfaceVariant;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -36,80 +46,158 @@ class _TaskCardState extends State<TaskCard> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          // ── Checkbox ──────────────────────────────────────────
           Checkbox(
-            value: widget.task.isDone,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(5),
-            ),
+            value: isDone,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
             onChanged: (value) {
-              setState(() {
-                widget.task.isDone = value!;
-              });
+              setState(() => widget.task.isDone = value!);
               widget.onChanged();
+              if (value == true) widget.onMarkComplete?.call();
             },
           ),
+
+          // ── Text content ──────────────────────────────────────
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Title
                 Text(
-                  capitalize(widget.task.taskName),
+                  _capitalize(widget.task.taskName),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: widget.task.isDone ? doneTextColor : activeTextColor,
+                    color: isDone ? doneColor : activeColor,
                     fontSize: 16,
                     fontWeight: FontWeight.w400,
-                    decoration: widget.task.isDone
-                        ? TextDecoration.lineThrough
-                        : null,
-                    decorationColor: doneTextColor,
+                    decoration:
+                        isDone ? TextDecoration.lineThrough : null,
+                    decorationColor: doneColor,
                     decorationThickness: 2,
                   ),
                 ),
-                if (widget.task.taskDescription != '') ...[
+
+                // Description
+                if (widget.task.taskDescription.isNotEmpty) ...[
                   Text(
-                    capitalize(widget.task.taskDescription),
+                    _capitalize(widget.task.taskDescription),
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: widget.task.isDone
-                          ? doneTextColor
-                          : colorScheme.onSurfaceVariant,
+                      color: isDone ? doneColor : colorScheme.onSurfaceVariant,
                       fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                      decoration: widget.task.isDone
-                          ? TextDecoration.lineThrough
-                          : null,
-                      decorationColor: doneTextColor,
+                      decoration:
+                          isDone ? TextDecoration.lineThrough : null,
+                      decorationColor: doneColor,
                       decorationThickness: 1,
                     ),
                   ),
-                ] else
-                  const SizedBox.shrink(),
-                Text(
-                  DateFormat('dd MMM yyyy • hh:mm a')
-                      .format(DateTime.parse(widget.task.dateTime)),
-                  style: TextStyle(
-                    color: colorScheme.onSurfaceVariant,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
+                ],
+
+                // Date + reminder badge
+                Row(
+                  children: [
+                    Text(
+                      DateFormat('dd MMM yyyy • hh:mm a')
+                          .format(DateTime.parse(widget.task.dateTime)),
+                      style: TextStyle(
+                        color: colorScheme.onSurfaceVariant,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    if (widget.task.reminderEnabled &&
+                        widget.task.reminderDate != null) ...[
+                      const SizedBox(width: 6),
+                      Icon(
+                        Icons.alarm,
+                        size: 13,
+                        color: colorScheme.primary,
+                      ),
+                      const SizedBox(width: 2),
+                      Text(
+                        DateFormat('hh:mm a')
+                            .format(widget.task.reminderDate!),
+                        style: TextStyle(
+                          color: colorScheme.primary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ],
             ),
           ),
-          Icon(
-            Icons.more_vert,
-            size: 30,
-            color: colorScheme.onSurfaceVariant,
+
+          // ── More menu ─────────────────────────────────────────
+          PopupMenuButton<String>(
+            icon: Icon(
+              Icons.more_vert,
+              size: 24,
+              color: colorScheme.onSurfaceVariant,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            onSelected: (value) {
+              if (value == 'delete') _confirmDelete(context);
+            },
+            itemBuilder: (_) => [
+              PopupMenuItem(
+                value: 'delete',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete_outline,
+                        color: colorScheme.error, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Delete',
+                      style: TextStyle(color: colorScheme.error),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  String capitalize(String text) {
+  void _confirmDelete(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Task'),
+        content: Text(
+          'Delete "${widget.task.taskName}"? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              widget.onDelete();
+            },
+            child: Text(
+              'Delete',
+              style:
+                  TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _capitalize(String text) {
     if (text.isEmpty) return text;
     return text[0].toUpperCase() + text.substring(1);
   }

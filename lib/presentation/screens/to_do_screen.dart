@@ -5,11 +5,15 @@ import 'package:tasky/presentation/components/tasks_card.dart';
 class TodoScreen extends StatefulWidget {
   final List<TaskModel> tasks;
   final ValueChanged<List<TaskModel>> onTasksChanged;
+  final ValueChanged<TaskModel> onDeleteTask;
+  final ValueChanged<TaskModel> onTaskCompleted;
 
   const TodoScreen({
     super.key,
     required this.tasks,
     required this.onTasksChanged,
+    required this.onDeleteTask,
+    required this.onTaskCompleted,
   });
 
   @override
@@ -22,16 +26,16 @@ class _TodoScreenState extends State<TodoScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('To Do Tasks')),
       body: Container(
-        margin: const EdgeInsets.only(left: 12.0, right: 12.0),
-        child: buildTaskCards(context),
+        margin: const EdgeInsets.symmetric(horizontal: 12),
+        child: _buildCards(context),
       ),
     );
   }
 
-  Widget buildTaskCards(BuildContext context) {
-    final todoTasks = widget.tasks.where((task) => !task.isDone).toList();
+  Widget _buildCards(BuildContext context) {
+    final todo = widget.tasks.where((t) => !t.isDone).toList();
 
-    if (todoTasks.isEmpty) {
+    if (todo.isEmpty) {
       return Center(
         child: Text(
           'No Tasks Yet',
@@ -51,16 +55,14 @@ class _TodoScreenState extends State<TodoScreen> {
           shrinkWrap: true,
           padding: const EdgeInsets.only(bottom: 65),
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: todoTasks.length,
-          itemBuilder: (context, index) {
-            return TaskCard(
-              task: todoTasks[index],
-              index: index,
-              onChanged: () {
-                widget.onTasksChanged(widget.tasks);
-              },
-            );
-          },
+          itemCount: todo.length,
+          itemBuilder: (_, i) => TaskCard(
+            task: todo[i],
+            index: i,
+            onChanged: () => widget.onTasksChanged(widget.tasks),
+            onDelete: () => widget.onDeleteTask(todo[i]),
+            onMarkComplete: () => widget.onTaskCompleted(todo[i]),
+          ),
           separatorBuilder: (_, __) => const SizedBox(height: 12),
         ),
       ],

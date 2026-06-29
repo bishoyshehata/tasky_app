@@ -5,11 +5,15 @@ import 'package:tasky/presentation/components/tasks_card.dart';
 class CompletedTasksScreen extends StatefulWidget {
   final List<TaskModel> tasks;
   final ValueChanged<List<TaskModel>> onTasksChanged;
+  final ValueChanged<TaskModel> onDeleteTask;
+  final ValueChanged<TaskModel> onTaskCompleted;
 
   const CompletedTasksScreen({
     super.key,
     required this.tasks,
     required this.onTasksChanged,
+    required this.onDeleteTask,
+    required this.onTaskCompleted,
   });
 
   @override
@@ -22,16 +26,16 @@ class _CompletedTasksScreenState extends State<CompletedTasksScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Completed Tasks')),
       body: Container(
-        margin: const EdgeInsets.only(left: 12.0, right: 12.0),
-        child: buildTaskCards(context),
+        margin: const EdgeInsets.symmetric(horizontal: 12),
+        child: _buildCards(context),
       ),
     );
   }
 
-  Widget buildTaskCards(BuildContext context) {
-    final completedTasks = widget.tasks.where((task) => task.isDone).toList();
+  Widget _buildCards(BuildContext context) {
+    final done = widget.tasks.where((t) => t.isDone).toList();
 
-    if (completedTasks.isEmpty) {
+    if (done.isEmpty) {
       return Center(
         child: Text(
           'No Completed Tasks Yet',
@@ -51,16 +55,14 @@ class _CompletedTasksScreenState extends State<CompletedTasksScreen> {
           shrinkWrap: true,
           padding: const EdgeInsets.only(bottom: 65),
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: completedTasks.length,
-          itemBuilder: (context, index) {
-            return TaskCard(
-              task: completedTasks[index],
-              index: index,
-              onChanged: () {
-                widget.onTasksChanged(widget.tasks);
-              },
-            );
-          },
+          itemCount: done.length,
+          itemBuilder: (_, i) => TaskCard(
+            task: done[i],
+            index: i,
+            onChanged: () => widget.onTasksChanged(widget.tasks),
+            onDelete: () => widget.onDeleteTask(done[i]),
+            onMarkComplete: () => widget.onTaskCompleted(done[i]),
+          ),
           separatorBuilder: (_, __) => const SizedBox(height: 12),
         ),
       ],

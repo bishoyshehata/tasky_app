@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:tasky/core/notifications/local_notification_service.dart';
+import 'package:tasky/domain/usecases/cancel_task_reminder_use_case.dart';
+import 'package:tasky/domain/usecases/schedule_task_reminder_use_case.dart';
 import 'package:tasky/presentation/screens/comleted_tasks.dart';
 import 'package:tasky/presentation/screens/home_screen.dart';
 import 'package:tasky/presentation/screens/profile_screen.dart';
@@ -20,50 +23,85 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   List<TaskModel> tasks = [];
   UserModel? userModel;
 
+  // ── Use Cases ────────────────────────────────────────────────
+  late final _scheduleUseCase =
+      ScheduleTaskReminderUseCase(LocalNotificationService.instance);
+  late final _cancelUseCase =
+      CancelTaskReminderUseCase(LocalNotificationService.instance);
+
+  // ── Lifecycle ────────────────────────────────────────────────
   @override
   void initState() {
     super.initState();
-    _loadTasks();
     _loadUser();
+    _loadTasksAndReschedule();
   }
 
+  // ── Data ─────────────────────────────────────────────────────
   void _loadUser() async {
     final prefs = await SharedPreferences.getInstance();
     final userJson = prefs.getString('user');
-    if (userJson != null) {
+    if (userJson != null && mounted) {
       setState(() {
         userModel = UserModel.fromJson(jsonDecode(userJson));
       });
     }
   }
 
-  void _loadTasks() async {
+  Future<void> _loadTasksAndReschedule() async {
     final prefs = await SharedPreferences.getInstance();
     final tasksJson = prefs.getStringList('tasks');
-    if (tasksJson != null) {
-      setState(() {
-        tasks = tasksJson
-            .map((taskJson) => TaskModel.fromJson(jsonDecode(taskJson)))
-            .toList();
-      });
+    if (tasksJson != null && mounted) {
+      final loaded = tasksJson
+          .map((j) => TaskModel.fromJson(jsonDecode(j)))
+          .toList();
+      setState(() => tasks = loaded);
+      // Restore reminders that survived a reboot / app kill
+      await _scheduleUseCase.rescheduleAll(loaded);
     }
   }
 
-  void _saveAllTasks(List<TaskModel> updatedTasks) async {
+  Future<void> _saveAllTasks(List<TaskModel> updated) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(
       'tasks',
-      updatedTasks.map((task) => jsonEncode(task.toJson())).toList(),
+      updated.map((t) => jsonEncode(t.toJson())).toList(),
     );
   }
 
-  void _onTasksChanged(List<TaskModel> updatedTasks) {
-    setState(() {
-      tasks = updatedTasks;
-    });
-    _saveAllTasks(updatedTasks);
+  // ── Callbacks passed to child screens ────────────────────────
+
+  void _onTasksChanged(List<TaskModel> updated) {
+    setState(() => tasks = updated);
+    _saveAllTasks(updated);
   }
 
+  /// Called after a new task is created — schedules its reminder if needed.
+  Future<void> _onTaskAdded(TaskModel task) async {
+    final updated = List<TaskModel>.from(tasks)..add(task);
+    _onTasksChanged(updated);
+    await _scheduleUseCase.execute(task);
+  }
+
+  /// Called when the user taps the delete button on a task card.
+  Future<void> _onDeleteTask(TaskModel task) async {
+    // Cancel reminder first
+    await _cancelUseCase.execute(task.id);
+    // Then remove from list
+    final updated = tasks.where((t) => t.id != task.id).toList();
+    _onTasksChanged(updated);
+  }
+
+  /// Called when a task is marked as completed.
+  Future<void> _onTaskCompleted(TaskModel task) async {
+    if (task.reminderEnabled) {
+      await _cancelUseCase.execute(task.id);
+    }
+    // Trigger a save so isDone is persisted
+    _onTasksChanged(tasks);
+  }
+
+  // ── Build ─────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -92,10 +130,23 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           HomeScreen(
             tasks: tasks,
             onTasksChanged: _onTasksChanged,
+            onTaskAdded: _onTaskAdded,
+            onDeleteTask: _onDeleteTask,
+            onTaskCompleted: _onTaskCompleted,
             userModel: userModel,
           ),
-          TodoScreen(tasks: tasks, onTasksChanged: _onTasksChanged),
-          CompletedTasksScreen(tasks: tasks, onTasksChanged: _onTasksChanged),
+          TodoScreen(
+            tasks: tasks,
+            onTasksChanged: _onTasksChanged,
+            onDeleteTask: _onDeleteTask,
+            onTaskCompleted: _onTaskCompleted,
+          ),
+          CompletedTasksScreen(
+            tasks: tasks,
+            onTasksChanged: _onTasksChanged,
+            onDeleteTask: _onDeleteTask,
+            onTaskCompleted: _onTaskCompleted,
+          ),
           ProfileScreen(onUserChanged: _loadUser),
         ],
       ),

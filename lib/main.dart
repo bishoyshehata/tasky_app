@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'core/notifications/notification_initializer.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/app_theme_notifier.dart';
 import 'presentation/screens/splash_screen.dart';
@@ -6,6 +7,7 @@ import 'presentation/screens/splash_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await AppThemeNotifier.instance.load();
+  await NotificationInitializer.init();
   runApp(const MyApp());
 }
 

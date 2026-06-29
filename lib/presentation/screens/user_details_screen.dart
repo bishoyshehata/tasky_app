@@ -28,7 +28,8 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
 
   void _updateButtonState() {
     setState(() {
-      _isButtonEnabled = nameController.text.isNotEmpty || quoteController.text.isNotEmpty;
+      _isButtonEnabled =
+          nameController.text.isNotEmpty || quoteController.text.isNotEmpty;
     });
   }
 
@@ -60,13 +61,11 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
       appBar: AppBar(
         title: const Text(
           'User Details',
           style: TextStyle(color: Color(0xffFFFCFC), fontSize: 20),
         ),
-        backgroundColor: const Color(0xFF121212),
         iconTheme: IconThemeData(color: Colors.white),
       ),
       body: Column(

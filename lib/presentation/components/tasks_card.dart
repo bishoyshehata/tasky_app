@@ -53,7 +53,7 @@ class _TaskCardState extends State<TaskCard> {
                   children: [
                     Expanded(
                       child: Text(
-                        widget.task.taskName,
+                        capitalize(widget.task.taskName),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -75,7 +75,7 @@ class _TaskCardState extends State<TaskCard> {
 
                 if (widget.task.taskDescription != '') ...[
                   Text(
-                    widget.task.taskDescription!,
+                    capitalize(widget.task.taskDescription),
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -117,5 +117,10 @@ class _TaskCardState extends State<TaskCard> {
         ],
       ),
     );
+  }
+
+  String capitalize(String text) {
+    if (text.isEmpty) return text;
+    return text[0].toUpperCase() + text.substring(1);
   }
 }

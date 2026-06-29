@@ -17,6 +17,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
   final nameFocus = FocusNode();
   final quoteFocus = FocusNode();
   bool _isButtonEnabled = false;
+  UserModel? userModel;
 
   @override
   void initState() {
@@ -44,13 +45,9 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
     super.dispose();
   }
 
-  UserModel? userModel;
-
   Future<void> _loadData() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-
+    final prefs = await SharedPreferences.getInstance();
     final userJson = prefs.getString('user');
-
     if (userJson != null) {
       setState(() {
         userModel = UserModel.fromJson(jsonDecode(userJson));
@@ -70,85 +67,34 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     'Your Name',
-                    style: TextStyle(
-                      color: Color(0xffFFFCFC),
-                      fontSize: 18,
-                      fontWeight: FontWeight.w400,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w400),
                   ),
-                  SizedBox(height: 6),
+                  const SizedBox(height: 6),
                   TextFormField(
                     focusNode: nameFocus,
                     textInputAction: TextInputAction.done,
                     maxLines: 1,
                     controller: nameController,
-                    cursorColor: Colors.white,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w400,
-                    ),
                     decoration: InputDecoration(
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide.none,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide.none,
-                      ),
-                      fillColor: Color(0xFF282828),
-                      filled: true,
                       hintText: userModel?.name ?? 'Write Your Name',
-                      hintStyle: TextStyle(
-                        color: Color(0xFF6D6D6D),
-                        fontSize: 16,
-                        fontWeight: FontWeight.w400,
-                      ),
                     ),
                   ),
-                  SizedBox(height: 12),
-                  Text(
+                  const SizedBox(height: 12),
+                  const Text(
                     'Motivation Quote',
-                    style: TextStyle(
-                      color: Color(0xffFFFCFC),
-                      fontSize: 18,
-                      fontWeight: FontWeight.w400,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w400),
                   ),
-                  SizedBox(height: 6),
+                  const SizedBox(height: 6),
                   TextFormField(
                     focusNode: quoteFocus,
                     textInputAction: TextInputAction.done,
                     maxLines: 5,
                     controller: quoteController,
-                    cursorColor: Colors.white,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w400,
-                    ),
                     decoration: InputDecoration(
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide.none,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide.none,
-                      ),
-                      fillColor: Color(0xFF282828),
-                      filled: true,
-                      hintText:
-                          userModel?.motivationQuote ??
+                      hintText: userModel?.motivationQuote ??
                           'Write a quote that motivates you to do your tasks.',
-                      hintStyle: TextStyle(
-                        color: Color(0xFF6D6D6D),
-                        fontSize: 16,
-                        fontWeight: FontWeight.w400,
-                      ),
                     ),
                   ),
                 ],
@@ -158,41 +104,33 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
           ElevatedButton.icon(
             onPressed: _isButtonEnabled
                 ? () async {
-                    String name = nameController.text;
-                    String quote = quoteController.text;
                     final user = UserModel(
-                      name: name.isNotEmpty
-                          ? name
+                      name: nameController.text.isNotEmpty
+                          ? nameController.text
                           : userModel?.name ?? 'Write Your Name',
-                      motivationQuote: quote.isNotEmpty
-                          ? quote
+                      motivationQuote: quoteController.text.isNotEmpty
+                          ? quoteController.text
                           : userModel?.motivationQuote,
                       profileImagePath: userModel?.profileImagePath ?? '',
                     );
-                    SharedPreferences prefs =
-                        await SharedPreferences.getInstance();
-                    prefs.setString('user', jsonEncode(user.toJson()));
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.setString('user', jsonEncode(user.toJson()));
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
+                        const SnackBar(
                           content: Text('User details updated successfully'),
-                          backgroundColor: Color(0xFF15B86C),
                         ),
                       );
                       Navigator.pop(context, user);
                     }
                   }
                 : null,
-            label: Text('Save Changes', style: TextStyle(fontSize: 14)),
+            label: const Text('Save Changes', style: TextStyle(fontSize: 14)),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFF15B86C),
-              foregroundColor: Color(0xffFFFCFC),
-              disabledBackgroundColor: Color(0xFF15B86C).withOpacity(0.5),
-              disabledForegroundColor: Color(0xffFFFCFC).withOpacity(0.5),
-              fixedSize: Size(346, 40),
+              fixedSize: const Size(346, 40),
             ),
           ),
-          SizedBox(height: 34),
+          const SizedBox(height: 34),
         ],
       ),
     );

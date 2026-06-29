@@ -51,10 +51,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   void _saveAllTasks(List<TaskModel> updatedTasks) async {
     final prefs = await SharedPreferences.getInstance();
-    final tasksJson = updatedTasks
-        .map((task) => jsonEncode(task.toJson()))
-        .toList();
-    await prefs.setStringList('tasks', tasksJson);
+    await prefs.setStringList(
+      'tasks',
+      updatedTasks.map((task) => jsonEncode(task.toJson())).toList(),
+    );
   }
 
   void _onTasksChanged(List<TaskModel> updatedTasks) {
@@ -68,18 +68,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Color(0xff282828),
-        type: BottomNavigationBarType.fixed,
-
-        selectedItemColor: Color(0xff15B86C),
-        unselectedItemColor: Color(0xffC6C6C6),
         currentIndex: _selectedIndex,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-        items: [
+        onTap: (index) => setState(() => _selectedIndex = index),
+        items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(
             icon: Icon(Icons.format_list_numbered_rtl_outlined),
@@ -98,7 +89,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       body: IndexedStack(
         index: _selectedIndex,
         children: [
-          HomeScreen(tasks: tasks, onTasksChanged: _onTasksChanged, userModel: userModel),
+          HomeScreen(
+            tasks: tasks,
+            onTasksChanged: _onTasksChanged,
+            userModel: userModel,
+          ),
           TodoScreen(tasks: tasks, onTasksChanged: _onTasksChanged),
           CompletedTasksScreen(tasks: tasks, onTasksChanged: _onTasksChanged),
           ProfileScreen(onUserChanged: _loadUser),

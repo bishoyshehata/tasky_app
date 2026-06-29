@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tasky/core/theme/app_theme_notifier.dart';
 import 'package:tasky/core/utils/picker_manager.dart';
 import 'package:tasky/data/models/user_model.dart';
 import 'dart:convert';
@@ -19,20 +20,17 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  UserModel? userModel;
+
   @override
   void initState() {
     super.initState();
-
     _loadData();
   }
 
-  UserModel? userModel;
-
   Future<void> _loadData() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-
+    final prefs = await SharedPreferences.getInstance();
     final userJson = prefs.getString('user');
-
     if (userJson != null) {
       setState(() {
         userModel = UserModel.fromJson(jsonDecode(userJson));
@@ -42,6 +40,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
@@ -52,7 +52,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
         child: Column(
           children: [
-            // Avatar Container
+            // ── Avatar ─────────────────────────────────────────
             Stack(
               children: [
                 Container(
@@ -60,7 +60,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   height: 128,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: const Color(0xFF1E1E1E),
+                    color: colorScheme.surfaceContainerHighest,
                     border: Border.all(color: Colors.transparent, width: 2),
                   ),
                   child: ClipOval(
@@ -69,39 +69,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             File(userModel!.profileImagePath!),
                             fit: BoxFit.cover,
                           )
-                        : const Icon(
+                        : Icon(
                             Icons.person,
                             size: 48,
-                            color: Colors.white,
+                            color: colorScheme.onSurface,
                           ),
                   ),
                 ),
-
-                // Camera Icon Overlay
                 Positioned(
                   bottom: 0,
                   right: 0,
                   child: IconButton(
-                    style: IconButton.styleFrom(
-                      backgroundColor: const Color(0xFF2A2A2A),
-                    ),
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.camera_alt_outlined,
-                      color: Color(0xFFD1D5DB), // text-gray-300
+                      color: colorScheme.onSurfaceVariant,
                       size: 16,
                     ),
-                    onPressed: () => _showImagePickerDialog(),
+                    onPressed: _showImagePickerDialog,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 24),
 
-            // Identity Info
+            // ── Identity ────────────────────────────────────────
             Text(
               userModel?.name ?? '',
-              style: TextStyle(
-                color: Colors.white,
+              style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w600,
                 letterSpacing: -0.5,
@@ -111,39 +105,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Text(
               userModel?.motivationQuote ?? '',
               style: TextStyle(
-                color: Color(0xFF9CA3AF), // text-gray-400
+                color: colorScheme.onSurfaceVariant,
                 fontSize: 14,
                 fontWeight: FontWeight.w300,
               ),
             ),
             const SizedBox(height: 40),
 
-            // Settings List
+            // ── Section Label ───────────────────────────────────
             const Align(
               alignment: Alignment.centerLeft,
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 4.0),
                 child: Text(
                   'Profile Info',
-                  style: TextStyle(
-                    color: Color(0xFFF3F4F6), // text-gray-100
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
                 ),
               ),
             ),
             const SizedBox(height: 16),
 
-            // Menu Items
+            // ── Menu Items ──────────────────────────────────────
             _buildMenuItem(
+              context: context,
               icon: Icons.person_outline,
               title: 'User Details',
               onTap: () async {
                 final result = await Navigator.of(context).push(
                   MaterialPageRoute(builder: (context) => UserDetailsScreen()),
                 );
-
                 if (result != null) {
                   _loadData();
                   widget.onUserChanged();
@@ -151,26 +141,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
               },
             ),
             _buildMenuItem(
+              context: context,
               icon: Icons.dark_mode_outlined,
               title: 'Dark Mode',
-              trailing: Switch(
-                value: true,
-                onChanged: (value) {},
-                activeColor: Colors.white,
-                activeTrackColor: const Color(0xFF2ECC71), // Green toggle state
-                inactiveThumbColor: Colors.white,
-                inactiveTrackColor: const Color(0xFF333333),
+              trailing: ValueListenableBuilder<ThemeMode>(
+                valueListenable: AppThemeNotifier.instance,
+                builder: (_, themeMode, __) => Switch(
+                  value: AppThemeNotifier.instance.isDark,
+                  onChanged: (_) => AppThemeNotifier.instance.toggle(),
+                ),
               ),
             ),
             _buildMenuItem(
+              context: context,
               icon: Icons.logout,
               title: 'Log Out',
               onTap: () async {
-                SharedPreferences prefs = await SharedPreferences.getInstance();
-                prefs.remove('user');
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (context) => SplashScreen()),
-                );
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.remove('user');
+                if (context.mounted) {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (context) => SplashScreen()),
+                  );
+                }
               },
               isDestructive: true,
             ),
@@ -181,22 +174,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildMenuItem({
+    required BuildContext context,
     required IconData icon,
     required String title,
     VoidCallback? onTap,
     Widget? trailing,
     bool isDestructive = false,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return InkWell(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           border: Border(
-            bottom: BorderSide(
-              color: Color(0x1AFFFFFF), // rgba(255, 255, 255, 0.1)
-              width: 1,
-            ),
+            bottom: BorderSide(color: colorScheme.outline, width: 1),
           ),
         ),
         child: Row(
@@ -204,8 +197,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Icon(
               icon,
               color: isDestructive
-                  ? Colors.red[400]
-                  : const Color(0xFF9CA3AF), // text-gray-400
+                  ? colorScheme.error
+                  : colorScheme.onSurfaceVariant,
               size: 24,
             ),
             const SizedBox(width: 16),
@@ -213,16 +206,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Text(
                 title,
                 style: const TextStyle(
-                  color: Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.w400,
                 ),
               ),
             ),
             trailing ??
-                const Icon(
+                Icon(
                   Icons.chevron_right,
-                  color: Color(0xFF6B7280), // text-gray-500
+                  color: colorScheme.onSurfaceVariant,
                   size: 20,
                 ),
           ],
@@ -233,33 +225,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> pickImageFromGallery() async {
     final image = await PickerManager.pickImage(source: ImageSource.gallery);
-
     if (image == null) return;
-
     setState(() {
       userModel = userModel!.copyWith(profileImagePath: image.path);
     });
-
     await _saveUserData();
     widget.onUserChanged();
   }
 
   Future<void> pickImageFromCamera() async {
     final image = await PickerManager.pickImage(source: ImageSource.camera);
-
     if (image == null) return;
-
     setState(() {
       userModel = userModel!.copyWith(profileImagePath: image.path);
     });
-
     await _saveUserData();
     widget.onUserChanged();
   }
 
   void _showImagePickerDialog() {
+    final colorScheme = Theme.of(context).colorScheme;
+
     showModalBottomSheet(
-      backgroundColor: const Color(0xFF1E1E1E),
       context: context,
       builder: (context) => Container(
         padding: const EdgeInsets.all(20),
@@ -267,15 +254,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              tileColor: const Color(0xFF2A2A2A),
+              tileColor: colorScheme.surfaceContainerHighest,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-              leading: Icon(Icons.photo, color: Colors.white),
-              title: Text(
-                'Choose from Gallery',
-                style: TextStyle(color: Colors.white),
-              ),
+              leading: Icon(Icons.photo, color: colorScheme.onSurface),
+              title: const Text('Choose from Gallery'),
               onTap: () async {
                 Navigator.pop(context);
                 await pickImageFromGallery();
@@ -283,15 +267,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 6),
             ListTile(
-              tileColor: const Color(0xFF2A2A2A),
+              tileColor: colorScheme.surfaceContainerHighest,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-              leading: Icon(Icons.camera_alt, color: Colors.white),
-              title: Text(
-                'Take from Camera',
-                style: TextStyle(color: Colors.white),
-              ),
+              leading: Icon(Icons.camera_alt, color: colorScheme.onSurface),
+              title: const Text('Take from Camera'),
               onTap: () async {
                 Navigator.pop(context);
                 await pickImageFromCamera();
@@ -304,10 +285,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _saveUserData() async {
-    final prefs = await SharedPreferences.getInstance();
-
     if (userModel == null) return;
-
+    final prefs = await SharedPreferences.getInstance();
     await prefs.setString('user', jsonEncode(userModel!.toJson()));
   }
 }

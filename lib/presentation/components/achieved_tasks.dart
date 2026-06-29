@@ -13,12 +13,14 @@ class AchievedTasks extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final percent = allTasks == 0 ? 0.0 : achievedTasks / allTasks;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        color: Color(0xff282828),
+        color: colorScheme.surface,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -27,29 +29,18 @@ class AchievedTasks extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Achieved Tasks',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: Color(0xffFFFCFC),
-                          fontSize: 20,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                    ),
-                  ],
+                const Text(
+                  'Achieved Tasks',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w400),
                 ),
-
                 Text(
                   '$achievedTasks Out of $allTasks Done',
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: Color(0xffC6C6C6),
+                    color: colorScheme.onSurfaceVariant,
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
                   ),
@@ -63,17 +54,13 @@ class AchievedTasks extends StatelessWidget {
             animation: true,
             animationDuration: 500,
             animateFromLastPercent: true,
-            percent: allTasks == 0 ? 0 : achievedTasks / allTasks,
+            percent: percent,
             circularStrokeCap: CircularStrokeCap.round,
-            backgroundColor: Color(0xffA0A0A0),
-            progressColor: Color(0xff15B86C),
+            backgroundColor: colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+            progressColor: colorScheme.primary,
             center: Text(
-              '${(allTasks == 0 ? 0 : achievedTasks / allTasks * 100).toStringAsFixed(0)}%',
-              style: TextStyle(
-                color: Color(0xffFFFCFC),
-                fontSize: 20,
-                fontWeight: FontWeight.w400,
-              ),
+              '${(percent * 100).toStringAsFixed(0)}%',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400),
             ),
           ),
         ],

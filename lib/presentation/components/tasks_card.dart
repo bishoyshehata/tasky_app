@@ -9,6 +9,7 @@ class TaskCard extends StatefulWidget {
     required this.index,
     required this.onChanged,
   });
+
   final TaskModel task;
   final int index;
   final VoidCallback onChanged;
@@ -20,12 +21,17 @@ class TaskCard extends StatefulWidget {
 class _TaskCardState extends State<TaskCard> {
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    // Semantic colours for done/active state — derived from theme
+    final activeTextColor = colorScheme.onSurface;
+    final doneTextColor = colorScheme.onSurfaceVariant;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        color: Color(0xff282828),
+        color: colorScheme.surface,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -35,44 +41,32 @@ class _TaskCardState extends State<TaskCard> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(5),
             ),
-
             onChanged: (value) {
               setState(() {
                 widget.task.isDone = value!;
               });
               widget.onChanged();
             },
-            activeColor: const Color(0xff15B86C),
           ),
-
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        capitalize(widget.task.taskName),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: widget.task.isDone
-                              ? Color(0xffA0A0A0)
-                              : Color(0xffFFFCFC),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w400,
-                          decoration: widget.task.isDone
-                              ? TextDecoration.lineThrough
-                              : null,
-                          decorationColor: Color(0xffA0A0A0),
-                          decorationThickness: 2,
-                        ),
-                      ),
-                    ),
-                  ],
+                Text(
+                  capitalize(widget.task.taskName),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: widget.task.isDone ? doneTextColor : activeTextColor,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w400,
+                    decoration: widget.task.isDone
+                        ? TextDecoration.lineThrough
+                        : null,
+                    decorationColor: doneTextColor,
+                    decorationThickness: 2,
+                  ),
                 ),
-
                 if (widget.task.taskDescription != '') ...[
                   Text(
                     capitalize(widget.task.taskDescription),
@@ -80,25 +74,24 @@ class _TaskCardState extends State<TaskCard> {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: widget.task.isDone
-                          ? Color(0xffA0A0A0)
-                          : Color(0xffC6C6C6),
+                          ? doneTextColor
+                          : colorScheme.onSurfaceVariant,
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
                       decoration: widget.task.isDone
                           ? TextDecoration.lineThrough
                           : null,
-                      decorationColor: Color(0xffA0A0A0),
+                      decorationColor: doneTextColor,
                       decorationThickness: 1,
                     ),
                   ),
                 ] else
-                  SizedBox.shrink(),
+                  const SizedBox.shrink(),
                 Text(
-                  DateFormat(
-                    'dd MMM yyyy • hh:mm a',
-                  ).format(DateTime.parse(widget.task.dateTime)),
+                  DateFormat('dd MMM yyyy • hh:mm a')
+                      .format(DateTime.parse(widget.task.dateTime)),
                   style: TextStyle(
-                    color: Color(0xffC6C6C6),
+                    color: colorScheme.onSurfaceVariant,
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                   ),
@@ -106,13 +99,10 @@ class _TaskCardState extends State<TaskCard> {
               ],
             ),
           ),
-          IconButton(
-            icon: const Icon(
-              Icons.more_vert,
-              size: 30,
-              color: Color(0xffA0A0A0),
-            ),
-            onPressed: () {},
+          Icon(
+            Icons.more_vert,
+            size: 30,
+            color: colorScheme.onSurfaceVariant,
           ),
         ],
       ),

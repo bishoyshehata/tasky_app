@@ -20,25 +20,25 @@ class _CompletedTasksScreenState extends State<CompletedTasksScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Completed Tasks'),
-        iconTheme: IconThemeData(color: Colors.white),
-      ),
+      appBar: AppBar(title: const Text('Completed Tasks')),
       body: Container(
-        margin: EdgeInsets.only(left: 12.0, right: 12.0),
-        child: buildTaskCards(),
+        margin: const EdgeInsets.only(left: 12.0, right: 12.0),
+        child: buildTaskCards(context),
       ),
     );
   }
 
-  Widget buildTaskCards() {
+  Widget buildTaskCards(BuildContext context) {
     final completedTasks = widget.tasks.where((task) => task.isDone).toList();
 
     if (completedTasks.isEmpty) {
       return Center(
         child: Text(
           'No Completed Tasks Yet',
-          style: TextStyle(color: Colors.white54, fontSize: 18),
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontSize: 18,
+          ),
         ),
       );
     }
@@ -46,10 +46,10 @@ class _CompletedTasksScreenState extends State<CompletedTasksScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(height: 12),
+        const SizedBox(height: 12),
         ListView.separated(
           shrinkWrap: true,
-          padding: EdgeInsets.only(bottom: 65),
+          padding: const EdgeInsets.only(bottom: 65),
           physics: const NeverScrollableScrollPhysics(),
           itemCount: completedTasks.length,
           itemBuilder: (context, index) {

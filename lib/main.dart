@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/app_theme_notifier.dart';
 import 'presentation/screens/splash_screen.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await AppThemeNotifier.instance.load();
   runApp(const MyApp());
 }
 
@@ -12,13 +14,18 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Tasky',
-      theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
-      themeMode: ThemeMode.dark, // switch to ThemeMode.system when light is ready
-      home: const SplashScreen(),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: AppThemeNotifier.instance,
+      builder: (context, themeMode, _) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Tasky',
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
+          themeMode: themeMode,
+          home: const SplashScreen(),
+        );
+      },
     );
   }
 }

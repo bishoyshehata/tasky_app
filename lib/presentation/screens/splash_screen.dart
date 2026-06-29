@@ -15,14 +15,23 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _navigateToOnboarding();
+    _navigateToInitialRoute();
   }
 
-  _navigateToOnboarding() async {
-    await Future.delayed(const Duration(seconds: 1), () {
-      _initialRoute();
-    });
-    if (mounted) {
+  Future<void> _navigateToInitialRoute() async {
+    await Future.delayed(const Duration(seconds: 1));
+    if (!mounted) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final user = prefs.getString('user');
+
+    if (!mounted) return;
+
+    if (user != null) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => MainNavigationScreen()),
+      );
+    } else {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => OnboardingScreen()),
       );
@@ -41,7 +50,6 @@ class _SplashScreenState extends State<SplashScreen> {
             const Text(
               'Tasky',
               style: TextStyle(
-                color: Color(0xFFFFFFFF),
                 fontSize: 32,
                 fontWeight: FontWeight.w600,
               ),
@@ -50,19 +58,5 @@ class _SplashScreenState extends State<SplashScreen> {
         ),
       ),
     );
-  }
-
-  void _initialRoute() async {
-    final prefs = await SharedPreferences.getInstance();
-    final user = prefs.getString('user');
-    if (user != null) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => MainNavigationScreen()),
-      );
-    } else {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => OnboardingScreen()),
-      );
-    }
   }
 }

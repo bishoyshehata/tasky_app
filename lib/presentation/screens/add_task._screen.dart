@@ -17,6 +17,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   final FocusNode taskDescriptionFocus = FocusNode();
 
   bool isHighPriority = false;
+
   @override
   void dispose() {
     taskNameFocus.dispose();
@@ -29,7 +30,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("New Task")),
+      appBar: AppBar(title: const Text('New Task')),
       body: Form(
         key: _formKey,
         child: Padding(
@@ -41,42 +42,20 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         'Task Name',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w400,
                         ),
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       TextFormField(
                         textInputAction: TextInputAction.next,
-
                         focusNode: taskNameFocus,
                         controller: taskNameController,
-                        cursorColor: Colors.white,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w400,
-                        ),
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: BorderSide.none,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: BorderSide.none,
-                          ),
-                          fillColor: Color(0xFF282828),
-                          filled: true,
+                        decoration: const InputDecoration(
                           hintText: 'Finish UI design for login screen',
-                          hintStyle: TextStyle(
-                            color: Color(0xFF6D6D6D),
-                            fontSize: 16,
-                            fontWeight: FontWeight.w400,
-                          ),
                         ),
                         validator: (value) {
                           if (value?.trim().isEmpty ?? false) {
@@ -85,61 +64,32 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                           return null;
                         },
                       ),
-                      SizedBox(height: 20),
-                      Text(
+                      const SizedBox(height: 20),
+                      const Text(
                         'Task Description',
                         style: TextStyle(
-                          color: Color(0xffFFFCFC),
                           fontSize: 16,
                           fontWeight: FontWeight.w400,
                         ),
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       TextFormField(
                         focusNode: taskDescriptionFocus,
                         textInputAction: TextInputAction.done,
                         maxLines: 5,
                         controller: taskDescriptionController,
-                        cursorColor: Colors.white,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w400,
-                        ),
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: BorderSide.none,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: BorderSide.none,
-                          ),
-                          fillColor: Color(0xFF282828),
-                          filled: true,
+                        decoration: const InputDecoration(
                           hintText:
                               'Finish onboarding UI and hand off to devs by Thursday.',
-                          hintStyle: TextStyle(
-                            color: Color(0xFF6D6D6D),
-                            fontSize: 16,
-                            fontWeight: FontWeight.w400,
-                          ),
                         ),
-                        // validator: (value) {
-                        //   if (value?.trim().isEmpty ?? false) {
-                        //     return 'Please Enter The Task Description';
-                        //   }
-                        //   return null;
-                        // },
                       ),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
+                          const Text(
                             'High Priority',
                             style: TextStyle(
-                              color: Color(0xffFFFCFC),
                               fontSize: 16,
                               fontWeight: FontWeight.w400,
                             ),
@@ -147,8 +97,9 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                           Switch(
                             value: isHighPriority,
                             onChanged: (value) {
-                              isHighPriority = value;
-                              setState(() {});
+                              setState(() {
+                                isHighPriority = value;
+                              });
                             },
                           ),
                         ],
@@ -157,17 +108,13 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   ),
                 ),
               ),
-
               ElevatedButton.icon(
                 onPressed: () async {
                   if (_formKey.currentState?.validate() ?? false) {
-                    String taskName = taskNameController.text;
-                    String taskDescription = taskDescriptionController.text;
-                    bool isHighPriorityVal = isHighPriority;
                     final task = TaskModel(
-                      taskName: taskName,
-                      taskDescription: taskDescription,
-                      isHighPriority: isHighPriorityVal,
+                      taskName: taskNameController.text,
+                      taskDescription: taskDescriptionController.text,
+                      isHighPriority: isHighPriority,
                       dateTime: DateTime.now().toIso8601String(),
                     );
                     if (mounted) {
@@ -175,13 +122,10 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                     }
                   }
                 },
-                label: Text('Add Task', style: TextStyle(fontSize: 14)),
-
-                icon: Icon(Icons.add),
+                label: const Text('Add Task', style: TextStyle(fontSize: 14)),
+                icon: const Icon(Icons.add),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF15B86C),
-                  foregroundColor: Color(0xffFFFCFC),
-                  fixedSize: Size(346, 40),
+                  fixedSize: const Size(346, 40),
                 ),
               ),
             ],

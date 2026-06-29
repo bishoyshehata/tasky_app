@@ -1,6 +1,7 @@
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:auto_size_text/auto_size_text.dart';
+import 'package:tasky/core/theme/app_theme_notifier.dart';
 import 'package:tasky/data/models/task_model.dart';
 import 'package:tasky/data/models/user_model.dart';
 import 'package:tasky/presentation/components/achieved_tasks.dart';
@@ -32,7 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: SingleChildScrollView(
-            physics: AlwaysScrollableScrollPhysics(),
+            physics: const AlwaysScrollableScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -47,7 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           : const AssetImage('assets/images/file.jpg')
                                 as ImageProvider,
                     ),
-                    SizedBox(width: 4),
+                    const SizedBox(width: 4),
                     SizedBox(
                       width: MediaQuery.of(context).size.width * 0.65,
                       child: Column(
@@ -55,20 +56,18 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           AutoSizeText(
                             '${getGreeting()}, ${widget.userModel?.name ?? ''} ',
-                            style: TextStyle(
-                              color: Color(0xffFFFCFC),
-                              fontSize: 18,
-                            ),
+                            style: const TextStyle(fontSize: 18),
                             minFontSize: 14,
-
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           Text(
                             widget.userModel?.motivationQuote ??
-                                'One task at a time.One step closer.',
+                                'One task at a time. One step closer.',
                             style: TextStyle(
-                              color: Color(0xffC6C6C6),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                               fontSize: 16,
                             ),
                             overflow: TextOverflow.ellipsis,
@@ -78,24 +77,32 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     IconButton.filled(
-                      style: IconButton.styleFrom(
-                        backgroundColor: Color(0xff282828),
+                      onPressed: () {
+                        AppThemeNotifier.instance.toggle();
+                      },
+                      icon: ValueListenableBuilder<ThemeMode>(
+                        valueListenable: AppThemeNotifier.instance,
+                        builder: (_, themeMode, __) {
+                          final isDark = themeMode == ThemeMode.dark;
+
+                          return Icon(
+                            isDark ? Icons.light_mode : Icons.dark_mode,
+                          );
+                        },
                       ),
-                      onPressed: () {},
-                      icon: Icon(Icons.light_mode, color: Color(0xffFFFCFC)),
                     ),
                   ],
                 ),
-                SizedBox(height: 20),
-                Text(
+                const SizedBox(height: 20),
+                const Text(
                   'Yuhuu ,Your work Is ',
-                  style: TextStyle(color: Color(0xffFFFCFC), fontSize: 30),
+                  style: TextStyle(fontSize: 30),
                 ),
                 Row(
                   children: [
-                    Text(
+                    const Text(
                       'almost done ! ',
-                      style: TextStyle(color: Color(0xffFFFCFC), fontSize: 30),
+                      style: TextStyle(fontSize: 30),
                     ),
                     SvgPicture.asset(
                       'assets/images/hand.svg',
@@ -104,17 +111,17 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ],
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 AchievedTasks(
                   allTasks: widget.tasks.length,
                   achievedTasks: widget.tasks
                       .where((task) => task.isDone)
                       .length,
                 ),
-                SizedBox(height: 10),
-                buildHighPrioritySection(),
-                SizedBox(height: 10),
-                buildTaskCards(),
+                const SizedBox(height: 10),
+                buildHighPrioritySection(context),
+                const SizedBox(height: 10),
+                buildTaskCards(context),
               ],
             ),
           ),
@@ -135,8 +142,6 @@ class _HomeScreenState extends State<HomeScreen> {
               widget.onTasksChanged(updatedTasks);
             }
           },
-          backgroundColor: const Color(0xff15B86C),
-          foregroundColor: const Color(0xffFFFCFC),
           label: const Text(
             'Add New Task',
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
@@ -147,19 +152,23 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget buildTaskCards() {
+  Widget buildTaskCards(BuildContext context) {
     final reversedTasks = widget.tasks
         .where((task) => !task.isHighPriority)
         .toList()
         .reversed
         .toList();
+
     if (reversedTasks.isEmpty) {
-      return const Center(
+      return Center(
         child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 60),
+          padding: const EdgeInsets.symmetric(vertical: 60),
           child: Text(
             'No Tasks Yet',
-            style: TextStyle(color: Colors.white54, fontSize: 18),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 18,
+            ),
           ),
         ),
       );
@@ -168,21 +177,17 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 16.0),
+        const Padding(
+          padding: EdgeInsets.only(left: 16.0),
           child: Text(
             'My Tasks',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w400,
-              color: Colors.white,
-            ),
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w400),
           ),
         ),
-        SizedBox(height: 12),
+        const SizedBox(height: 12),
         ListView.separated(
           shrinkWrap: true,
-          padding: EdgeInsets.only(bottom: 65),
+          padding: const EdgeInsets.only(bottom: 65),
           physics: const NeverScrollableScrollPhysics(),
           itemCount: reversedTasks.length,
           itemBuilder: (context, index) {
@@ -200,66 +205,59 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  buildHighPrioritySection() {
-    List<TaskModel> highPriorityTasks = widget.tasks
+  Widget buildHighPrioritySection(BuildContext context) {
+    final highPriorityTasks = widget.tasks
         .where((task) => task.isHighPriority)
         .toList()
         .reversed
         .toList();
-    return highPriorityTasks.isNotEmpty
-        ? Container(
-            decoration: BoxDecoration(
-              color: Color(0xff282828),
-              borderRadius: BorderRadius.circular(20),
+
+    if (highPriorityTasks.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 8.0, left: 16.0),
+            child: Text(
+              'High Priority Tasks',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w400,
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 8.0, left: 16.0),
-                  child: Text(
-                    'High Priority Tasks',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w400,
-                      color: Color(0xff15B86C),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 6),
-                ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: highPriorityTasks.length,
-                  itemBuilder: (context, index) {
-                    final task = highPriorityTasks[index];
-                    return TaskCard(
-                      task: task,
-                      index: index,
-                      onChanged: () {
-                        widget.onTasksChanged(widget.tasks);
-                      },
-                    );
-                  },
-                  separatorBuilder: (context, index) {
-                    return SizedBox(height: 12);
-                  },
-                ),
-              ],
-            ),
-          )
-        : SizedBox.shrink();
+          ),
+          const SizedBox(height: 6),
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: highPriorityTasks.length,
+            itemBuilder: (context, index) {
+              return TaskCard(
+                task: highPriorityTasks[index],
+                index: index,
+                onChanged: () {
+                  widget.onTasksChanged(widget.tasks);
+                },
+              );
+            },
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
+          ),
+        ],
+      ),
+    );
   }
 
   String getGreeting() {
     final hour = DateTime.now().hour;
-
-    if (hour >= 5 && hour < 12) {
-      return 'Good Morning';
-    } else if (hour >= 12 && hour < 17) {
-      return 'Good Afternoon';
-    } else {
-      return 'Good Evening';
-    }
+    if (hour >= 5 && hour < 12) return 'Good Morning';
+    if (hour >= 12 && hour < 17) return 'Good Afternoon';
+    return 'Good Evening';
   }
 }

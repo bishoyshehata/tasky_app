@@ -13,6 +13,7 @@ class HomeScreen extends StatefulWidget {
   final List<TaskModel> tasks;
   final ValueChanged<List<TaskModel>> onTasksChanged;
   final ValueChanged<TaskModel> onTaskAdded;
+  final ValueChanged<TaskModel> onEditTask;
   final ValueChanged<TaskModel> onDeleteTask;
   final ValueChanged<TaskModel> onTaskCompleted;
   final UserModel? userModel;
@@ -22,6 +23,7 @@ class HomeScreen extends StatefulWidget {
     required this.tasks,
     required this.onTasksChanged,
     required this.onTaskAdded,
+    required this.onEditTask,
     required this.onDeleteTask,
     required this.onTaskCompleted,
     this.userModel,
@@ -49,10 +51,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     CircleAvatar(
                       radius: 25,
-                      backgroundImage: widget.userModel?.profileImagePath != null
+                      backgroundImage:
+                          widget.userModel?.profileImagePath != null
                           ? FileImage(File(widget.userModel!.profileImagePath!))
                           : const AssetImage('assets/images/file.jpg')
-                              as ImageProvider,
+                                as ImageProvider,
                     ),
                     const SizedBox(width: 4),
                     SizedBox(
@@ -71,9 +74,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             widget.userModel?.motivationQuote ??
                                 'One task at a time. One step closer.',
                             style: TextStyle(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                               fontSize: 16,
                             ),
                             overflow: TextOverflow.ellipsis,
@@ -103,7 +106,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 Row(
                   children: [
-                    const Text('almost done ! ', style: TextStyle(fontSize: 30)),
+                    const Text(
+                      'almost done ! ',
+                      style: TextStyle(fontSize: 30),
+                    ),
                     SvgPicture.asset(
                       'assets/images/hand.svg',
                       width: 40,
@@ -113,15 +119,36 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
 
                 const SizedBox(height: 10),
-                AchievedTasks(
-                  allTasks: widget.tasks.length,
-                  achievedTasks:
-                      widget.tasks.where((t) => t.isDone).length,
-                ),
-                const SizedBox(height: 10),
-                _buildHighPriority(),
-                const SizedBox(height: 10),
-                _buildTaskCards(),
+                if (widget.tasks.isEmpty)
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 60),
+                      child: Text(
+                        'No Tasks Yet',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  Column(
+                    children: [
+                      AchievedTasks(
+                        allTasks: widget.tasks.length,
+                        achievedTasks: widget.tasks
+                            .where((t) => t.isDone)
+                            .length,
+                      ),
+                      const SizedBox(height: 10),
+                      _buildHighPriority(),
+                      const SizedBox(height: 10),
+                      widget.tasks.where((t) => !t.isHighPriority).isEmpty
+                          ? SizedBox.shrink()
+                          : _buildTaskCards(),
+                    ],
+                  ),
               ],
             ),
           ),
@@ -139,6 +166,7 @@ class _HomeScreenState extends State<HomeScreen> {
             );
             if (result != null) {
               widget.onTaskAdded(result);
+              _showReminderSnackbar(result, 'added');
             }
           },
           label: const Text(
@@ -157,21 +185,6 @@ class _HomeScreenState extends State<HomeScreen> {
         .toList()
         .reversed
         .toList();
-
-    if (reversed.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 60),
-          child: Text(
-            'No Tasks Yet',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontSize: 18,
-            ),
-          ),
-        ),
-      );
-    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -193,6 +206,7 @@ class _HomeScreenState extends State<HomeScreen> {
             task: reversed[i],
             index: i,
             onChanged: () => widget.onTasksChanged(widget.tasks),
+            onEdit: () => _handleEdit(reversed[i]),
             onDelete: () => widget.onDeleteTask(reversed[i]),
             onMarkComplete: () => widget.onTaskCompleted(reversed[i]),
           ),
@@ -239,6 +253,7 @@ class _HomeScreenState extends State<HomeScreen> {
               task: hp[i],
               index: i,
               onChanged: () => widget.onTasksChanged(widget.tasks),
+              onEdit: () => _handleEdit(hp[i]),
               onDelete: () => widget.onDeleteTask(hp[i]),
               onMarkComplete: () => widget.onTaskCompleted(hp[i]),
             ),
@@ -254,5 +269,39 @@ class _HomeScreenState extends State<HomeScreen> {
     if (h >= 5 && h < 12) return 'Good Morning';
     if (h >= 12 && h < 17) return 'Good Afternoon';
     return 'Good Evening';
+  }
+
+  Future<void> _handleEdit(TaskModel task) async {
+    final updated = await Navigator.push<TaskModel>(
+      context,
+      MaterialPageRoute(builder: (_) => AddTaskScreen(taskToEdit: task)),
+    );
+    if (updated != null) {
+      widget.onEditTask(updated);
+      _showReminderSnackbar(updated, 'updated');
+    }
+  }
+
+  void _showReminderSnackbar(TaskModel task, String action) {
+    if (!task.reminderEnabled || task.reminderDate == null) return;
+
+    final diff = task.reminderDate!.difference(DateTime.now());
+    if (diff.isNegative) return;
+
+    String timeStr = '';
+    if (diff.inDays > 0) {
+      timeStr = '${diff.inDays} day(s)';
+    } else if (diff.inHours > 0) {
+      timeStr = '${diff.inHours} hour(s) and ${diff.inMinutes % 60} minute(s)';
+    } else {
+      timeStr = '${diff.inMinutes} minute(s)';
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Task $action. You will be reminded in $timeStr.'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 }

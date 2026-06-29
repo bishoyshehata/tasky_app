@@ -9,6 +9,7 @@ class TaskCard extends StatefulWidget {
     required this.index,
     required this.onChanged,
     required this.onDelete,
+    required this.onEdit,
     this.onMarkComplete,
   });
 
@@ -21,6 +22,9 @@ class TaskCard extends StatefulWidget {
   /// Called when the user confirms deletion — parent handles list update
   /// and notification cancellation.
   final VoidCallback onDelete;
+
+  /// Called when the user taps edit.
+  final VoidCallback onEdit;
 
   /// Called when isDone changes to true — parent cancels the reminder.
   final VoidCallback? onMarkComplete;
@@ -144,9 +148,24 @@ class _TaskCardState extends State<TaskCard> {
               borderRadius: BorderRadius.circular(12),
             ),
             onSelected: (value) {
+              if (value == 'edit') widget.onEdit();
               if (value == 'delete') _confirmDelete(context);
             },
             itemBuilder: (_) => [
+              PopupMenuItem(
+                value: 'edit',
+                child: Row(
+                  children: [
+                    Icon(Icons.edit_outlined,
+                        color: colorScheme.onSurface, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Edit',
+                      style: TextStyle(color: colorScheme.onSurface),
+                    ),
+                  ],
+                ),
+              ),
               PopupMenuItem(
                 value: 'delete',
                 child: Row(

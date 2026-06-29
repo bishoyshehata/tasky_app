@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:tasky/data/models/task_model.dart';
+import 'package:flutter_system_ringtones/flutter_system_ringtones.dart';
 
 class AddTaskScreen extends StatefulWidget {
-  const AddTaskScreen({super.key});
+  final TaskModel? taskToEdit;
+
+  const AddTaskScreen({super.key, this.taskToEdit});
 
   @override
   State<AddTaskScreen> createState() => _AddTaskScreenState();
@@ -19,6 +22,22 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   bool _isHighPriority = false;
   bool _reminderEnabled = false;
   DateTime? _reminderDate;
+  String _alarmSound = 'default';
+  int _snoozeDuration = 10;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.taskToEdit != null) {
+      _nameController.text = widget.taskToEdit!.taskName;
+      _descController.text = widget.taskToEdit!.taskDescription;
+      _isHighPriority = widget.taskToEdit!.isHighPriority;
+      _reminderEnabled = widget.taskToEdit!.reminderEnabled;
+      _reminderDate = widget.taskToEdit!.reminderDate;
+      _alarmSound = widget.taskToEdit!.alarmSound;
+      _snoozeDuration = widget.taskToEdit!.snoozeDuration;
+    }
+  }
 
   @override
   void dispose() {
@@ -64,13 +83,97 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     });
   }
 
+  Future<void> _showRingtonePicker() async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    List<Ringtone> sounds = [];
+    try {
+      final ringtones = await FlutterSystemRingtones.getRingtoneSounds();
+      final alarms = await FlutterSystemRingtones.getAlarmSounds();
+      
+      // Deduplicate by URI
+      final seen = <String>{};
+      sounds = [...ringtones, ...alarms].where((s) => seen.add(s.uri)).toList();
+    } catch (e) {
+      // ignore
+    }
+
+    if (mounted) Navigator.pop(context); // Close loading dialog
+    if (!mounted) return;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Select Alarm Sound',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  )
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            Expanded(
+              child: ListView.builder(
+                itemCount: sounds.length + 1,
+                itemBuilder: (context, index) {
+                  if (index == 0) {
+                    return ListTile(
+                      title: const Text('Default Notification'),
+                      selected: _alarmSound == 'default',
+                      onTap: () {
+                        setState(() {
+                          _alarmSound = 'default';
+                        });
+                        Navigator.pop(context);
+                      },
+                    );
+                  }
+                  final sound = sounds[index - 1];
+                  final isSelected = _alarmSound.startsWith(sound.uri);
+                  return ListTile(
+                    title: Text(sound.title),
+                    selected: isSelected,
+                    onTap: () {
+                      setState(() {
+                        _alarmSound = '${sound.uri}|${sound.title}';
+                      });
+                      Navigator.pop(context);
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   // ── Build ─────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('New Task')),
+      appBar: AppBar(title: Text(widget.taskToEdit == null ? 'New Task' : 'Edit Task')),
       body: Form(
         key: _formKey,
         child: Padding(
@@ -182,7 +285,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                         ],
                       ),
 
-                      // Show chosen date
+                      // Show chosen date and extra settings
                       if (_reminderEnabled && _reminderDate != null) ...[
                         const SizedBox(height: 10),
                         Container(
@@ -222,6 +325,74 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                             ],
                           ),
                         ),
+                        
+                        const SizedBox(height: 16),
+                        
+                        // Alarm Settings
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('Alarm Sound', style: TextStyle(fontSize: 12)),
+                                  const SizedBox(height: 4),
+                                  InkWell(
+                                    onTap: _showRingtonePicker,
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                      decoration: BoxDecoration(
+                                        border: Border.all(color: colorScheme.outline),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              _alarmSound.contains('|') 
+                                                  ? _alarmSound.split('|')[1] 
+                                                  : 'Default Notification',
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          const Icon(Icons.arrow_drop_down),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('Snooze Duration', style: TextStyle(fontSize: 12)),
+                                  const SizedBox(height: 4),
+                                  DropdownButtonFormField<int>(
+                                    value: _snoozeDuration,
+                                    decoration: InputDecoration(
+                                      isDense: true,
+                                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                    ),
+                                    items: const [
+                                      DropdownMenuItem(value: 5, child: Text('5 mins')),
+                                      DropdownMenuItem(value: 10, child: Text('10 mins')),
+                                      DropdownMenuItem(value: 15, child: Text('15 mins')),
+                                      DropdownMenuItem(value: 30, child: Text('30 mins')),
+                                    ],
+                                    onChanged: (v) => setState(() => _snoozeDuration = v!),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
                     ],
                   ),
@@ -231,8 +402,8 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               // ── Save Button ──────────────────────────────────
               ElevatedButton.icon(
                 onPressed: _submit,
-                label: const Text('Add Task', style: TextStyle(fontSize: 14)),
-                icon: const Icon(Icons.add),
+                label: Text(widget.taskToEdit == null ? 'Add Task' : 'Update Task', style: const TextStyle(fontSize: 14)),
+                icon: Icon(widget.taskToEdit == null ? Icons.add : Icons.save),
                 style: ElevatedButton.styleFrom(
                   fixedSize: const Size(346, 40),
                 ),
@@ -260,14 +431,25 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       }
     }
 
-    final task = TaskModel(
-      taskName: _nameController.text.trim(),
-      taskDescription: _descController.text.trim(),
-      isHighPriority: _isHighPriority,
-      dateTime: DateTime.now().toIso8601String(),
-      reminderDate: _reminderEnabled ? _reminderDate : null,
-      reminderEnabled: _reminderEnabled,
-    );
+    final task = widget.taskToEdit?.copyWith(
+          taskName: _nameController.text.trim(),
+          taskDescription: _descController.text.trim(),
+          isHighPriority: _isHighPriority,
+          reminderDate: _reminderEnabled ? _reminderDate : null,
+          reminderEnabled: _reminderEnabled,
+          alarmSound: _alarmSound,
+          snoozeDuration: _snoozeDuration,
+        ) ??
+        TaskModel(
+          taskName: _nameController.text.trim(),
+          taskDescription: _descController.text.trim(),
+          isHighPriority: _isHighPriority,
+          dateTime: DateTime.now().toIso8601String(),
+          reminderDate: _reminderEnabled ? _reminderDate : null,
+          reminderEnabled: _reminderEnabled,
+          alarmSound: _alarmSound,
+          snoozeDuration: _snoozeDuration,
+        );
 
     if (mounted) Navigator.pop(context, task);
   }

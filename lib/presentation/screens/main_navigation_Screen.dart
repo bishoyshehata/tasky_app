@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tasky/core/notifications/local_notification_service.dart';
 import 'package:tasky/domain/usecases/cancel_task_reminder_use_case.dart';
 import 'package:tasky/domain/usecases/schedule_task_reminder_use_case.dart';
+import 'package:tasky/domain/usecases/update_task_reminder_use_case.dart';
 import 'package:tasky/presentation/screens/comleted_tasks.dart';
 import 'package:tasky/presentation/screens/home_screen.dart';
 import 'package:tasky/presentation/screens/profile_screen.dart';
@@ -28,6 +29,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       ScheduleTaskReminderUseCase(LocalNotificationService.instance);
   late final _cancelUseCase =
       CancelTaskReminderUseCase(LocalNotificationService.instance);
+  late final _updateUseCase =
+      UpdateTaskReminderUseCase(LocalNotificationService.instance);
 
   // ── Lifecycle ────────────────────────────────────────────────
   @override
@@ -83,6 +86,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     await _scheduleUseCase.execute(task);
   }
 
+  /// Called when a task is edited.
+  Future<void> _onEditTask(TaskModel updatedTask) async {
+    final updatedList = tasks.map((t) => t.id == updatedTask.id ? updatedTask : t).toList();
+    _onTasksChanged(updatedList);
+    await _updateUseCase.execute(updatedTask);
+  }
+
   /// Called when the user taps the delete button on a task card.
   Future<void> _onDeleteTask(TaskModel task) async {
     // Cancel reminder first
@@ -131,6 +141,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             tasks: tasks,
             onTasksChanged: _onTasksChanged,
             onTaskAdded: _onTaskAdded,
+            onEditTask: _onEditTask,
             onDeleteTask: _onDeleteTask,
             onTaskCompleted: _onTaskCompleted,
             userModel: userModel,
@@ -138,12 +149,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           TodoScreen(
             tasks: tasks,
             onTasksChanged: _onTasksChanged,
+            onEditTask: _onEditTask,
             onDeleteTask: _onDeleteTask,
             onTaskCompleted: _onTaskCompleted,
           ),
           CompletedTasksScreen(
             tasks: tasks,
             onTasksChanged: _onTasksChanged,
+            onEditTask: _onEditTask,
             onDeleteTask: _onDeleteTask,
             onTaskCompleted: _onTaskCompleted,
           ),

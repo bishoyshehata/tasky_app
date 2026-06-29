@@ -8,6 +8,8 @@ class TaskModel {
   bool isDone;
   final DateTime? reminderDate;
   final bool reminderEnabled;
+  final String alarmSound;
+  final int snoozeDuration;
 
   TaskModel({
     String? id,
@@ -18,6 +20,8 @@ class TaskModel {
     this.isDone = false,
     this.reminderDate,
     this.reminderEnabled = false,
+    this.alarmSound = 'default',
+    this.snoozeDuration = 10,
   }) : id = id ?? DateTime.now().millisecondsSinceEpoch.toString();
 
   factory TaskModel.fromJson(Map<String, dynamic> json) {
@@ -33,6 +37,8 @@ class TaskModel {
           ? DateTime.parse(json['reminderDate'] as String)
           : null,
       reminderEnabled: json['reminderEnabled'] as bool? ?? false,
+      alarmSound: json['alarmSound'] as String? ?? 'default',
+      snoozeDuration: json['snoozeDuration'] as int? ?? 10,
     );
   }
 
@@ -46,6 +52,8 @@ class TaskModel {
       'isDone': isDone,
       'reminderDate': reminderDate?.toIso8601String(),
       'reminderEnabled': reminderEnabled,
+      'alarmSound': alarmSound,
+      'snoozeDuration': snoozeDuration,
     };
   }
 
@@ -57,6 +65,8 @@ class TaskModel {
     bool? isDone,
     DateTime? reminderDate,
     bool? reminderEnabled,
+    String? alarmSound,
+    int? snoozeDuration,
   }) {
     return TaskModel(
       id: id,
@@ -67,6 +77,8 @@ class TaskModel {
       isDone: isDone ?? this.isDone,
       reminderDate: reminderDate ?? this.reminderDate,
       reminderEnabled: reminderEnabled ?? this.reminderEnabled,
+      alarmSound: alarmSound ?? this.alarmSound,
+      snoozeDuration: snoozeDuration ?? this.snoozeDuration,
     );
   }
 }

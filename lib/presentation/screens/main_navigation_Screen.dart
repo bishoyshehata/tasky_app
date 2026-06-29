@@ -15,6 +15,8 @@ import 'package:tasky/data/models/user_model.dart';
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
 
+  static final ValueNotifier<bool> refreshTrigger = ValueNotifier(false);
+
   @override
   State<MainNavigationScreen> createState() => _MainNavigationScreenState();
 }
@@ -32,12 +34,24 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   late final _updateUseCase =
       UpdateTaskReminderUseCase(LocalNotificationService.instance);
 
-  // ── Lifecycle ────────────────────────────────────────────────
   @override
   void initState() {
     super.initState();
     _loadUser();
     _loadTasksAndReschedule();
+    MainNavigationScreen.refreshTrigger.addListener(_onGlobalRefresh);
+  }
+
+  @override
+  void dispose() {
+    MainNavigationScreen.refreshTrigger.removeListener(_onGlobalRefresh);
+    super.dispose();
+  }
+
+  void _onGlobalRefresh() {
+    if (mounted) {
+      _loadTasksAndReschedule();
+    }
   }
 
   // ── Data ─────────────────────────────────────────────────────

@@ -6,6 +6,8 @@ import 'dart:convert';
 import 'package:tasky/data/models/task_model.dart';
 import 'package:tasky/main.dart';
 import 'package:tasky/presentation/screens/alarm_screen.dart';
+import 'package:tasky/presentation/screens/main_navigation_Screen.dart';
+import 'package:flutter/services.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -13,24 +15,41 @@ import 'notification_logger.dart';
 import 'notification_permission.dart';
 import 'notification_service.dart';
 
+const _pickerChannel = MethodChannel('com.bsh.tasky/ringtone_picker');
+
 @pragma('vm:entry-point')
 void _onBackgroundNotificationResponse(NotificationResponse response) async {
   WidgetsFlutterBinding.ensureInitialized();
   if (response.payload == null) return;
-  final parts = response.payload!.split('|');
-  if (parts.length < 3) return;
 
-  final taskId = parts[0];
+  Map<String, dynamic> data;
+  try {
+    data = jsonDecode(response.payload!) as Map<String, dynamic>;
+  } catch (e) {
+    final parts = response.payload!.split('|');
+    if (parts.length < 3) return;
+    data = {
+      'id': parts[0],
+      'title': parts[1],
+      'desc': parts[2],
+      'sound': parts.length > 3 ? parts[3] : 'default',
+      'snooze': 10,
+    };
+  }
+
+  final taskId = data['id'] as String;
   final notifId = taskId.hashCode.abs() % 2147483647;
-  
+
   final plugin = FlutterLocalNotificationsPlugin();
-  
+
   if (response.actionId == 'stop') {
+    await _pickerChannel.invokeMethod('stopRingtone');
     await plugin.cancel(notifId);
     return;
   }
-  
+
   if (response.actionId == 'snooze') {
+    await _pickerChannel.invokeMethod('stopRingtone');
     await plugin.cancel(notifId);
     await LocalNotificationService.snoozeTaskInStorage(taskId);
   }
@@ -52,8 +71,7 @@ class LocalNotificationService implements NotificationService {
   static int _notificationId(String taskId) =>
       taskId.hashCode.abs() % 2147483647;
 
-  tz.TZDateTime _toTZ(DateTime dt) =>
-      tz.TZDateTime.from(dt, tz.local);
+  tz.TZDateTime _toTZ(DateTime dt) => tz.TZDateTime.from(dt, tz.local);
 
   Future<NotificationDetails> _getDetails(String alarmSoundData) async {
     // alarmSoundData format: "URI|NAME" or just "default"
@@ -65,7 +83,7 @@ class LocalNotificationService implements NotificationService {
     }
 
     String channelId = '${_channelIdBase}_${uri.hashCode}';
-    
+
     AndroidNotificationSound? sound;
     bool playSound = true;
     if (uri != 'default') {
@@ -77,8 +95,10 @@ class LocalNotificationService implements NotificationService {
     }
 
     // Dynamically create this specific channel to bypass Android limits
-    final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
+    final androidPlugin = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     if (androidPlugin != null) {
       await androidPlugin.createNotificationChannel(
         AndroidNotificationChannel(
@@ -94,39 +114,27 @@ class LocalNotificationService implements NotificationService {
     }
 
     return NotificationDetails(
-        android: AndroidNotificationDetails(
-          channelId,
-          _channelName,
-          channelDescription: _channelDescription,
-          importance: Importance.high,
-          priority: Priority.high,
-          enableVibration: true,
-          sound: sound,
-          playSound: playSound,
-          icon: '@mipmap/ic_launcher',
-          fullScreenIntent: true,
-          category: AndroidNotificationCategory.alarm,
-          actions: [
-            const AndroidNotificationAction(
-              'snooze', 
-              'Snooze', 
-              cancelNotification: true,
-            ),
-            const AndroidNotificationAction(
-              'stop', 
-              'Stop', 
-              cancelNotification: true,
-            ),
-          ],
-          audioAttributesUsage: AudioAttributesUsage.alarm,
-        ),
-        iOS: const DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
-          interruptionLevel: InterruptionLevel.critical,
-        ),
-      );
+      android: AndroidNotificationDetails(
+        channelId,
+        _channelName,
+        channelDescription: _channelDescription,
+        importance: Importance.high,
+        priority: Priority.high,
+        enableVibration: true,
+        sound: sound,
+        playSound: playSound,
+        icon: '@mipmap/ic_launcher',
+        fullScreenIntent: true,
+        category: AndroidNotificationCategory.alarm,
+        audioAttributesUsage: AudioAttributesUsage.alarm,
+      ),
+      iOS: const DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+        interruptionLevel: InterruptionLevel.critical,
+      ),
+    );
   }
 
   // ─── Public API ───────────────────────────────────────────────
@@ -148,13 +156,16 @@ class LocalNotificationService implements NotificationService {
     await _plugin.initialize(
       const InitializationSettings(android: android, iOS: ios),
       onDidReceiveNotificationResponse: _onNotificationResponse,
-      onDidReceiveBackgroundNotificationResponse: _onBackgroundNotificationResponse,
+      onDidReceiveBackgroundNotificationResponse:
+          _onBackgroundNotificationResponse,
     );
 
     // Create base default channel
-    final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
-    
+    final androidPlugin = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+
     if (androidPlugin != null) {
       await androidPlugin.createNotificationChannel(
         const AndroidNotificationChannel(
@@ -177,16 +188,18 @@ class LocalNotificationService implements NotificationService {
       if (!task.reminderEnabled || task.reminderDate == null) return;
       if (task.reminderDate!.isBefore(DateTime.now())) {
         NotificationLogger.logError(
-            'schedule', 'Reminder date is in the past for "${task.taskName}"');
+          'schedule',
+          'Reminder date is in the past for "${task.taskName}"',
+        );
         return;
       }
 
       final details = await _getDetails(task.alarmSound);
-      
+
       await _plugin.zonedSchedule(
         _notificationId(task.id),
         task.taskName,
-        task.taskName.isNotEmpty 
+        task.taskName.isNotEmpty
             ? task.taskDescription
             : 'You have a task reminder!',
         _toTZ(task.reminderDate!),
@@ -194,7 +207,13 @@ class LocalNotificationService implements NotificationService {
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
-        payload: '${task.id}|${task.taskName}|${task.taskDescription}|${task.alarmSound}',
+        payload: jsonEncode({
+          'id': task.id,
+          'title': task.taskName,
+          'desc': task.taskDescription,
+          'sound': task.alarmSound,
+          'snooze': task.snoozeDuration,
+        }),
       );
 
       NotificationLogger.logScheduled(task.taskName, task.reminderDate!);
@@ -240,11 +259,13 @@ class LocalNotificationService implements NotificationService {
   Future<void> rescheduleAll(List<TaskModel> tasks) async {
     try {
       final now = DateTime.now();
-      final upcoming = tasks.where((t) =>
-          t.reminderEnabled &&
-          t.reminderDate != null &&
-          t.reminderDate!.isAfter(now) &&
-          !t.isDone);
+      final upcoming = tasks.where(
+        (t) =>
+            t.reminderEnabled &&
+            t.reminderDate != null &&
+            t.reminderDate!.isAfter(now) &&
+            !t.isDone,
+      );
 
       for (final task in upcoming) {
         await schedule(task);
@@ -258,37 +279,62 @@ class LocalNotificationService implements NotificationService {
 
   static void _onNotificationResponse(NotificationResponse response) async {
     if (response.payload == null) return;
-    final parts = response.payload!.split('|');
-    if (parts.length < 3) return;
 
-    final taskId = parts[0];
-    final title = parts[1];
-    final desc = parts[2];
+    Map<String, dynamic> data;
+    try {
+      data = jsonDecode(response.payload!) as Map<String, dynamic>;
+    } catch (e) {
+      final parts = response.payload!.split('|');
+      if (parts.length < 3) return;
+      data = {
+        'id': parts[0],
+        'title': parts[1],
+        'desc': parts[2],
+        'sound': parts.length > 3 ? parts[3] : 'default',
+        'snooze': 10,
+      };
+    }
+
+    final taskId = data['id'] as String;
+    final title = data['title'] as String;
+    final desc = data['desc'] as String;
+    final alarmSound = data['sound'] as String? ?? 'default';
+    final snoozeDuration = data['snooze'] as int? ?? 10;
+
     final notifId = _notificationId(taskId);
     final plugin = FlutterLocalNotificationsPlugin();
 
     if (response.actionId == 'stop') {
+      await _pickerChannel.invokeMethod('stopRingtone');
       await plugin.cancel(notifId);
       return;
     }
 
     if (response.actionId == 'snooze') {
+      await _pickerChannel.invokeMethod('stopRingtone');
       await plugin.cancel(notifId);
-      snoozeTaskInStorage(taskId);
+      await snoozeTaskInStorage(taskId);
       return;
     }
 
     // Default action (tap) -> push Alarm Screen
-    final alarmSound = parts.length > 3 ? parts[3] : 'default';
-    
     navigatorKey.currentState?.push(
       MaterialPageRoute(
         builder: (_) => AlarmScreen(
+          taskId: taskId,
           title: title,
           description: desc,
           alarmSound: alarmSound,
-          onStop: () {},
-          onSnooze: () => snoozeTaskInStorage(taskId),
+          snoozeDuration: snoozeDuration,
+          onStop: () async {
+            await plugin.cancel(notifId);
+            await _pickerChannel.invokeMethod('stopRingtone');
+          },
+          onSnooze: () async {
+            await plugin.cancel(notifId);
+            await _pickerChannel.invokeMethod('stopRingtone');
+            await snoozeTaskInStorage(taskId);
+          },
         ),
       ),
     );
@@ -306,15 +352,17 @@ class LocalNotificationService implements NotificationService {
     final index = tasks.indexWhere((t) => t.id == taskId);
     if (index != -1) {
       final task = tasks[index];
-      final snoozeDate = DateTime.now().add(Duration(minutes: task.snoozeDuration));
-      
+      final snoozeDate = DateTime.now().add(
+        Duration(minutes: task.snoozeDuration),
+      );
+
       final updatedTask = task.copyWith(
         reminderDate: snoozeDate,
         reminderEnabled: true,
       );
-      
+
       tasks[index] = updatedTask;
-      
+
       await prefs.setStringList(
         'tasks',
         tasks.map((t) => jsonEncode(t.toJson())).toList(),
@@ -322,6 +370,10 @@ class LocalNotificationService implements NotificationService {
 
       // Reschedule
       await LocalNotificationService.instance.schedule(updatedTask);
+
+      // Trigger global refresh so any open UI updates immediately
+      MainNavigationScreen.refreshTrigger.value =
+          !MainNavigationScreen.refreshTrigger.value;
     }
   }
 }

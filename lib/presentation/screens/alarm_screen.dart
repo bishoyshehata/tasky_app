@@ -3,19 +3,24 @@ import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:intl/intl.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/services.dart';
+import 'dart:io';
 
 class AlarmScreen extends StatefulWidget {
+  final String taskId;
   final String title;
   final String description;
   final String alarmSound;
+  final int snoozeDuration;
   final VoidCallback onSnooze;
   final VoidCallback onStop;
 
   const AlarmScreen({
     super.key,
+    required this.taskId,
     required this.title,
     required this.description,
     required this.alarmSound,
+    required this.snoozeDuration,
     required this.onSnooze,
     required this.onStop,
   });
@@ -51,7 +56,7 @@ class _AlarmScreenState extends State<AlarmScreen>
     final soundData = widget.alarmSound;
     if (soundData.contains('|')) {
       final uri = soundData.split('|')[0];
-      if (Theme.of(context).platform == TargetPlatform.android) {
+      if (Platform.isAndroid) {
         try {
           await _pickerChannel.invokeMethod('playRingtone', {'uri': uri});
         } catch (e) {
@@ -72,7 +77,7 @@ class _AlarmScreenState extends State<AlarmScreen>
   }
 
   void _stopRingtone() {
-    if (Theme.of(context).platform == TargetPlatform.android) {
+    if (Platform.isAndroid) {
       _pickerChannel.invokeMethod('stopRingtone');
     }
     _audioPlayer.stop();
@@ -132,7 +137,7 @@ class _AlarmScreenState extends State<AlarmScreen>
             
             // Current Time
             Text(
-              DateFormat('HH:mm').format(DateTime.now()),
+              DateFormat('h:mm a').format(DateTime.now()),
               style: TextStyle(
                 fontSize: 64,
                 fontWeight: FontWeight.w300,
@@ -189,9 +194,9 @@ class _AlarmScreenState extends State<AlarmScreen>
                           borderRadius: BorderRadius.circular(16),
                         ),
                       ),
-                      child: const Text(
-                        'Snooze (10m)',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      child: Text(
+                        'Snooze (${widget.snoozeDuration}m)',
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),

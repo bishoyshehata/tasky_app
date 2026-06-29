@@ -118,14 +118,18 @@ class _TaskCardState extends State<TaskCard> {
                       Icon(
                         Icons.alarm,
                         size: 13,
-                        color: colorScheme.primary,
+                        color: widget.task.reminderDate!.isBefore(DateTime.now())
+                            ? colorScheme.onSurfaceVariant.withOpacity(0.6)
+                            : colorScheme.primary,
                       ),
                       const SizedBox(width: 2),
                       Text(
                         DateFormat('hh:mm a')
                             .format(widget.task.reminderDate!),
                         style: TextStyle(
-                          color: colorScheme.primary,
+                          color: widget.task.reminderDate!.isBefore(DateTime.now())
+                              ? colorScheme.onSurfaceVariant.withOpacity(0.6)
+                              : colorScheme.primary,
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                         ),

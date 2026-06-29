@@ -93,7 +93,8 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                     maxLines: 5,
                     controller: quoteController,
                     decoration: InputDecoration(
-                      hintText: userModel?.motivationQuote ??
+                      hintText:
+                          userModel?.motivationQuote ??
                           'Write a quote that motivates you to do your tasks.',
                     ),
                   ),
@@ -111,7 +112,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                       motivationQuote: quoteController.text.isNotEmpty
                           ? quoteController.text
                           : userModel?.motivationQuote,
-                      profileImagePath: userModel?.profileImagePath ?? '',
+                      profileImageBase64: userModel?.profileImageBase64,
                     );
                     final prefs = await SharedPreferences.getInstance();
                     await prefs.setString('user', jsonEncode(user.toJson()));
@@ -126,9 +127,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                   }
                 : null,
             label: const Text('Save Changes', style: TextStyle(fontSize: 14)),
-            style: ElevatedButton.styleFrom(
-              fixedSize: const Size(346, 40),
-            ),
+            style: ElevatedButton.styleFrom(fixedSize: const Size(346, 40)),
           ),
           const SizedBox(height: 34),
         ],

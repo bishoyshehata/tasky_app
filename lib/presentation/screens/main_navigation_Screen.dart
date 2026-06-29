@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:tasky/data/models/task_model.dart';
 import 'package:tasky/data/models/user_model.dart';
+import 'package:tasky/core/backup/auto_backup_manager.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -40,6 +41,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     _loadUser();
     _loadTasksAndReschedule();
     MainNavigationScreen.refreshTrigger.addListener(_onGlobalRefresh);
+    AutoBackupManager.checkAndRun();
   }
 
   @override

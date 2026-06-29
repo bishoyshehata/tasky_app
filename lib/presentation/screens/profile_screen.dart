@@ -9,6 +9,7 @@ import 'package:tasky/data/models/user_model.dart';
 import 'dart:convert';
 import 'package:tasky/presentation/screens/splash_screen.dart';
 import 'package:tasky/presentation/screens/user_details_screen.dart';
+import 'package:tasky/presentation/screens/backup_restore_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final VoidCallback onUserChanged;
@@ -64,9 +65,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     border: Border.all(color: Colors.transparent, width: 2),
                   ),
                   child: ClipOval(
-                    child: (userModel?.profileImagePath != null)
-                        ? Image.file(
-                            File(userModel!.profileImagePath!),
+                    child: (userModel?.profileImageBytes != null)
+                        ? Image.memory(
+                            userModel!.profileImageBytes!,
                             fit: BoxFit.cover,
                           )
                         : Icon(
@@ -139,6 +140,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   widget.onUserChanged();
                 }
               },
+            ),
+            _buildMenuItem(
+              context: context,
+              icon: Icons.backup_outlined,
+              title: 'Backup & Restore',
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const BackupRestoreScreen(),
+                ),
+              ),
             ),
             _buildMenuItem(
               context: context,
@@ -226,8 +237,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> pickImageFromGallery() async {
     final image = await PickerManager.pickImage(source: ImageSource.gallery);
     if (image == null) return;
+    final bytes = await image.readAsBytes();
+    final base64Str = base64Encode(bytes);
     setState(() {
-      userModel = userModel!.copyWith(profileImagePath: image.path);
+      userModel = userModel!.copyWith(profileImageBase64: base64Str);
     });
     await _saveUserData();
     widget.onUserChanged();
@@ -236,8 +249,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> pickImageFromCamera() async {
     final image = await PickerManager.pickImage(source: ImageSource.camera);
     if (image == null) return;
+    final bytes = await image.readAsBytes();
+    final base64Str = base64Encode(bytes);
     setState(() {
-      userModel = userModel!.copyWith(profileImagePath: image.path);
+      userModel = userModel!.copyWith(profileImageBase64: base64Str);
     });
     await _saveUserData();
     widget.onUserChanged();

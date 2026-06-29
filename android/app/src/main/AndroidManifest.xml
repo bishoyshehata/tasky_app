@@ -19,6 +19,15 @@
     <!-- Optional: needed to keep the screen on during the alarm -->
     <uses-permission android:name="android.permission.DISABLE_KEYGUARD"/>
 
+    <!-- ── Storage (Auto Backup) ─────────────────────────────────── -->
+    <!-- Needed on Android 9 and below; harmless on API 29+ (scoped storage) -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28"/>
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32"/>
+
     <application
         android:label="tasky"
         android:name="${applicationName}"

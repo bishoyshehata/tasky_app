@@ -8,12 +8,16 @@ class PickerManager {
 
   static Future<File?> pickImage({
     ImageSource source = ImageSource.gallery,
-    int imageQuality = 80,
+    int imageQuality = 60,
+    double? maxWidth = 300,
+    double? maxHeight = 300,
   }) async {
     try {
       final XFile? image = await _picker.pickImage(
         source: source,
         imageQuality: imageQuality,
+        maxWidth: maxWidth,
+        maxHeight: maxHeight,
       );
 
       if (image == null) return null;

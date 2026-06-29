@@ -8,6 +8,7 @@ import 'package:tasky/presentation/components/achieved_tasks.dart';
 import 'package:tasky/presentation/components/tasks_card.dart';
 import 'package:tasky/presentation/screens/add_task._screen.dart';
 import 'dart:io';
+import 'dart:convert';
 
 class HomeScreen extends StatefulWidget {
   final List<TaskModel> tasks;
@@ -52,8 +53,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     CircleAvatar(
                       radius: 25,
                       backgroundImage:
-                          widget.userModel?.profileImagePath != null
-                          ? FileImage(File(widget.userModel!.profileImagePath!))
+                          (widget.userModel?.profileImageBytes != null)
+                          ? MemoryImage(widget.userModel!.profileImageBytes!)
                           : const AssetImage('assets/images/file.jpg')
                                 as ImageProvider,
                     ),

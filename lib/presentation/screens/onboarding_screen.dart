@@ -8,7 +8,7 @@ import 'package:engez/core/backup/backup_service.dart';
 import 'package:engez/core/theme/app_sizes.dart';
 import 'package:engez/data/models/user_model.dart';
 import 'package:engez/l10n/app_localizations.dart';
-import 'package:engez/presentation/screens/main_navigation_Screen.dart';
+import 'package:engez/presentation/screens/main_navigation_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});

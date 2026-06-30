@@ -465,7 +465,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
 
   String _frequencyLabel(int days) {
     return switch (days) {
-      0 => '1 Min 🧪',
+      // 0 => '1 Min 🧪',
       1 => 'Every Day',
       2 => 'Every 2 Days',
       5 => 'Every 5 Days',
@@ -612,41 +612,27 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: _hasFullStorageAccess
-                          ? cs.primaryContainer.withOpacity(0.5)
-                          : cs.errorContainer.withOpacity(0.5),
+                      color: cs.primaryContainer.withOpacity(0.5),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Row(
                       children: [
                         Icon(
-                          _hasFullStorageAccess
-                              ? Icons.folder_open_rounded
-                              : Icons.folder_off_outlined,
+                          Icons.folder_open_rounded,
                           size: 16,
-                          color: _hasFullStorageAccess ? cs.primary : cs.error,
+                          color: cs.primary,
                         ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            _hasFullStorageAccess
-                                ? 'Saves to Internal Storage → TaskyBackups'
-                                : 'Tap to enable saving to Internal Storage → TaskyBackups',
+                            'Saves to Internal Storage → TaskyBackups',
                             style: TextStyle(
                               fontSize: 12,
-                              color: _hasFullStorageAccess
-                                  ? cs.onPrimaryContainer
-                                  : cs.error,
+                              color: cs.onPrimaryContainer,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
                         ),
-                        if (!_hasFullStorageAccess)
-                          Icon(
-                            Icons.arrow_forward_ios_rounded,
-                            size: 12,
-                            color: cs.error,
-                          ),
                       ],
                     ),
                   ),

@@ -14,7 +14,7 @@ class AutoBackupManager {
 
   /// frequency == 0 → test mode: every 1 minute
   /// frequency > 0  → every N days
-  static const List<int> frequencyOptions = [0, 1, 2, 5, 7];
+  static const List<int> frequencyOptions = [1, 2, 5, 7];
 
   // ── Settings getters/setters ──────────────────────────────
 

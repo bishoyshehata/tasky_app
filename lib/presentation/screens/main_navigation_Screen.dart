@@ -71,9 +71,62 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     final prefs = await SharedPreferences.getInstance();
     final tasksJson = prefs.getStringList('tasks');
     if (tasksJson != null && mounted) {
-      final loaded = tasksJson
+      List<TaskModel> loaded = tasksJson
           .map((j) => TaskModel.fromJson(jsonDecode(j)))
           .toList();
+
+      // ── Auto-Archive & Cleanup Logic ────────────────────────
+      final now = DateTime.now();
+      bool needsSave = false;
+
+      for (int i = 0; i < loaded.length; i++) {
+        final task = loaded[i];
+
+        // 1. Auto-delete after 7 days in archive
+        if (task.isArchived) {
+          if (task.archivedAt != null) {
+            final diff = now.difference(task.archivedAt!);
+            if (diff.inDays >= 7) {
+              // Mark for removal by setting a flag or we can just filter it out later
+              continue; // We will filter it out below
+            }
+          }
+        } 
+        // 2. Auto-archive after 24 hours of being done
+        else if (task.isDone) {
+          if (task.completedAt != null) {
+            final diff = now.difference(task.completedAt!);
+            if (diff.inHours >= 24) {
+              task.isArchived = true;
+              task.archivedAt = now;
+              needsSave = true;
+            }
+          } else {
+            // Legacy task migration: set completedAt to now so it archives in 24h
+            task.completedAt = now;
+            needsSave = true;
+          }
+        }
+      }
+
+      // Filter out tasks that should be permanently deleted (archived > 7 days)
+      final originalCount = loaded.length;
+      loaded = loaded.where((task) {
+        if (task.isArchived && task.archivedAt != null) {
+          return now.difference(task.archivedAt!).inDays < 7;
+        }
+        return true;
+      }).toList();
+
+      if (loaded.length != originalCount) {
+        needsSave = true;
+      }
+
+      if (needsSave) {
+        await _saveAllTasks(loaded);
+      }
+      // ────────────────────────────────────────────────────────
+
       setState(() => tasks = loaded);
       // Restore reminders that survived a reboot / app kill
       await _scheduleUseCase.rescheduleAll(loaded);
@@ -127,6 +180,20 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     _onTasksChanged(tasks);
   }
 
+  /// Called when the user manually archives a task
+  void _onArchiveTask(TaskModel task) {
+    final updatedList = tasks.map((t) {
+      if (t.id == task.id) {
+        return t.copyWith(
+          isArchived: true,
+          archivedAt: DateTime.now(),
+        );
+      }
+      return t;
+    }).toList();
+    _onTasksChanged(updatedList);
+  }
+
   // ── Build ─────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
@@ -154,7 +221,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         index: _selectedIndex,
         children: [
           HomeScreen(
-            tasks: tasks,
+            tasks: tasks.where((t) => !t.isArchived).toList(),
             onTasksChanged: _onTasksChanged,
             onTaskAdded: _onTaskAdded,
             onEditTask: _onEditTask,
@@ -163,7 +230,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             userModel: userModel,
           ),
           TodoScreen(
-            tasks: tasks,
+            tasks: tasks.where((t) => !t.isArchived).toList(),
             onTasksChanged: _onTasksChanged,
             onEditTask: _onEditTask,
             onDeleteTask: _onDeleteTask,
@@ -175,8 +242,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             onEditTask: _onEditTask,
             onDeleteTask: _onDeleteTask,
             onTaskCompleted: _onTaskCompleted,
+            onArchiveTask: _onArchiveTask,
           ),
-          ProfileScreen(onUserChanged: _loadUser),
+          ProfileScreen(
+            tasks: tasks,
+            onUserChanged: _loadUser,
+            onTasksChanged: _onTasksChanged,
+          ),
         ],
       ),
     );

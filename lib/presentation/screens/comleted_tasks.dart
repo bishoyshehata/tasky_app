@@ -9,6 +9,7 @@ class CompletedTasksScreen extends StatefulWidget {
   final ValueChanged<TaskModel> onEditTask;
   final ValueChanged<TaskModel> onDeleteTask;
   final ValueChanged<TaskModel> onTaskCompleted;
+  final ValueChanged<TaskModel> onArchiveTask;
 
   const CompletedTasksScreen({
     super.key,
@@ -17,6 +18,7 @@ class CompletedTasksScreen extends StatefulWidget {
     required this.onEditTask,
     required this.onDeleteTask,
     required this.onTaskCompleted,
+    required this.onArchiveTask,
   });
 
   @override
@@ -36,7 +38,7 @@ class _CompletedTasksScreenState extends State<CompletedTasksScreen> {
   }
 
   Widget _buildCards(BuildContext context) {
-    final done = widget.tasks.where((t) => t.isDone).toList();
+    final done = widget.tasks.where((t) => t.isDone && !t.isArchived).toList();
 
     if (done.isEmpty) {
       return Center(
@@ -66,6 +68,7 @@ class _CompletedTasksScreenState extends State<CompletedTasksScreen> {
             onEdit: () => _handleEdit(done[i]),
             onDelete: () => widget.onDeleteTask(done[i]),
             onMarkComplete: () => widget.onTaskCompleted(done[i]),
+            onArchive: () => widget.onArchiveTask(done[i]),
           ),
           separatorBuilder: (_, __) => const SizedBox(height: 12),
         ),

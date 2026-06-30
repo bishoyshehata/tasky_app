@@ -6,6 +6,9 @@ class TaskModel {
   final bool isHighPriority;
   final String dateTime;
   bool isDone;
+  DateTime? completedAt;
+  bool isArchived;
+  DateTime? archivedAt;
   final DateTime? reminderDate;
   final bool reminderEnabled;
   final String alarmSound;
@@ -18,6 +21,9 @@ class TaskModel {
     required this.isHighPriority,
     required this.dateTime,
     this.isDone = false,
+    this.completedAt,
+    this.isArchived = false,
+    this.archivedAt,
     this.reminderDate,
     this.reminderEnabled = false,
     this.alarmSound = 'default',
@@ -33,6 +39,13 @@ class TaskModel {
       isHighPriority: json['isHighPriority'] as bool,
       dateTime: json['dateTime'] as String,
       isDone: json['isDone'] as bool? ?? false,
+      completedAt: json['completedAt'] != null
+          ? DateTime.parse(json['completedAt'] as String)
+          : null,
+      isArchived: json['isArchived'] as bool? ?? false,
+      archivedAt: json['archivedAt'] != null
+          ? DateTime.parse(json['archivedAt'] as String)
+          : null,
       reminderDate: json['reminderDate'] != null
           ? DateTime.parse(json['reminderDate'] as String)
           : null,
@@ -50,6 +63,9 @@ class TaskModel {
       'isHighPriority': isHighPriority,
       'dateTime': dateTime,
       'isDone': isDone,
+      'completedAt': completedAt?.toIso8601String(),
+      'isArchived': isArchived,
+      'archivedAt': archivedAt?.toIso8601String(),
       'reminderDate': reminderDate?.toIso8601String(),
       'reminderEnabled': reminderEnabled,
       'alarmSound': alarmSound,
@@ -63,6 +79,9 @@ class TaskModel {
     bool? isHighPriority,
     String? dateTime,
     bool? isDone,
+    DateTime? completedAt,
+    bool? isArchived,
+    DateTime? archivedAt,
     DateTime? reminderDate,
     bool? reminderEnabled,
     String? alarmSound,
@@ -75,6 +94,9 @@ class TaskModel {
       isHighPriority: isHighPriority ?? this.isHighPriority,
       dateTime: dateTime ?? this.dateTime,
       isDone: isDone ?? this.isDone,
+      completedAt: completedAt ?? this.completedAt,
+      isArchived: isArchived ?? this.isArchived,
+      archivedAt: archivedAt ?? this.archivedAt,
       reminderDate: reminderDate ?? this.reminderDate,
       reminderEnabled: reminderEnabled ?? this.reminderEnabled,
       alarmSound: alarmSound ?? this.alarmSound,

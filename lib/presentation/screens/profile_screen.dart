@@ -10,11 +10,20 @@ import 'dart:convert';
 import 'package:tasky/presentation/screens/splash_screen.dart';
 import 'package:tasky/presentation/screens/user_details_screen.dart';
 import 'package:tasky/presentation/screens/backup_restore_screen.dart';
+import 'package:tasky/presentation/screens/archived_tasks_screen.dart';
+import 'package:tasky/data/models/task_model.dart';
 
 class ProfileScreen extends StatefulWidget {
   final VoidCallback onUserChanged;
+  final List<TaskModel> tasks;
+  final ValueChanged<List<TaskModel>> onTasksChanged;
 
-  const ProfileScreen({super.key, required this.onUserChanged});
+  const ProfileScreen({
+    super.key,
+    required this.onUserChanged,
+    required this.tasks,
+    required this.onTasksChanged,
+  });
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -139,6 +148,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   _loadData();
                   widget.onUserChanged();
                 }
+              },
+            ),
+            _buildMenuItem(
+              context: context,
+              icon: Icons.archive_outlined,
+              title: 'Archived Tasks',
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => ArchivedTasksScreen(
+                      tasks: widget.tasks,
+                      onTasksChanged: widget.onTasksChanged,
+                    ),
+                  ),
+                );
               },
             ),
             _buildMenuItem(

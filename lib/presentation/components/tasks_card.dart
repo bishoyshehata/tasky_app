@@ -11,10 +11,13 @@ class TaskCard extends StatefulWidget {
     required this.onDelete,
     required this.onEdit,
     this.onMarkComplete,
+    this.onArchive,
+    this.isReadOnly = false,
   });
 
   final TaskModel task;
   final int index;
+  final bool isReadOnly;
 
   /// Called whenever isDone is toggled — triggers a save in the parent.
   final VoidCallback onChanged;
@@ -28,6 +31,9 @@ class TaskCard extends StatefulWidget {
 
   /// Called when isDone changes to true — parent cancels the reminder.
   final VoidCallback? onMarkComplete;
+
+  /// Called when user taps "Archive" from the more menu.
+  final VoidCallback? onArchive;
 
   @override
   State<TaskCard> createState() => _TaskCardState();
@@ -51,16 +57,22 @@ class _TaskCardState extends State<TaskCard> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // ── Checkbox ──────────────────────────────────────────
-          Checkbox(
-            value: isDone,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-            onChanged: (value) {
-              setState(() => widget.task.isDone = value!);
-              widget.onChanged();
-              if (value == true) widget.onMarkComplete?.call();
-            },
-          ),
+          if (!widget.isReadOnly)
+            Checkbox(
+              value: isDone,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(5)),
+              onChanged: (value) {
+                setState(() {
+                  widget.task.isDone = value!;
+                  widget.task.completedAt = value ? DateTime.now() : null;
+                });
+                widget.onChanged();
+                if (value == true) widget.onMarkComplete?.call();
+              },
+            )
+          else
+            const SizedBox(width: 12),
 
           // ── Text content ──────────────────────────────────────
           Expanded(
@@ -142,50 +154,67 @@ class _TaskCardState extends State<TaskCard> {
           ),
 
           // ── More menu ─────────────────────────────────────────
-          PopupMenuButton<String>(
-            icon: Icon(
-              Icons.more_vert,
-              size: 24,
-              color: colorScheme.onSurfaceVariant,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            onSelected: (value) {
-              if (value == 'edit') widget.onEdit();
-              if (value == 'delete') _confirmDelete(context);
-            },
-            itemBuilder: (_) => [
-              PopupMenuItem(
-                value: 'edit',
-                child: Row(
-                  children: [
-                    Icon(Icons.edit_outlined,
-                        color: colorScheme.onSurface, size: 20),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Edit',
-                      style: TextStyle(color: colorScheme.onSurface),
-                    ),
-                  ],
-                ),
+          if (!widget.isReadOnly)
+            PopupMenuButton<String>(
+              icon: Icon(
+                Icons.more_vert,
+                size: 24,
+                color: colorScheme.onSurfaceVariant,
               ),
-              PopupMenuItem(
-                value: 'delete',
-                child: Row(
-                  children: [
-                    Icon(Icons.delete_outline,
-                        color: colorScheme.error, size: 20),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Delete',
-                      style: TextStyle(color: colorScheme.error),
-                    ),
-                  ],
-                ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
-            ],
-          ),
+              onSelected: (value) {
+                if (value == 'edit') widget.onEdit();
+                if (value == 'delete') _confirmDelete(context);
+                if (value == 'archive') widget.onArchive?.call();
+              },
+              itemBuilder: (_) => [
+                if (widget.onArchive != null && widget.task.isDone)
+                  PopupMenuItem(
+                    value: 'archive',
+                    child: Row(
+                      children: [
+                        Icon(Icons.archive_outlined,
+                            color: colorScheme.onSurface, size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Archive',
+                          style: TextStyle(color: colorScheme.onSurface),
+                        ),
+                      ],
+                    ),
+                  ),
+                PopupMenuItem(
+                  value: 'edit',
+                  child: Row(
+                    children: [
+                      Icon(Icons.edit_outlined,
+                          color: colorScheme.onSurface, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Edit',
+                        style: TextStyle(color: colorScheme.onSurface),
+                      ),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete_outline,
+                          color: colorScheme.error, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Delete',
+                        style: TextStyle(color: colorScheme.error),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
         ],
       ),
     );

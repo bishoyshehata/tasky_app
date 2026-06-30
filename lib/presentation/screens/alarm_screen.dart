@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/services.dart';
 import 'dart:io';
+import 'package:tasky/core/theme/app_sizes.dart';
 
 class AlarmScreen extends StatefulWidget {
   final String taskId;
@@ -120,58 +121,58 @@ class _AlarmScreenState extends State<AlarmScreen>
             ScaleTransition(
               scale: _animation,
               child: Container(
-                padding: const EdgeInsets.all(24),
+                padding: EdgeInsets.all(AppW.w24),
                 decoration: BoxDecoration(
                   color: colorScheme.primary.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   Icons.alarm,
-                  size: 80,
+                  size: AppSp.sp80,
                   color: colorScheme.primary,
                 ),
               ),
             ),
             
-            const SizedBox(height: 40),
+            SizedBox(height: AppH.h40),
             
             // Current Time
             Text(
               DateFormat('h:mm a').format(DateTime.now()),
               style: TextStyle(
-                fontSize: 64,
+                fontSize: AppSp.sp64,
                 fontWeight: FontWeight.w300,
                 color: colorScheme.onSurface,
               ),
             ),
             
-            const SizedBox(height: 20),
+            SizedBox(height: AppH.h20),
             
             // Task Title
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+              padding: EdgeInsets.symmetric(horizontal: AppW.w24),
               child: Text(
                 widget.title,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: AppSp.sp24,
                   fontWeight: FontWeight.bold,
                   color: colorScheme.onSurface,
                 ),
               ),
             ),
             
-            const SizedBox(height: 12),
+            SizedBox(height: AppH.h12),
             
             // Task Description
             if (widget.description.isNotEmpty)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
+                padding: EdgeInsets.symmetric(horizontal: AppW.w32),
                 child: Text(
                   widget.description,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: AppSp.sp16,
                     color: colorScheme.onSurfaceVariant,
                   ),
                 ),
@@ -181,40 +182,40 @@ class _AlarmScreenState extends State<AlarmScreen>
             
             // Action Buttons
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              padding: EdgeInsets.symmetric(horizontal: AppW.w24, vertical: AppH.h32),
               child: Row(
                 children: [
                   Expanded(
                     child: OutlinedButton(
                       onPressed: _snooze,
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        padding: EdgeInsets.symmetric(vertical: AppH.h16),
                         side: BorderSide(color: colorScheme.primary, width: 2),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(AppR.r16),
                         ),
                       ),
                       child: Text(
                         'Snooze (${widget.snoozeDuration}m)',
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(fontSize: AppSp.sp18, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  SizedBox(width: AppW.w16),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: _stop,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: colorScheme.primary,
                         foregroundColor: colorScheme.onPrimary,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        padding: EdgeInsets.symmetric(vertical: AppH.h16),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(AppR.r16),
                         ),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Stop',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(fontSize: AppSp.sp18, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),

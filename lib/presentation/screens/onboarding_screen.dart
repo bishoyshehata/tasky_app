@@ -8,6 +8,7 @@ import 'package:tasky/core/backup/backup_service.dart';
 import 'package:tasky/core/backup/backup_validator.dart';
 import 'package:tasky/data/models/user_model.dart';
 import 'package:tasky/presentation/screens/main_navigation_Screen.dart';
+import 'package:tasky/core/theme/app_sizes.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -61,18 +62,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             children: [
               Text(
                 'Found ${preview!.taskCount} task${preview.taskCount != 1 ? 's' : ''} in this backup.',
-                style: const TextStyle(fontSize: 15),
+                style: TextStyle(fontSize: AppSp.sp15),
               ),
-              const SizedBox(height: 6),
+              SizedBox(height: AppH.h6),
               Text(
                 'Created: ${_fmtDate(preview.createdAt)}',
                 style:
-                    TextStyle(color: cs.onSurfaceVariant, fontSize: 13),
+                    TextStyle(color: cs.onSurfaceVariant, fontSize: AppSp.sp13),
               ),
-              const SizedBox(height: 14),
-              const Text(
+              SizedBox(height: AppH.h14),
+              Text(
                 'All tasks will be restored and you\'ll go straight to the app.',
-                style: TextStyle(fontSize: 13),
+                style: TextStyle(fontSize: AppSp.sp13),
               ),
             ],
           ),
@@ -147,7 +148,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             : Theme.of(context).colorScheme.primary,
         behavior: SnackBarBehavior.floating,
         shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppR.r10)),
       ),
     );
   }
@@ -159,7 +160,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
     return Scaffold(
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: EdgeInsets.symmetric(horizontal: AppW.w16),
         child: SafeArea(
           child: SingleChildScrollView(
             padding: EdgeInsets.zero,
@@ -173,63 +174,63 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     children: [
                       SvgPicture.asset(
                         'assets/images/logo.svg',
-                        width: 60,
-                        height: 60,
+                        width: AppW.w60,
+                        height: AppH.h60,
                       ),
-                      const SizedBox(width: 16),
-                      const Text(
+                      SizedBox(width: AppW.w16),
+                      Text(
                         'Tasky',
                         style: TextStyle(
-                          fontSize: 28,
+                          fontSize: AppSp.sp28,
                           fontWeight: FontWeight.w400,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 118),
+                  SizedBox(height: AppH.h118),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text(
+                      Text(
                         'Welcome To Taskey',
                         style: TextStyle(
-                          fontSize: 24,
+                          fontSize: AppSp.sp24,
                           fontWeight: FontWeight.w400,
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      SizedBox(width: AppW.w16),
                       SvgPicture.asset(
                         'assets/images/hand.svg',
-                        width: 40,
-                        height: 40,
+                        width: AppW.w40,
+                        height: AppH.h40,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
+                  SizedBox(height: AppH.h8),
+                  Text(
                     'Your productivity journey starts here.',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
+                    style: TextStyle(fontSize: AppSp.sp16, fontWeight: FontWeight.w400),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: AppH.h24),
                   SvgPicture.asset(
                     'assets/images/onboard_image.svg',
-                    width: 215,
-                    height: 204,
+                    width: AppW.w215,
+                    height: AppH.h204,
                   ),
-                  const SizedBox(height: 28),
+                  SizedBox(height: AppH.h28),
                   SizedBox(
                     width: double.infinity,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Full Name',
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: AppSp.sp16,
                             fontWeight: FontWeight.w400,
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: AppH.h8),
                         TextFormField(
                           controller: controller,
                           decoration: const InputDecoration(
@@ -244,7 +245,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             return null;
                           },
                         ),
-                        const SizedBox(height: 24),
+                        SizedBox(height: AppH.h24),
                         ElevatedButton(
                           onPressed: () async {
                             if (_formKey.currentState?.validate() ?? false) {
@@ -272,19 +273,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             }
                           },
                           style: ElevatedButton.styleFrom(
-                            fixedSize: Size(screenWidth, 40),
+                            fixedSize: Size(screenWidth, AppH.h40),
                           ),
-                          child: const Text(
+                          child: Text(
                             'Let\'s Get Started',
                             style: TextStyle(
-                              fontSize: 20,
+                              fontSize: AppSp.sp20,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
                         ),
 
                         // ── Restore from backup ─────────────────────
-                        const SizedBox(height: 16),
+                        SizedBox(height: AppH.h16),
                         SizedBox(
                           width: double.infinity,
                           child: OutlinedButton.icon(
@@ -303,19 +304,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               _isRestoring
                                   ? 'Restoring...'
                                   : 'Restore from Backup',
-                              style: const TextStyle(fontSize: 15),
+                              style: TextStyle(fontSize: AppSp.sp15),
                             ),
                             style: OutlinedButton.styleFrom(
-                              fixedSize: Size(screenWidth, 40),
+                              fixedSize: Size(screenWidth, AppH.h40),
                             ),
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: AppH.h8),
                         Center(
                           child: Text(
                             'Have a backup file? Restore everything in one tap.',
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: AppSp.sp12,
                               color: cs.onSurfaceVariant,
                             ),
                             textAlign: TextAlign.center,
@@ -324,7 +325,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: AppH.h24),
                 ],
               ),
             ),

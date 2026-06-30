@@ -10,6 +10,7 @@ import 'package:tasky/core/backup/backup_service.dart';
 import 'package:tasky/domain/usecases/create_backup_use_case.dart';
 import 'package:tasky/domain/usecases/restore_backup_use_case.dart';
 import 'package:tasky/presentation/screens/main_navigation_Screen.dart';
+import 'package:tasky/core/theme/app_sizes.dart';
 
 class BackupRestoreScreen extends StatefulWidget {
   const BackupRestoreScreen({super.key});
@@ -138,11 +139,11 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppR.r24)),
       ),
       builder: (ctx) => Padding(
-        padding: const EdgeInsets.fromLTRB(24, 8, 24, 40),
+        padding: EdgeInsets.fromLTRB(AppW.w24, AppH.h8, AppW.w24, AppH.h40),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -150,12 +151,12 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
             // Handle bar
             Center(
               child: Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 20, top: 8),
+                width: AppW.w40,
+                height: AppH.h4,
+                margin: EdgeInsets.only(bottom: AppH.h20, top: AppH.h8),
                 decoration: BoxDecoration(
                   color: colorScheme.outlineVariant,
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: BorderRadius.circular(AppR.r4),
                 ),
               ),
             ),
@@ -164,24 +165,24 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(10),
+                  padding: EdgeInsets.all(AppW.w10),
                   decoration: BoxDecoration(
                     color: colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppR.r12),
                   ),
                   child: Icon(
                     Icons.inventory_2_outlined,
                     color: colorScheme.onPrimaryContainer,
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: AppW.w12),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Backup Preview',
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: AppSp.sp18,
                         fontWeight: FontWeight.w700,
                         color: colorScheme.onSurface,
                       ),
@@ -189,7 +190,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
                     Text(
                       'Version ${preview.version}',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: AppSp.sp12,
                         color: colorScheme.onSurfaceVariant,
                       ),
                     ),
@@ -197,14 +198,14 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: AppH.h20),
 
             // Stats
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(AppW.w16),
               decoration: BoxDecoration(
                 color: colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppR.r16),
               ),
               child: Row(
                 children: [
@@ -214,7 +215,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
                     '${preview.taskCount}',
                     'Tasks',
                   ),
-                  const SizedBox(width: 16),
+                  SizedBox(width: AppW.w16),
                   _statChip(
                     colorScheme,
                     Icons.calendar_today_outlined,
@@ -224,7 +225,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: AppH.h24),
 
             // Merge
             _strategyButton(
@@ -235,7 +236,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
               color: colorScheme.primary,
               onTap: () => _applyRestore(ctx, preview, RestoreStrategy.merge),
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: AppH.h10),
 
             // Replace
             _strategyButton(
@@ -246,7 +247,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
               color: colorScheme.error,
               onTap: () => _confirmReplace(ctx, preview),
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: AppH.h10),
 
             // Cancel
             TextButton(
@@ -269,8 +270,8 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
     return Expanded(
       child: Row(
         children: [
-          Icon(icon, size: 18, color: cs.primary),
-          const SizedBox(width: 8),
+          Icon(icon, size: AppSp.sp18, color: cs.primary),
+          SizedBox(width: AppW.w8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -278,13 +279,13 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
                 main,
                 style: TextStyle(
                   fontWeight: FontWeight.w700,
-                  fontSize: 15,
+                  fontSize: AppSp.sp15,
                   color: cs.onSurface,
                 ),
               ),
               Text(
                 sub,
-                style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
+                style: TextStyle(fontSize: AppSp.sp11, color: cs.onSurfaceVariant),
               ),
             ],
           ),
@@ -304,17 +305,17 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
     final cs = Theme.of(ctx).colorScheme;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(AppR.r16),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: EdgeInsets.symmetric(horizontal: AppW.w16, vertical: AppH.h14),
         decoration: BoxDecoration(
-          border: Border.all(color: color.withOpacity(0.4)),
-          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: color.withValues(alpha: 0.4)),
+          borderRadius: BorderRadius.circular(AppR.r16),
         ),
         child: Row(
           children: [
-            Icon(icon, color: color, size: 22),
-            const SizedBox(width: 12),
+            Icon(icon, color: color, size: AppSp.sp24),
+            SizedBox(width: AppW.w12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -324,17 +325,17 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
                       color: cs.onSurface,
-                      fontSize: 14,
+                      fontSize: AppSp.sp14,
                     ),
                   ),
                   Text(
                     subtitle,
-                    style: TextStyle(color: cs.onSurfaceVariant, fontSize: 12),
+                    style: TextStyle(color: cs.onSurfaceVariant, fontSize: AppSp.sp12),
                   ),
                 ],
               ),
             ),
-            Icon(Icons.chevron_right, color: color, size: 20),
+            Icon(Icons.chevron_right, color: color, size: AppSp.sp20),
           ],
         ),
       ),
@@ -487,13 +488,13 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
         elevation: 0,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(AppW.w20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ── Manual Backup ──────────────────────────────
             _sectionHeader('Manual Backup'),
-            const SizedBox(height: 12),
+            SizedBox(height: AppH.h12),
             _card(cs, [
               _infoRow(
                 cs,
@@ -511,45 +512,45 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
                 child: FilledButton.icon(
                   onPressed: _isExporting ? null : _handleExport,
                   icon: _isExporting
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
+                      ? SizedBox(
+                          width: AppW.w16,
+                          height: AppH.h16,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.upload_outlined),
                   label: Text(_isExporting ? 'Preparing...' : 'Create Backup'),
                   style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    padding: EdgeInsets.symmetric(vertical: AppH.h14),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppR.r12),
                     ),
                   ),
                 ),
               ),
             ]),
-            const SizedBox(height: 24),
+            SizedBox(height: AppH.h24),
 
             // ── Restore ────────────────────────────────────
             _sectionHeader('Restore Backup'),
-            const SizedBox(height: 12),
+            SizedBox(height: AppH.h12),
             _card(cs, [
               Text(
                 'Choose a .json backup file from your device, Google Drive, or any shared location.',
                 style: TextStyle(
                   color: cs.onSurfaceVariant,
-                  fontSize: 13,
+                  fontSize: AppSp.sp13,
                   height: 1.5,
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: AppH.h16),
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
                   onPressed: _isImporting ? null : _handleImport,
                   icon: _isImporting
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
+                      ? SizedBox(
+                          width: AppW.w16,
+                          height: AppH.h16,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.download_outlined),
@@ -557,19 +558,19 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
                     _isImporting ? 'Reading...' : 'Restore from File',
                   ),
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    padding: EdgeInsets.symmetric(vertical: AppH.h14),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppR.r12),
                     ),
                   ),
                 ),
               ),
             ]),
-            const SizedBox(height: 24),
+            SizedBox(height: AppH.h24),
 
             // ── Auto Backup ────────────────────────────────
             _sectionHeader('Auto Backup'),
-            const SizedBox(height: 12),
+            SizedBox(height: AppH.h12),
             _card(cs, [
               Row(
                 children: [
@@ -580,16 +581,16 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
                         Text(
                           'Enable Auto Backup',
                           style: TextStyle(
-                            fontSize: 15,
+                            fontSize: AppSp.sp15,
                             fontWeight: FontWeight.w500,
                             color: cs.onSurface,
                           ),
                         ),
-                        const SizedBox(height: 2),
+                        SizedBox(height: AppH.h2),
                         Text(
                           'Automatically saves a local backup',
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: AppSp.sp12,
                             color: cs.onSurfaceVariant,
                           ),
                         ),
@@ -601,33 +602,33 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
               ),
               // ── Storage Access Banner ────────────────────
               if (Platform.isAndroid) ...[
-                const SizedBox(height: 12),
+                SizedBox(height: AppH.h12),
                 GestureDetector(
                   onTap: _hasFullStorageAccess
                       ? null
                       : _requestFullStorageAccess,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: AppW.w12,
+                      vertical: AppH.h8,
                     ),
                     decoration: BoxDecoration(
-                      color: cs.primaryContainer.withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(10),
+                      color: cs.primaryContainer.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(AppR.r10),
                     ),
                     child: Row(
                       children: [
                         Icon(
                           Icons.folder_open_rounded,
-                          size: 16,
+                          size: AppSp.sp16,
                           color: cs.primary,
                         ),
-                        const SizedBox(width: 8),
+                        SizedBox(width: AppW.w8),
                         Expanded(
                           child: Text(
                             'Saves to Internal Storage → TaskyBackups',
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: AppSp.sp12,
                               color: cs.onPrimaryContainer,
                               fontWeight: FontWeight.w500,
                             ),
@@ -643,12 +644,12 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
                 Text(
                   'Backup Frequency',
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: AppSp.sp13,
                     fontWeight: FontWeight.w500,
                     color: cs.onSurface,
                   ),
                 ),
-                const SizedBox(height: 10),
+                SizedBox(height: AppH.h10),
                 Wrap(
                   spacing: 8,
                   children: AutoBackupManager.frequencyOptions.map((days) {
@@ -669,7 +670,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
                     );
                   }).toList(),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: AppH.h12),
                 _infoRow(
                   cs,
                   icon: Icons.schedule_outlined,
@@ -680,46 +681,46 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
                         ).format(_lastAutoBackup!.toLocal())
                       : 'Not yet',
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: AppH.h12),
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
                     onPressed: _isRunningAutoBackup ? null : _runAutoBackupNow,
                     icon: _isRunningAutoBackup
-                        ? const SizedBox(
-                            width: 14,
-                            height: 14,
+                        ? SizedBox(
+                            width: AppW.w14,
+                            height: AppH.h14,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Icon(Icons.play_arrow_rounded, size: 18),
+                        : Icon(Icons.play_arrow_rounded, size: AppSp.sp18),
                     label: Text(
                       _isRunningAutoBackup ? 'Running...' : 'Backup Now',
                     ),
                     style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      padding: EdgeInsets.symmetric(vertical: AppH.h12),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(AppR.r10),
                       ),
                     ),
                   ),
                 ),
                 if (_lastAutoBackupPath != null) ...[
-                  const SizedBox(height: 12),
+                  SizedBox(height: AppH.h12),
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: EdgeInsets.all(AppW.w12),
                     decoration: BoxDecoration(
                       color: cs.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppR.r10),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Icon(
                           Icons.folder_outlined,
-                          size: 16,
+                          size: AppSp.sp16,
                           color: cs.primary,
                         ),
-                        const SizedBox(width: 8),
+                        SizedBox(width: AppW.w8),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -727,23 +728,23 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
                               Text(
                                 'Saved to your internal storage',
                                 style: TextStyle(
-                                  fontSize: 11,
+                                  fontSize: AppSp.sp11,
                                   color: cs.onSurfaceVariant,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
-                              const SizedBox(height: 2),
+                              SizedBox(height: AppH.h2),
                             ],
                           ),
                         ),
-                        const SizedBox(width: 6),
+                        SizedBox(width: AppW.w6),
                       ],
                     ),
                   ),
                 ],
               ],
             ]),
-            const SizedBox(height: 32),
+            SizedBox(height: AppH.h32),
           ],
         ),
       ),
@@ -755,17 +756,17 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
   Widget _sectionHeader(String title) {
     return Text(
       title,
-      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+      style: TextStyle(fontSize: AppSp.sp18, fontWeight: FontWeight.w600),
     );
   }
 
   Widget _card(ColorScheme cs, List<Widget> children) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: EdgeInsets.all(AppW.w18), // Let's add AppW.w18 instead of fallback
       decoration: BoxDecoration(
         color: cs.surface,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppR.r16),
         boxShadow: [
           BoxShadow(
             color: cs.shadow.withOpacity(0.06),
@@ -789,11 +790,11 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
   }) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: cs.onSurfaceVariant),
-        const SizedBox(width: 8),
+        Icon(icon, size: AppSp.sp16, color: cs.onSurfaceVariant),
+        SizedBox(width: AppW.w8),
         Text(
           '$label: ',
-          style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13),
+          style: TextStyle(color: cs.onSurfaceVariant, fontSize: AppSp.sp13),
         ),
         Expanded(
           child: Text(

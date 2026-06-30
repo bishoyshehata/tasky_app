@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tasky/core/theme/app_sizes.dart';
 import 'package:tasky/data/models/user_model.dart';
 
 class UserDetailsScreen extends StatefulWidget {
@@ -63,15 +64,15 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
         children: [
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              padding: EdgeInsets.symmetric(horizontal: AppW.w16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Your Name',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w400),
+                    style: TextStyle(fontSize: AppSp.sp18, fontWeight: FontWeight.w400),
                   ),
-                  const SizedBox(height: 6),
+                  SizedBox(height: AppH.h6),
                   TextFormField(
                     focusNode: nameFocus,
                     textInputAction: TextInputAction.done,
@@ -81,12 +82,12 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                       hintText: userModel?.name ?? 'Write Your Name',
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  const Text(
+                  SizedBox(height: AppH.h12),
+                  Text(
                     'Motivation Quote',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w400),
+                    style: TextStyle(fontSize: AppSp.sp18, fontWeight: FontWeight.w400),
                   ),
-                  const SizedBox(height: 6),
+                  SizedBox(height: AppH.h6),
                   TextFormField(
                     focusNode: quoteFocus,
                     textInputAction: TextInputAction.done,
@@ -126,10 +127,10 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                     }
                   }
                 : null,
-            label: const Text('Save Changes', style: TextStyle(fontSize: 14)),
-            style: ElevatedButton.styleFrom(fixedSize: const Size(346, 40)),
+            label: Text('Save Changes', style: TextStyle(fontSize: AppSp.sp14)),
+            style: ElevatedButton.styleFrom(fixedSize: Size(AppW.w300 + AppW.w40, AppH.h40)),
           ),
-          const SizedBox(height: 34),
+          SizedBox(height: AppH.h34),
         ],
       ),
     );

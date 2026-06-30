@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import 'package:tasky/data/models/task_model.dart';
 import 'package:tasky/presentation/components/tasks_card.dart';
 import 'package:tasky/presentation/screens/add_task._screen.dart';
+import 'package:tasky/core/theme/app_sizes.dart';
 
 class TodoScreen extends StatefulWidget {
   final List<TaskModel> tasks;
@@ -29,7 +31,7 @@ class _TodoScreenState extends State<TodoScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('To Do Tasks')),
       body: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 12),
+        margin: EdgeInsets.symmetric(horizontal: AppW.w12),
         child: _buildCards(context),
       ),
     );
@@ -39,24 +41,39 @@ class _TodoScreenState extends State<TodoScreen> {
     final todo = widget.tasks.where((t) => !t.isDone).toList();
 
     if (todo.isEmpty) {
-      return Center(
-        child: Text(
-          'No Tasks Yet',
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-            fontSize: 18,
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: double.infinity,
+            height: AppH.h250,
+            alignment: Alignment.center,
+            margin: EdgeInsets.only(bottom: AppH.h40),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Theme.of(context).colorScheme.surface,
+            ),
+            child: Lottie.asset('assets/lottie/to_do.json', fit: BoxFit.cover),
           ),
-        ),
+          Text(
+            'No Tasks Yet',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: AppSp.sp18,
+            ),
+          ),
+        ],
       );
     }
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const SizedBox(height: 12),
+        SizedBox(height: AppH.h12),
         ListView.separated(
           shrinkWrap: true,
-          padding: const EdgeInsets.only(bottom: 65),
+          padding: EdgeInsets.only(bottom: AppH.h65),
           physics: const NeverScrollableScrollPhysics(),
           itemCount: todo.length,
           itemBuilder: (_, i) => TaskCard(
@@ -67,7 +84,18 @@ class _TodoScreenState extends State<TodoScreen> {
             onDelete: () => widget.onDeleteTask(todo[i]),
             onMarkComplete: () => widget.onTaskCompleted(todo[i]),
           ),
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
+          separatorBuilder: (_, __) => SizedBox(height: AppH.h12),
+        ),
+        Container(
+          width: AppW.w200,
+          height: AppH.h200,
+          alignment: Alignment.center,
+          margin: EdgeInsets.only(bottom: AppH.h40),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Theme.of(context).colorScheme.surface,
+          ),
+          child: Lottie.asset('assets/lottie/to_do.json', fit: BoxFit.cover),
         ),
       ],
     );
@@ -76,9 +104,7 @@ class _TodoScreenState extends State<TodoScreen> {
   Future<void> _handleEdit(TaskModel task) async {
     final updated = await Navigator.push<TaskModel>(
       context,
-      MaterialPageRoute(
-        builder: (_) => AddTaskScreen(taskToEdit: task),
-      ),
+      MaterialPageRoute(builder: (_) => AddTaskScreen(taskToEdit: task)),
     );
     if (updated != null) {
       widget.onEditTask(updated);
@@ -88,7 +114,7 @@ class _TodoScreenState extends State<TodoScreen> {
 
   void _showReminderSnackbar(TaskModel task, String action) {
     if (!task.reminderEnabled || task.reminderDate == null) return;
-    
+
     final diff = task.reminderDate!.difference(DateTime.now());
     if (diff.isNegative) return;
 

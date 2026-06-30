@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import 'package:tasky/data/models/task_model.dart';
 import 'package:tasky/presentation/components/tasks_card.dart';
+import 'package:tasky/core/theme/app_sizes.dart';
 
 class ArchivedTasksScreen extends StatefulWidget {
   final List<TaskModel> tasks;
@@ -20,12 +22,9 @@ class _ArchivedTasksScreenState extends State<ArchivedTasksScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Archived Tasks'),
-        elevation: 0,
-      ),
+      appBar: AppBar(title: const Text('Archived Tasks'), elevation: 0),
       body: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 12),
+        margin: EdgeInsets.symmetric(horizontal: AppW.w12),
         child: _buildCards(context),
       ),
     );
@@ -35,37 +34,55 @@ class _ArchivedTasksScreenState extends State<ArchivedTasksScreen> {
     final archived = widget.tasks.where((t) => t.isArchived).toList();
 
     if (archived.isEmpty) {
-      return Center(
-        child: Text(
-          'No Archived Tasks',
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-            fontSize: 18,
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SizedBox(height: AppH.h12),
+          Container(
+            width: double.infinity,
+            height: AppH.h250,
+            alignment: Alignment.center,
+
+            child: Lottie.asset(
+              'assets/lottie/archeived.json',
+              fit: BoxFit.cover,
+            ),
           ),
-        ),
+          Text(
+            'No Archived Tasks',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: AppSp.sp18,
+            ),
+          ),
+        ],
       );
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 12),
+        SizedBox(height: AppH.h12),
         // A banner to inform the user about the auto-delete policy
         Container(
-          padding: const EdgeInsets.all(12),
+          padding: EdgeInsets.all(AppW.w12),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppR.r10),
           ),
           child: Row(
             children: [
-              Icon(Icons.info_outline, color: Theme.of(context).colorScheme.primary, size: 20),
-              const SizedBox(width: 8),
+              Icon(
+                Icons.info_outline,
+                color: Theme.of(context).colorScheme.primary,
+                size: AppSp.sp20,
+              ),
+              SizedBox(width: AppW.w8),
               Expanded(
                 child: Text(
                   'Archived tasks are read-only and will be permanently deleted after 7 days.',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: AppSp.sp12,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
@@ -73,10 +90,10 @@ class _ArchivedTasksScreenState extends State<ArchivedTasksScreen> {
             ],
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: AppH.h12),
         Expanded(
           child: ListView.separated(
-            padding: const EdgeInsets.only(bottom: 65),
+            padding: EdgeInsets.only(bottom: AppH.h65),
             itemCount: archived.length,
             itemBuilder: (_, i) => TaskCard(
               task: archived[i],
@@ -90,7 +107,17 @@ class _ArchivedTasksScreenState extends State<ArchivedTasksScreen> {
                 // But user didn't ask for it, so we can just leave it since the more-menu is hidden.
               },
             ),
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            separatorBuilder: (_, __) => SizedBox(height: AppH.h12),
+          ),
+        ),
+        Container(
+          width: double.infinity,
+          height: AppH.h250,
+          alignment: Alignment.center,
+          margin: EdgeInsets.only(top: AppH.h40, bottom: AppH.h300),
+          child: Lottie.asset(
+            'assets/lottie/archeived.json',
+            fit: BoxFit.cover,
           ),
         ),
       ],

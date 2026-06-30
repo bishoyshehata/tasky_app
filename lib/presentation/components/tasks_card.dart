@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:tasky/core/theme/app_sizes.dart';
 import 'package:tasky/data/models/task_model.dart';
 
 class TaskCard extends StatefulWidget {
@@ -48,9 +49,9 @@ class _TaskCardState extends State<TaskCard> {
     final doneColor = colorScheme.onSurfaceVariant;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: EdgeInsets.symmetric(horizontal: AppW.w6, vertical: AppH.h2),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppR.r20),
         color: colorScheme.surface,
       ),
       child: Row(
@@ -61,7 +62,7 @@ class _TaskCardState extends State<TaskCard> {
             Checkbox(
               value: isDone,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(5)),
+                  borderRadius: BorderRadius.circular(AppR.r5)),
               onChanged: (value) {
                 setState(() {
                   widget.task.isDone = value!;
@@ -72,7 +73,7 @@ class _TaskCardState extends State<TaskCard> {
               },
             )
           else
-            const SizedBox(width: 12),
+            SizedBox(width: AppW.w12),
 
           // ── Text content ──────────────────────────────────────
           Expanded(
@@ -86,7 +87,7 @@ class _TaskCardState extends State<TaskCard> {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: isDone ? doneColor : activeColor,
-                    fontSize: 16,
+                    fontSize: AppSp.sp16,
                     fontWeight: FontWeight.w400,
                     decoration:
                         isDone ? TextDecoration.lineThrough : null,
@@ -103,7 +104,7 @@ class _TaskCardState extends State<TaskCard> {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: isDone ? doneColor : colorScheme.onSurfaceVariant,
-                      fontSize: 14,
+                      fontSize: AppSp.sp14,
                       decoration:
                           isDone ? TextDecoration.lineThrough : null,
                       decorationColor: doneColor,
@@ -120,29 +121,29 @@ class _TaskCardState extends State<TaskCard> {
                           .format(DateTime.parse(widget.task.dateTime)),
                       style: TextStyle(
                         color: colorScheme.onSurfaceVariant,
-                        fontSize: 12,
+                        fontSize: AppSp.sp12,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                     if (widget.task.reminderEnabled &&
                         widget.task.reminderDate != null) ...[
-                      const SizedBox(width: 6),
+                      SizedBox(width: AppW.w6),
                       Icon(
                         Icons.alarm,
-                        size: 13,
+                        size: AppSp.sp13,
                         color: widget.task.reminderDate!.isBefore(DateTime.now())
                             ? colorScheme.onSurfaceVariant.withOpacity(0.6)
                             : colorScheme.primary,
                       ),
-                      const SizedBox(width: 2),
+                      SizedBox(width: AppW.w2),
                       Text(
                         DateFormat('hh:mm a')
                             .format(widget.task.reminderDate!),
                         style: TextStyle(
                           color: widget.task.reminderDate!.isBefore(DateTime.now())
-                              ? colorScheme.onSurfaceVariant.withOpacity(0.6)
+                              ? colorScheme.onSurfaceVariant.withValues(alpha: 0.6)
                               : colorScheme.primary,
-                          fontSize: 11,
+                          fontSize: AppSp.sp11,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -158,11 +159,11 @@ class _TaskCardState extends State<TaskCard> {
             PopupMenuButton<String>(
               icon: Icon(
                 Icons.more_vert,
-                size: 24,
+                size: AppSp.sp24,
                 color: colorScheme.onSurfaceVariant,
               ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppR.r12),
               ),
               onSelected: (value) {
                 if (value == 'edit') widget.onEdit();
@@ -176,8 +177,8 @@ class _TaskCardState extends State<TaskCard> {
                     child: Row(
                       children: [
                         Icon(Icons.archive_outlined,
-                            color: colorScheme.onSurface, size: 20),
-                        const SizedBox(width: 8),
+                            color: colorScheme.onSurface, size: AppSp.sp20),
+                        SizedBox(width: AppW.w8),
                         Text(
                           'Archive',
                           style: TextStyle(color: colorScheme.onSurface),
@@ -190,8 +191,8 @@ class _TaskCardState extends State<TaskCard> {
                   child: Row(
                     children: [
                       Icon(Icons.edit_outlined,
-                          color: colorScheme.onSurface, size: 20),
-                      const SizedBox(width: 8),
+                          color: colorScheme.onSurface, size: AppSp.sp20),
+                      SizedBox(width: AppW.w8),
                       Text(
                         'Edit',
                         style: TextStyle(color: colorScheme.onSurface),
@@ -204,8 +205,8 @@ class _TaskCardState extends State<TaskCard> {
                   child: Row(
                     children: [
                       Icon(Icons.delete_outline,
-                          color: colorScheme.error, size: 20),
-                      const SizedBox(width: 8),
+                          color: colorScheme.error, size: AppSp.sp20),
+                      SizedBox(width: AppW.w8),
                       Text(
                         'Delete',
                         style: TextStyle(color: colorScheme.error),

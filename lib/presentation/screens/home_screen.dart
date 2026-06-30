@@ -1,14 +1,14 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:lottie/lottie.dart';
+import 'package:tasky/core/theme/app_sizes.dart';
 import 'package:tasky/core/theme/app_theme_notifier.dart';
 import 'package:tasky/data/models/task_model.dart';
 import 'package:tasky/data/models/user_model.dart';
 import 'package:tasky/presentation/components/achieved_tasks.dart';
 import 'package:tasky/presentation/components/tasks_card.dart';
 import 'package:tasky/presentation/screens/add_task._screen.dart';
-import 'dart:io';
-import 'dart:convert';
 
 class HomeScreen extends StatefulWidget {
   final List<TaskModel> tasks;
@@ -40,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(12.0),
+          padding: EdgeInsets.all(AppW.w12),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             child: Column(
@@ -51,14 +51,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     CircleAvatar(
-                      radius: 25,
+                      radius: AppR.r25,
                       backgroundImage:
                           (widget.userModel?.profileImageBytes != null)
                           ? MemoryImage(widget.userModel!.profileImageBytes!)
                           : const AssetImage('assets/images/file.jpg')
                                 as ImageProvider,
                     ),
-                    const SizedBox(width: 4),
+                    SizedBox(width: AppW.w4),
                     SizedBox(
                       width: MediaQuery.of(context).size.width * 0.65,
                       child: Column(
@@ -66,7 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           AutoSizeText(
                             '${_greeting()}, ${widget.userModel?.name ?? ''} ',
-                            style: const TextStyle(fontSize: 18),
+                            style: TextStyle(fontSize: AppSp.sp18),
                             minFontSize: 14,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -78,7 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               color: Theme.of(
                                 context,
                               ).colorScheme.onSurfaceVariant,
-                              fontSize: 16,
+                              fontSize: AppSp.sp16,
                             ),
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
@@ -100,37 +100,58 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
 
-                const SizedBox(height: 20),
-                const Text(
-                  'Yuhuu, Your work Is ',
-                  style: TextStyle(fontSize: 30),
+                SizedBox(height: AppH.h20),
+                Text(
+                  'Small steps lead to',
+                  style: TextStyle(fontSize: AppSp.sp24),
                 ),
                 Row(
                   children: [
-                    const Text(
-                      'almost done ! ',
-                      style: TextStyle(fontSize: 30),
+                    Text(
+                      'big achievements! ',
+                      style: TextStyle(fontSize: AppSp.sp20),
                     ),
                     SvgPicture.asset(
                       'assets/images/hand.svg',
-                      width: 40,
-                      height: 40,
+                      width: AppW.w40,
+                      height: AppH.h40,
                     ),
                   ],
                 ),
 
-                const SizedBox(height: 10),
+                SizedBox(height: AppH.h100),
                 if (widget.tasks.isEmpty)
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 60),
-                      child: Text(
-                        'No Tasks Yet',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          fontSize: 18,
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: AppW.w250,
+                          height: AppH.h250,
+                          alignment: Alignment.center,
+                          margin: EdgeInsets.only(bottom: AppH.h40),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Theme.of(context).colorScheme.surface,
+                          ),
+                          child: Lottie.asset(
+                            'assets/lottie/to_do.json',
+
+                            fit: BoxFit.cover,
+                          ),
                         ),
-                      ),
+                        Text(
+                          'No Tasks Yet',
+                          style: TextStyle(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                            fontSize: AppSp.sp18,
+                          ),
+                        ),
+                      ],
                     ),
                   )
                 else
@@ -142,9 +163,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             .where((t) => t.isDone)
                             .length,
                       ),
-                      const SizedBox(height: 10),
+                      SizedBox(height: AppH.h10),
                       _buildHighPriority(),
-                      const SizedBox(height: 10),
+                      SizedBox(height: AppH.h10),
                       widget.tasks.where((t) => !t.isHighPriority).isEmpty
                           ? SizedBox.shrink()
                           : _buildTaskCards(),
@@ -158,7 +179,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       // ── FAB ───────────────────────────────────────────────────
       floatingActionButton: SizedBox(
-        height: 40,
+        height: AppH.h40,
         child: FloatingActionButton.extended(
           onPressed: () async {
             final result = await Navigator.push<TaskModel>(
@@ -170,9 +191,9 @@ class _HomeScreenState extends State<HomeScreen> {
               _showReminderSnackbar(result, 'added');
             }
           },
-          label: const Text(
+          label: Text(
             'Add New Task',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+            style: TextStyle(fontSize: AppSp.sp14, fontWeight: FontWeight.w500),
           ),
           icon: const Icon(Icons.add),
         ),
@@ -190,14 +211,14 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.only(left: 16.0),
+        Padding(
+          padding: EdgeInsets.only(left: AppW.w16),
           child: Text(
             'My Tasks',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w400),
+            style: TextStyle(fontSize: AppSp.sp20, fontWeight: FontWeight.w400),
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: AppH.h12),
         ListView.separated(
           shrinkWrap: true,
           padding: const EdgeInsets.only(bottom: 65),
@@ -211,7 +232,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onDelete: () => widget.onDeleteTask(reversed[i]),
             onMarkComplete: () => widget.onTaskCompleted(reversed[i]),
           ),
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
+          separatorBuilder: (_, __) => SizedBox(height: AppH.h12),
         ),
       ],
     );
@@ -229,7 +250,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppR.r20),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -245,7 +266,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: AppH.h6),
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -258,7 +279,7 @@ class _HomeScreenState extends State<HomeScreen> {
               onDelete: () => widget.onDeleteTask(hp[i]),
               onMarkComplete: () => widget.onTaskCompleted(hp[i]),
             ),
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            separatorBuilder: (_, __) => SizedBox(height: AppH.h12),
           ),
         ],
       ),

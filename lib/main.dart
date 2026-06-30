@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'core/notifications/notification_initializer.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/app_theme_notifier.dart';
@@ -19,17 +20,24 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: AppThemeNotifier.instance,
-      builder: (context, themeMode, _) {
-        return MaterialApp(
-          navigatorKey: navigatorKey,
-          debugShowCheckedModeBanner: false,
-          title: 'Tasky',
-          theme: AppTheme.light,
-          darkTheme: AppTheme.dark,
-          themeMode: themeMode,
-          home: const SplashScreen(),
+    return ScreenUtilInit(
+      designSize: const Size(375, 812), // Standard iPhone X design size
+      minTextAdapt: true,
+      splitScreenMode: true,
+      builder: (context, child) {
+        return ValueListenableBuilder<ThemeMode>(
+          valueListenable: AppThemeNotifier.instance,
+          builder: (context, themeMode, _) {
+            return MaterialApp(
+              navigatorKey: navigatorKey,
+              debugShowCheckedModeBanner: false,
+              title: 'Tasky',
+              theme: AppTheme.light,
+              darkTheme: AppTheme.dark,
+              themeMode: themeMode,
+              home: const SplashScreen(),
+            );
+          },
         );
       },
     );

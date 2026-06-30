@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
+import 'package:tasky/core/theme/app_sizes.dart';
 
 class AchievedTasks extends StatelessWidget {
   final int allTasks;
@@ -17,9 +18,9 @@ class AchievedTasks extends StatelessWidget {
     final percent = allTasks == 0 ? 0.0 : achievedTasks / allTasks;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.symmetric(horizontal: AppW.w16, vertical: AppH.h12),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppR.r20),
         color: colorScheme.surface,
       ),
       child: Row(
@@ -29,11 +30,11 @@ class AchievedTasks extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Achieved Tasks',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w400),
+                  style: TextStyle(fontSize: AppSp.sp20, fontWeight: FontWeight.w400),
                 ),
                 Text(
                   '$achievedTasks Out of $allTasks Done',
@@ -41,7 +42,7 @@ class AchievedTasks extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: colorScheme.onSurfaceVariant,
-                    fontSize: 14,
+                    fontSize: AppSp.sp14,
                     fontWeight: FontWeight.w400,
                   ),
                 ),
@@ -49,7 +50,7 @@ class AchievedTasks extends StatelessWidget {
             ),
           ),
           CircularPercentIndicator(
-            radius: 35.0,
+            radius: AppR.r35,
             lineWidth: 5.0,
             animation: true,
             animationDuration: 500,
@@ -60,7 +61,7 @@ class AchievedTasks extends StatelessWidget {
             progressColor: colorScheme.primary,
             center: Text(
               '${(percent * 100).toStringAsFixed(0)}%',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400),
+              style: TextStyle(fontSize: AppSp.sp20, fontWeight: FontWeight.w400),
             ),
           ),
         ],

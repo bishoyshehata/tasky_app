@@ -11,7 +11,9 @@ import 'package:tasky/presentation/screens/splash_screen.dart';
 import 'package:tasky/presentation/screens/user_details_screen.dart';
 import 'package:tasky/presentation/screens/backup_restore_screen.dart';
 import 'package:tasky/presentation/screens/archived_tasks_screen.dart';
+import 'package:tasky/presentation/screens/archived_tasks_screen.dart';
 import 'package:tasky/data/models/task_model.dart';
+import 'package:tasky/core/theme/app_sizes.dart';
 
 class ProfileScreen extends StatefulWidget {
   final VoidCallback onUserChanged;
@@ -59,15 +61,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
         title: const Text('My Profile'),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+        padding: EdgeInsets.symmetric(horizontal: AppW.w24, vertical: AppH.h24),
         child: Column(
           children: [
             // ── Avatar ─────────────────────────────────────────
             Stack(
               children: [
                 Container(
-                  width: 128,
-                  height: 128,
+                  width: AppW.w128,
+                  height: AppH.h128,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: colorScheme.surfaceContainerHighest,
@@ -81,7 +83,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           )
                         : Icon(
                             Icons.person,
-                            size: 48,
+                            size: AppSp.sp48,
                             color: colorScheme.onSurface,
                           ),
                   ),
@@ -93,47 +95,47 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     icon: Icon(
                       Icons.camera_alt_outlined,
                       color: colorScheme.onSurfaceVariant,
-                      size: 16,
+                      size: AppSp.sp16,
                     ),
                     onPressed: _showImagePickerDialog,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: AppH.h24),
 
             // ── Identity ────────────────────────────────────────
             Text(
               userModel?.name ?? '',
-              style: const TextStyle(
-                fontSize: 24,
+              style: TextStyle(
+                fontSize: AppSp.sp24,
                 fontWeight: FontWeight.w600,
                 letterSpacing: -0.5,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: AppH.h8),
             Text(
               userModel?.motivationQuote ?? '',
               style: TextStyle(
                 color: colorScheme.onSurfaceVariant,
-                fontSize: 14,
+                fontSize: AppSp.sp14,
                 fontWeight: FontWeight.w300,
               ),
             ),
-            const SizedBox(height: 40),
+            SizedBox(height: AppH.h40),
 
             // ── Section Label ───────────────────────────────────
-            const Align(
+            Align(
               alignment: Alignment.centerLeft,
               child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 4.0),
+                padding: EdgeInsets.symmetric(horizontal: AppW.w4),
                 child: Text(
                   'Profile Info',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                  style: TextStyle(fontSize: AppSp.sp18, fontWeight: FontWeight.w500),
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: AppH.h16),
 
             // ── Menu Items ──────────────────────────────────────
             _buildMenuItem(
@@ -221,7 +223,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return InkWell(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: EdgeInsets.symmetric(vertical: AppH.h16),
         decoration: BoxDecoration(
           border: Border(
             bottom: BorderSide(color: colorScheme.outline, width: 1),
@@ -234,14 +236,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
               color: isDestructive
                   ? colorScheme.error
                   : colorScheme.onSurfaceVariant,
-              size: 24,
+              size: AppSp.sp24,
             ),
-            const SizedBox(width: 16),
+            SizedBox(width: AppW.w16),
             Expanded(
               child: Text(
                 title,
-                style: const TextStyle(
-                  fontSize: 16,
+                style: TextStyle(
+                  fontSize: AppSp.sp16,
                   fontWeight: FontWeight.w400,
                 ),
               ),
@@ -250,7 +252,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Icon(
                   Icons.chevron_right,
                   color: colorScheme.onSurfaceVariant,
-                  size: 20,
+                  size: AppSp.sp20,
                 ),
           ],
         ),
@@ -288,14 +290,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showModalBottomSheet(
       context: context,
       builder: (context) => Container(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(AppW.w20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
               tileColor: colorScheme.surfaceContainerHighest,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppR.r12),
               ),
               leading: Icon(Icons.photo, color: colorScheme.onSurface),
               title: const Text('Choose from Gallery'),
@@ -304,11 +306,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 await pickImageFromGallery();
               },
             ),
-            const SizedBox(height: 6),
+            SizedBox(height: AppH.h6),
             ListTile(
               tileColor: colorScheme.surfaceContainerHighest,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppR.r12),
               ),
               leading: Icon(Icons.camera_alt, color: colorScheme.onSurface),
               title: const Text('Take from Camera'),

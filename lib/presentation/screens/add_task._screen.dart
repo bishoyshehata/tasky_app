@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_system_ringtones/flutter_system_ringtones.dart';
+import 'package:tasky/core/theme/app_sizes.dart';
 
 class AddTaskScreen extends StatefulWidget {
   final TaskModel? taskToEdit;
@@ -17,7 +18,7 @@ class AddTaskScreen extends StatefulWidget {
 
 class _AddTaskScreenState extends State<AddTaskScreen> {
   static const _pickerChannel = MethodChannel('com.bsh.tasky/ringtone_picker');
-  
+
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descController = TextEditingController();
@@ -117,7 +118,11 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     if (time == null || !mounted) return;
 
     final combined = DateTime(
-      date.year, date.month, date.day, time.hour, time.minute,
+      date.year,
+      date.month,
+      date.day,
+      time.hour,
+      time.minute,
     );
 
     setState(() {
@@ -144,9 +149,12 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     try {
       final ringtones = await FlutterSystemRingtones.getRingtoneSounds();
       final alarms = await FlutterSystemRingtones.getAlarmSounds();
-      
+
       final seen = <String>{};
-      systemSounds = [...ringtones, ...alarms].where((s) => seen.add(s.uri)).toList();
+      systemSounds = [
+        ...ringtones,
+        ...alarms,
+      ].where((s) => seen.add(s.uri)).toList();
     } catch (e) {
       // ignore
     }
@@ -159,8 +167,8 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppR.r16)),
       ),
       builder: (context) {
         final colorScheme = Theme.of(context).colorScheme;
@@ -172,14 +180,14 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 children: [
                   // Header
                   Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: EdgeInsets.all(AppW.w16),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
                           'Select Alarm Sound',
                           style: TextStyle(
-                            fontSize: 18,
+                            fontSize: AppSp.sp18,
                             fontWeight: FontWeight.bold,
                             color: colorScheme.onSurface,
                           ),
@@ -187,16 +195,16 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                         IconButton(
                           icon: const Icon(Icons.close),
                           onPressed: () => Navigator.pop(context),
-                        )
+                        ),
                       ],
                     ),
                   ),
                   const Divider(height: 1),
-                  
+
                   // Add custom sound button
                   ListTile(
                     leading: Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: EdgeInsets.all(AppW.w8),
                       decoration: BoxDecoration(
                         color: colorScheme.primary.withOpacity(0.1),
                         shape: BoxShape.circle,
@@ -205,33 +213,43 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                     ),
                     title: Text(
                       'Add Custom Sound from Files',
-                      style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     onTap: () async {
                       try {
-                        final result = await FilePicker.pickFiles(type: FileType.audio);
-                        if (result != null && result.files.single.path != null) {
+                        final result = await FilePicker.pickFiles(
+                          type: FileType.audio,
+                        );
+                        if (result != null &&
+                            result.files.single.path != null) {
                           final path = result.files.single.path!;
                           final name = result.files.single.name;
-                          
+
                           String finalPath = path;
-                          if (Theme.of(context).platform == TargetPlatform.android) {
-                            final String? systemUri = await _pickerChannel.invokeMethod('saveAudioToSystem', {
-                              'path': path,
-                              'title': name.split('.').first,
-                            });
+                          if (Theme.of(context).platform ==
+                              TargetPlatform.android) {
+                            final String? systemUri = await _pickerChannel
+                                .invokeMethod('saveAudioToSystem', {
+                                  'path': path,
+                                  'title': name.split('.').first,
+                                });
                             if (systemUri != null) {
                               finalPath = systemUri;
                             }
                           }
-                          
+
                           final soundKey = '$finalPath|$name';
-                          
+
                           await _saveCustomSound(finalPath, name);
                           setSheetState(() {
                             tempSelectedSound = soundKey;
                           });
-                          await _pickerChannel.invokeMethod('playRingtone', {'uri': finalPath});
+                          await _pickerChannel.invokeMethod('playRingtone', {
+                            'uri': finalPath,
+                          });
                         }
                       } catch (e) {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -241,7 +259,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                     },
                   ),
                   const Divider(height: 1),
-                  
+
                   Expanded(
                     child: ListView.builder(
                       itemCount: systemSounds.length + _customSounds.length + 1,
@@ -259,7 +277,9 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                                   setSheetState(() {
                                     tempSelectedSound = val;
                                   });
-                                  await _pickerChannel.invokeMethod('stopRingtone');
+                                  await _pickerChannel.invokeMethod(
+                                    'stopRingtone',
+                                  );
                                 }
                               },
                             ),
@@ -272,14 +292,14 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                             },
                           );
                         }
-                        
+
                         // 2. Custom Sounds
                         if (index <= _customSounds.length) {
                           final customSound = _customSounds[index - 1];
                           final parts = customSound.split('|');
                           final path = parts[0];
                           final name = parts[1];
-                          
+
                           return ListTile(
                             leading: Radio<String>(
                               value: customSound,
@@ -290,13 +310,19 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                                   setSheetState(() {
                                     tempSelectedSound = val;
                                   });
-                                  await _pickerChannel.invokeMethod('playRingtone', {'uri': path});
+                                  await _pickerChannel.invokeMethod(
+                                    'playRingtone',
+                                    {'uri': path},
+                                  );
                                 }
                               },
                             ),
                             title: Text(name),
                             trailing: IconButton(
-                              icon: const Icon(Icons.delete_outline, color: Colors.red),
+                              icon: const Icon(
+                                Icons.delete_outline,
+                                color: Colors.red,
+                              ),
                               onPressed: () async {
                                 await _deleteCustomSound(customSound);
                                 setSheetState(() {
@@ -311,16 +337,19 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                               setSheetState(() {
                                 tempSelectedSound = customSound;
                               });
-                              await _pickerChannel.invokeMethod('playRingtone', {'uri': path});
+                              await _pickerChannel.invokeMethod(
+                                'playRingtone',
+                                {'uri': path},
+                              );
                             },
                           );
                         }
-                        
+
                         // 3. System Sounds
                         final soundIndex = index - _customSounds.length - 1;
                         final sound = systemSounds[soundIndex];
                         final soundKey = '${sound.uri}|${sound.title}';
-                        
+
                         return ListTile(
                           leading: Radio<String>(
                             value: soundKey,
@@ -331,7 +360,10 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                                 setSheetState(() {
                                   tempSelectedSound = val;
                                 });
-                                await _pickerChannel.invokeMethod('playRingtone', {'uri': sound.uri});
+                                await _pickerChannel.invokeMethod(
+                                  'playRingtone',
+                                  {'uri': sound.uri},
+                                );
                               }
                             },
                           ),
@@ -340,16 +372,18 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                             setSheetState(() {
                               tempSelectedSound = soundKey;
                             });
-                            await _pickerChannel.invokeMethod('playRingtone', {'uri': sound.uri});
+                            await _pickerChannel.invokeMethod('playRingtone', {
+                              'uri': sound.uri,
+                            });
                           },
                         );
                       },
                     ),
                   ),
-                  
+
                   // Confirm Button
                   Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: EdgeInsets.all(AppW.w16),
                     child: ElevatedButton(
                       onPressed: () async {
                         setState(() {
@@ -359,10 +393,18 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                         Navigator.pop(context);
                       },
                       style: ElevatedButton.styleFrom(
-                        minimumSize: const Size(double.infinity, 48),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        minimumSize: const Size(
+                          double.infinity,
+                          48,
+                        ), // Might want to keep this or use 48.h
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppR.r8),
+                        ),
                       ),
-                      child: const Text('Confirm Selection', style: TextStyle(fontSize: 16)),
+                      child: Text(
+                        'Confirm Selection',
+                        style: TextStyle(fontSize: AppSp.sp16),
+                      ),
                     ),
                   ),
                 ],
@@ -382,11 +424,16 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.taskToEdit == null ? 'New Task' : 'Edit Task')),
+      appBar: AppBar(
+        title: Text(widget.taskToEdit == null ? 'New Task' : 'Edit Task'),
+      ),
       body: Form(
         key: _formKey,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: EdgeInsets.symmetric(
+            horizontal: AppW.w16,
+            vertical: AppH.h8,
+          ),
           child: Column(
             children: [
               Expanded(
@@ -395,20 +442,20 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // ── Task Name ────────────────────────────
-                      const Text(
+                      Text(
                         'Task Name',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: AppSp.sp16,
                           fontWeight: FontWeight.w400,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: AppH.h8),
                       TextFormField(
                         textInputAction: TextInputAction.next,
                         focusNode: _nameFocus,
                         controller: _nameController,
                         decoration: const InputDecoration(
-                          hintText: 'Finish UI design for login screen',
+                          hintText: 'Task Name',
                         ),
                         validator: (value) {
                           if (value?.trim().isEmpty ?? true) {
@@ -418,38 +465,37 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                         },
                       ),
 
-                      const SizedBox(height: 20),
+                      SizedBox(height: AppH.h20),
 
                       // ── Task Description ─────────────────────
-                      const Text(
+                      Text(
                         'Task Description',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: AppSp.sp16,
                           fontWeight: FontWeight.w400,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: AppH.h8),
                       TextFormField(
                         focusNode: _descFocus,
                         textInputAction: TextInputAction.done,
                         maxLines: 5,
                         controller: _descController,
                         decoration: const InputDecoration(
-                          hintText:
-                              'Finish onboarding UI and hand off to devs by Thursday.',
+                          hintText: 'Write your task description here ...',
                         ),
                       ),
 
-                      const SizedBox(height: 20),
+                      SizedBox(height: AppH.h20),
 
                       // ── High Priority ────────────────────────
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
+                          Text(
                             'High Priority',
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: AppSp.sp16,
                               fontWeight: FontWeight.w400,
                             ),
                           ),
@@ -461,17 +507,17 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                         ],
                       ),
 
-                      const SizedBox(height: 20),
+                      SizedBox(height: AppH.h20),
 
                       // ── Reminder ─────────────────────────────
-                      const Text(
+                      Text(
                         'Reminder',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: AppSp.sp16,
                           fontWeight: FontWeight.w400,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: AppH.h12),
                       Row(
                         children: [
                           // None option
@@ -482,7 +528,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                               onTap: _clearReminder,
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          SizedBox(width: AppW.w12),
                           // Pick Date & Time option
                           Expanded(
                             child: _ReminderOption(
@@ -496,29 +542,32 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
 
                       // Show chosen date and extra settings
                       if (_reminderEnabled && _reminderDate != null) ...[
-                        const SizedBox(height: 10),
+                        SizedBox(height: AppH.h10),
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 10),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: AppW.w16,
+                            vertical: AppH.h10,
+                          ),
                           decoration: BoxDecoration(
                             color: colorScheme.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppR.r12),
                           ),
                           child: Row(
                             children: [
                               Icon(
                                 Icons.alarm,
-                                size: 18,
+                                size: AppSp.sp18,
                                 color: colorScheme.primary,
                               ),
-                              const SizedBox(width: 8),
+                              SizedBox(width: AppW.w8),
                               Expanded(
                                 child: Text(
-                                  DateFormat('dd MMM yyyy • hh:mm a')
-                                      .format(_reminderDate!),
+                                  DateFormat(
+                                    'dd MMM yyyy • hh:mm a',
+                                  ).format(_reminderDate!),
                                   style: TextStyle(
                                     color: colorScheme.primary,
-                                    fontSize: 13,
+                                    fontSize: AppSp.sp13,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
@@ -527,16 +576,16 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                                 onTap: _clearReminder,
                                 child: Icon(
                                   Icons.close,
-                                  size: 18,
+                                  size: AppSp.sp18,
                                   color: colorScheme.primary,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        
-                        const SizedBox(height: 16),
-                        
+
+                        SizedBox(height: AppH.h16),
+
                         // Alarm Settings
                         Row(
                           children: [
@@ -544,24 +593,37 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text('Alarm Sound', style: TextStyle(fontSize: 12)),
-                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Alarm Sound',
+                                    style: TextStyle(fontSize: AppSp.sp12),
+                                  ),
+                                  SizedBox(height: AppH.h4),
                                   InkWell(
                                     onTap: _showRingtonePicker,
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: BorderRadius.circular(
+                                      AppR.r8,
+                                    ),
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: AppW.w12,
+                                        vertical: AppH.h12,
+                                      ),
                                       decoration: BoxDecoration(
-                                        border: Border.all(color: colorScheme.outline),
-                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                          color: colorScheme.outline,
+                                        ),
+                                        borderRadius: BorderRadius.circular(
+                                          AppR.r8,
+                                        ),
                                       ),
                                       child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
                                         children: [
                                           Expanded(
                                             child: Text(
-                                              _alarmSound.contains('|') 
-                                                  ? _alarmSound.split('|')[1] 
+                                              _alarmSound.contains('|')
+                                                  ? _alarmSound.split('|')[1]
                                                   : 'Default Notification',
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
@@ -575,27 +637,50 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                                 ],
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            SizedBox(width: AppW.w12),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text('Snooze Duration', style: TextStyle(fontSize: 12)),
-                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Snooze Duration',
+                                    style: TextStyle(fontSize: AppSp.sp12),
+                                  ),
+                                  SizedBox(height: AppH.h4),
                                   DropdownButtonFormField<int>(
                                     value: _snoozeDuration,
                                     decoration: InputDecoration(
                                       isDense: true,
-                                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: AppW.w12,
+                                        vertical: AppH.h10,
+                                      ),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(
+                                          AppR.r8,
+                                        ),
+                                      ),
                                     ),
                                     items: const [
-                                      DropdownMenuItem(value: 5, child: Text('5 mins')),
-                                      DropdownMenuItem(value: 10, child: Text('10 mins')),
-                                      DropdownMenuItem(value: 15, child: Text('15 mins')),
-                                      DropdownMenuItem(value: 30, child: Text('30 mins')),
+                                      DropdownMenuItem(
+                                        value: 5,
+                                        child: Text('5 mins'),
+                                      ),
+                                      DropdownMenuItem(
+                                        value: 10,
+                                        child: Text('10 mins'),
+                                      ),
+                                      DropdownMenuItem(
+                                        value: 15,
+                                        child: Text('15 mins'),
+                                      ),
+                                      DropdownMenuItem(
+                                        value: 30,
+                                        child: Text('30 mins'),
+                                      ),
                                     ],
-                                    onChanged: (v) => setState(() => _snoozeDuration = v!),
+                                    onChanged: (v) =>
+                                        setState(() => _snoozeDuration = v!),
                                   ),
                                 ],
                               ),
@@ -611,13 +696,19 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               // ── Save Button ──────────────────────────────────
               ElevatedButton.icon(
                 onPressed: _submit,
-                label: Text(widget.taskToEdit == null ? 'Add Task' : 'Update Task', style: const TextStyle(fontSize: 14)),
+                label: Text(
+                  widget.taskToEdit == null ? 'Add Task' : 'Update Task',
+                  style: TextStyle(fontSize: AppSp.sp14),
+                ),
                 icon: Icon(widget.taskToEdit == null ? Icons.add : Icons.save),
                 style: ElevatedButton.styleFrom(
-                  fixedSize: const Size(346, 40),
+                  fixedSize: Size(
+                    AppW.w300 + AppW.w40,
+                    AppH.h40,
+                  ), // Or keep fixed if needed, used screenutil width instead
                 ),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: AppH.h12),
             ],
           ),
         ),
@@ -632,15 +723,14 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     if (_reminderEnabled && _reminderDate != null) {
       if (_reminderDate!.isBefore(DateTime.now())) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Reminder time cannot be in the past.'),
-          ),
+          const SnackBar(content: Text('Reminder time cannot be in the past.')),
         );
         return;
       }
     }
 
-    final task = widget.taskToEdit?.copyWith(
+    final task =
+        widget.taskToEdit?.copyWith(
           taskName: _nameController.text.trim(),
           taskDescription: _descController.text.trim(),
           isHighPriority: _isHighPriority,
@@ -684,12 +774,12 @@ class _ReminderOption extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: EdgeInsets.symmetric(vertical: AppH.h12),
         decoration: BoxDecoration(
           color: isSelected
               ? colorScheme.primary.withValues(alpha: 0.12)
               : colorScheme.surface,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppR.r12),
           border: Border.all(
             color: isSelected ? colorScheme.primary : colorScheme.outline,
             width: isSelected ? 1.5 : 1,
@@ -700,19 +790,18 @@ class _ReminderOption extends StatelessWidget {
           children: [
             Icon(
               isSelected ? Icons.radio_button_checked : Icons.radio_button_off,
-              size: 18,
+              size: AppSp.sp18,
               color: isSelected
                   ? colorScheme.primary
                   : colorScheme.onSurfaceVariant,
             ),
-            const SizedBox(width: 6),
+            SizedBox(width: AppW.w6),
             Flexible(
               child: Text(
                 label,
                 style: TextStyle(
-                  fontSize: 13,
-                  fontWeight:
-                      isSelected ? FontWeight.w600 : FontWeight.w400,
+                  fontSize: AppSp.sp13,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                   color: isSelected
                       ? colorScheme.primary
                       : colorScheme.onSurfaceVariant,

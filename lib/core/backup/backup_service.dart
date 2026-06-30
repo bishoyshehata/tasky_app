@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tasky/core/notifications/local_notification_service.dart';
@@ -159,12 +160,27 @@ class BackupService {
     final jsonString = backup.toJsonString();
 
     // ── Resolve destination folder ────────────────────────────
-    final extDir = await getExternalStorageDirectory(); // Android/data/<pkg>/files
-    if (extDir == null) {
-      throw const BackupServiceException(
-          'External storage is unavailable on this device.');
+    Directory backupDir;
+    if (Platform.isAndroid) {
+      // Prefer the public root directory (visible in Files app like WhatsApp).
+      // Requires MANAGE_EXTERNAL_STORAGE on Android 11+.
+      final hasFullAccess =
+          await Permission.manageExternalStorage.isGranted;
+      if (hasFullAccess) {
+        backupDir = Directory('/storage/emulated/0/TaskyBackups');
+      } else {
+        // Fall back to app-private external dir (always accessible).
+        final extDir = await getExternalStorageDirectory();
+        backupDir = extDir != null
+            ? Directory('${extDir.path}/TaskyBackups')
+            : Directory(
+                '${(await getApplicationDocumentsDirectory()).path}/TaskyBackups');
+      }
+    } else {
+      final docDir = await getApplicationDocumentsDirectory();
+      backupDir = Directory('${docDir.path}/TaskyBackups');
     }
-    final backupDir = Directory('${extDir.path}/TaskyBackups');
+
     if (!await backupDir.exists()) {
       await backupDir.create(recursive: true);
     }
@@ -191,6 +207,7 @@ class BackupService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
         'last_auto_backup_at', DateTime.now().toIso8601String());
+    await prefs.setString('last_auto_backup_path', file.path);
 
     debugPrint('📦 [Backup] Auto backup saved to: ${file.path}');
     return file.path;

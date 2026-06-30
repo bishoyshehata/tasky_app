@@ -1,5 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:tasky/core/backup/auto_backup_manager.dart';
 import 'package:tasky/core/backup/backup_model.dart';
 import 'package:tasky/core/backup/backup_service.dart';
@@ -14,22 +18,55 @@ class BackupRestoreScreen extends StatefulWidget {
   State<BackupRestoreScreen> createState() => _BackupRestoreScreenState();
 }
 
-class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
+class _BackupRestoreScreenState extends State<BackupRestoreScreen>
+    with WidgetsBindingObserver {
   final _backupService = BackupService();
   late final _createUseCase = CreateBackupUseCase(_backupService);
   late final _restoreUseCase = RestoreBackupUseCase(_backupService);
 
   bool _isExporting = false;
   bool _isImporting = false;
+  bool _isRunningAutoBackup = false;
   bool _autoEnabled = false;
+  bool _hasFullStorageAccess = false;
+  bool _waitingForPermission = false;
   int _autoFrequency = 1;
   DateTime? _lastManualBackup;
   DateTime? _lastAutoBackup;
+  String? _lastAutoBackupPath;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadSettings();
+    _checkStoragePermission();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// Called when app resumes (e.g. user returns from Settings).
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _waitingForPermission) {
+      _waitingForPermission = false;
+      _checkStoragePermission().then((_) {
+        if (_hasFullStorageAccess) _runAutoBackupNow();
+      });
+    }
+  }
+
+  Future<void> _checkStoragePermission() async {
+    if (!Platform.isAndroid) {
+      if (mounted) setState(() => _hasFullStorageAccess = true);
+      return;
+    }
+    final granted = await Permission.manageExternalStorage.isGranted;
+    if (mounted) setState(() => _hasFullStorageAccess = granted);
   }
 
   Future<void> _loadSettings() async {
@@ -37,12 +74,15 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
     final freq = await AutoBackupManager.getFrequencyDays();
     final lastManual = await AutoBackupManager.getLastManualBackupAt();
     final lastAuto = await AutoBackupManager.getLastBackupAt();
+    final lastPath = await AutoBackupManager.getLastBackupPath();
+    await _checkStoragePermission();
     if (mounted) {
       setState(() {
         _autoEnabled = enabled;
         _autoFrequency = freq;
         _lastManualBackup = lastManual;
         _lastAutoBackup = lastAuto;
+        _lastAutoBackupPath = lastPath;
       });
     }
   }
@@ -363,7 +403,59 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
   Future<void> _onToggleAuto(bool value) async {
     await AutoBackupManager.setEnabled(value);
     setState(() => _autoEnabled = value);
-    if (value) await AutoBackupManager.checkAndRun();
+    if (value) await _runAutoBackupNow(silent: true);
+  }
+
+  Future<void> _runAutoBackupNow({bool silent = false}) async {
+    // On Android, prefer public storage — request permission if not yet granted.
+    if (Platform.isAndroid && !_hasFullStorageAccess) {
+      await _requestFullStorageAccess();
+      return; // Will auto-resume via didChangeAppLifecycleState once granted.
+    }
+
+    setState(() => _isRunningAutoBackup = true);
+    try {
+      await BackupService().writeSilentBackup();
+      await _loadSettings();
+      if (mounted && !silent) {
+        _showSnack('Backup saved!', isError: false);
+      }
+    } catch (e) {
+      if (mounted) _showSnack('Auto backup failed: $e', isError: true);
+    } finally {
+      if (mounted) setState(() => _isRunningAutoBackup = false);
+    }
+  }
+
+  /// Shows an explanation dialog then redirects to the All Files Access screen.
+  Future<void> _requestFullStorageAccess() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Allow File Access'),
+        content: const Text(
+          'To save backups directly to Internal Storage → TaskyBackups '
+          '(visible in the Files app), Tasky needs "All Files Access".\n\n'
+          'Tap Continue → find Tasky → enable the toggle.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Continue'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      setState(() => _waitingForPermission = true);
+      await Permission.manageExternalStorage.request();
+      // App will resume → didChangeAppLifecycleState handles the rest.
+    }
   }
 
   Future<void> _onFrequencyChanged(int days) async {
@@ -373,6 +465,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
 
   String _frequencyLabel(int days) {
     return switch (days) {
+      0 => '1 Min 🧪',
       1 => 'Every Day',
       2 => 'Every 2 Days',
       5 => 'Every 5 Days',
@@ -506,6 +599,59 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                   Switch(value: _autoEnabled, onChanged: _onToggleAuto),
                 ],
               ),
+              // ── Storage Access Banner ────────────────────
+              if (Platform.isAndroid) ...[
+                const SizedBox(height: 12),
+                GestureDetector(
+                  onTap: _hasFullStorageAccess
+                      ? null
+                      : _requestFullStorageAccess,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _hasFullStorageAccess
+                          ? cs.primaryContainer.withOpacity(0.5)
+                          : cs.errorContainer.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          _hasFullStorageAccess
+                              ? Icons.folder_open_rounded
+                              : Icons.folder_off_outlined,
+                          size: 16,
+                          color: _hasFullStorageAccess ? cs.primary : cs.error,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _hasFullStorageAccess
+                                ? 'Saves to Internal Storage → TaskyBackups'
+                                : 'Tap to enable saving to Internal Storage → TaskyBackups',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: _hasFullStorageAccess
+                                  ? cs.onPrimaryContainer
+                                  : cs.error,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        if (!_hasFullStorageAccess)
+                          Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            size: 12,
+                            color: cs.error,
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
               if (_autoEnabled) ...[
                 const Divider(height: 24),
                 Text(
@@ -548,6 +694,67 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                         ).format(_lastAutoBackup!.toLocal())
                       : 'Not yet',
                 ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: _isRunningAutoBackup ? null : _runAutoBackupNow,
+                    icon: _isRunningAutoBackup
+                        ? const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.play_arrow_rounded, size: 18),
+                    label: Text(
+                      _isRunningAutoBackup ? 'Running...' : 'Backup Now',
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                ),
+                if (_lastAutoBackupPath != null) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: cs.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.folder_outlined,
+                          size: 16,
+                          color: cs.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Saved to your internal storage',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: cs.onSurfaceVariant,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ]),
             const SizedBox(height: 32),

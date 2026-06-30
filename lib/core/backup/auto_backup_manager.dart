@@ -12,7 +12,9 @@ class AutoBackupManager {
   static const _keyFrequency = 'auto_backup_frequency_days';
   static const _keyLastAt = 'last_auto_backup_at';
 
-  static const List<int> frequencyOptions = [1, 2, 5, 7];
+  /// frequency == 0 → test mode: every 1 minute
+  /// frequency > 0  → every N days
+  static const List<int> frequencyOptions = [0, 1, 2, 5, 7];
 
   // ── Settings getters/setters ──────────────────────────────
 
@@ -50,6 +52,11 @@ class AutoBackupManager {
     return DateTime.tryParse(raw);
   }
 
+  static Future<String?> getLastBackupPath() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('last_auto_backup_path');
+  }
+
   // ── Check and run ─────────────────────────────────────────
 
   /// Call this on app start and after task changes.
@@ -58,13 +65,17 @@ class AutoBackupManager {
     final enabled = await isEnabled();
     if (!enabled) return;
 
-    final frequencyDays = await getFrequencyDays();
+    final frequency = await getFrequencyDays();
     final lastBackup = await getLastBackupAt();
 
     final now = DateTime.now();
     if (lastBackup != null) {
-      final elapsed = now.difference(lastBackup).inDays;
-      if (elapsed < frequencyDays) return; // Not time yet
+      if (frequency == 0) {
+        // Test mode: trigger every 1 minute
+        if (now.difference(lastBackup).inMinutes < 1) return;
+      } else {
+        if (now.difference(lastBackup).inDays < frequency) return;
+      }
     }
 
     try {

@@ -2,13 +2,14 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lottie/lottie.dart';
-import 'package:tasky/core/theme/app_sizes.dart';
-import 'package:tasky/core/theme/app_theme_notifier.dart';
-import 'package:tasky/data/models/task_model.dart';
-import 'package:tasky/data/models/user_model.dart';
-import 'package:tasky/presentation/components/achieved_tasks.dart';
-import 'package:tasky/presentation/components/tasks_card.dart';
-import 'package:tasky/presentation/screens/add_task._screen.dart';
+import 'package:engez/core/theme/app_sizes.dart';
+import 'package:engez/core/theme/app_theme_notifier.dart';
+import 'package:engez/data/models/task_model.dart';
+import 'package:engez/data/models/user_model.dart';
+import 'package:engez/l10n/app_localizations.dart';
+import 'package:engez/presentation/components/achieved_tasks.dart';
+import 'package:engez/presentation/components/tasks_card.dart';
+import 'package:engez/presentation/screens/add_task._screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final List<TaskModel> tasks;
@@ -37,6 +38,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -65,7 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           AutoSizeText(
-                            '${_greeting()}, ${widget.userModel?.name ?? ''} ',
+                            '${_greeting(l)}, ${widget.userModel?.name ?? ''} ',
                             style: TextStyle(fontSize: AppSp.sp18),
                             minFontSize: 14,
                             maxLines: 1,
@@ -73,7 +76,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           Text(
                             widget.userModel?.motivationQuote ??
-                                'One task at a time. One step closer.',
+                                l.motivationDefault,
                             style: TextStyle(
                               color: Theme.of(
                                 context,
@@ -102,13 +105,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 SizedBox(height: AppH.h20),
                 Text(
-                  'Small steps lead to',
+                  l.homeTagline1,
                   style: TextStyle(fontSize: AppSp.sp24),
                 ),
                 Row(
                   children: [
                     Text(
-                      'big achievements! ',
+                      l.homeTagline2,
                       style: TextStyle(fontSize: AppSp.sp20),
                     ),
                     SvgPicture.asset(
@@ -138,12 +141,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           child: Lottie.asset(
                             'assets/lottie/to_do.json',
-
                             fit: BoxFit.cover,
                           ),
                         ),
                         Text(
-                          'No Tasks Yet',
+                          l.noTasksYet,
                           style: TextStyle(
                             color: Theme.of(
                               context,
@@ -164,11 +166,11 @@ class _HomeScreenState extends State<HomeScreen> {
                             .length,
                       ),
                       SizedBox(height: AppH.h10),
-                      _buildHighPriority(),
+                      _buildHighPriority(l),
                       SizedBox(height: AppH.h10),
                       widget.tasks.where((t) => !t.isHighPriority).isEmpty
-                          ? SizedBox.shrink()
-                          : _buildTaskCards(),
+                          ? const SizedBox.shrink()
+                          : _buildTaskCards(l),
                     ],
                   ),
               ],
@@ -188,11 +190,11 @@ class _HomeScreenState extends State<HomeScreen> {
             );
             if (result != null) {
               widget.onTaskAdded(result);
-              _showReminderSnackbar(result, 'added');
+              _showReminderSnackbar(result, l.taskAdded, l);
             }
           },
           label: Text(
-            'Add New Task',
+            l.addNewTask,
             style: TextStyle(fontSize: AppSp.sp14, fontWeight: FontWeight.w500),
           ),
           icon: const Icon(Icons.add),
@@ -201,7 +203,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildTaskCards() {
+  Widget _buildTaskCards(AppLocalizations l) {
     final reversed = widget.tasks
         .where((t) => !t.isHighPriority)
         .toList()
@@ -214,7 +216,7 @@ class _HomeScreenState extends State<HomeScreen> {
         Padding(
           padding: EdgeInsets.only(left: AppW.w16),
           child: Text(
-            'My Tasks',
+            l.myTasks,
             style: TextStyle(fontSize: AppSp.sp20, fontWeight: FontWeight.w400),
           ),
         ),
@@ -228,7 +230,7 @@ class _HomeScreenState extends State<HomeScreen> {
             task: reversed[i],
             index: i,
             onChanged: () => widget.onTasksChanged(widget.tasks),
-            onEdit: () => _handleEdit(reversed[i]),
+            onEdit: () => _handleEdit(reversed[i], l),
             onDelete: () => widget.onDeleteTask(reversed[i]),
             onMarkComplete: () => widget.onTaskCompleted(reversed[i]),
           ),
@@ -238,7 +240,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildHighPriority() {
+  Widget _buildHighPriority(AppLocalizations l) {
     final hp = widget.tasks
         .where((t) => t.isHighPriority)
         .toList()
@@ -256,11 +258,11 @@ class _HomeScreenState extends State<HomeScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.only(top: 8.0, left: 16.0),
+            padding: EdgeInsets.only(top: AppH.h8, left: AppW.w16),
             child: Text(
-              'High Priority Tasks',
+              l.highPriorityTasks,
               style: TextStyle(
-                fontSize: 20,
+                fontSize: AppSp.sp20,
                 fontWeight: FontWeight.w400,
                 color: Theme.of(context).colorScheme.primary,
               ),
@@ -275,7 +277,7 @@ class _HomeScreenState extends State<HomeScreen> {
               task: hp[i],
               index: i,
               onChanged: () => widget.onTasksChanged(widget.tasks),
-              onEdit: () => _handleEdit(hp[i]),
+              onEdit: () => _handleEdit(hp[i], l),
               onDelete: () => widget.onDeleteTask(hp[i]),
               onMarkComplete: () => widget.onTaskCompleted(hp[i]),
             ),
@@ -286,25 +288,29 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  String _greeting() {
+  String _greeting(AppLocalizations l) {
     final h = DateTime.now().hour;
-    if (h >= 5 && h < 12) return 'Good Morning';
-    if (h >= 12 && h < 17) return 'Good Afternoon';
-    return 'Good Evening';
+    if (h >= 5 && h < 12) return l.greetingMorning;
+    if (h >= 12 && h < 17) return l.greetingAfternoon;
+    return l.greetingEvening;
   }
 
-  Future<void> _handleEdit(TaskModel task) async {
+  Future<void> _handleEdit(TaskModel task, AppLocalizations l) async {
     final updated = await Navigator.push<TaskModel>(
       context,
       MaterialPageRoute(builder: (_) => AddTaskScreen(taskToEdit: task)),
     );
     if (updated != null) {
       widget.onEditTask(updated);
-      _showReminderSnackbar(updated, 'updated');
+      _showReminderSnackbar(updated, l.taskUpdated, l);
     }
   }
 
-  void _showReminderSnackbar(TaskModel task, String action) {
+  void _showReminderSnackbar(
+    TaskModel task,
+    String action,
+    AppLocalizations l,
+  ) {
     if (!task.reminderEnabled || task.reminderDate == null) return;
 
     final diff = task.reminderDate!.difference(DateTime.now());
@@ -321,7 +327,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Task $action. You will be reminded in $timeStr.'),
+        content: Text('$action. ${l.reminderIn} $timeStr.'),
         behavior: SnackBarBehavior.floating,
       ),
     );

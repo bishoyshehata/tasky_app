@@ -1,5 +1,5 @@
-import 'package:tasky/core/notifications/notification_service.dart';
-import 'package:tasky/data/models/task_model.dart';
+import 'package:engez/core/notifications/notification_service.dart';
+import 'package:engez/data/models/task_model.dart';
 
 /// Cancels the old reminder and schedules a new one when a task is updated.
 class UpdateTaskReminderUseCase {

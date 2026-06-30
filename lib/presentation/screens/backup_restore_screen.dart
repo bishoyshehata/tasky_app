@@ -4,13 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:tasky/core/backup/auto_backup_manager.dart';
-import 'package:tasky/core/backup/backup_model.dart';
-import 'package:tasky/core/backup/backup_service.dart';
-import 'package:tasky/domain/usecases/create_backup_use_case.dart';
-import 'package:tasky/domain/usecases/restore_backup_use_case.dart';
-import 'package:tasky/presentation/screens/main_navigation_Screen.dart';
-import 'package:tasky/core/theme/app_sizes.dart';
+import 'package:engez/core/backup/auto_backup_manager.dart';
+import 'package:engez/core/backup/backup_model.dart';
+import 'package:engez/core/backup/backup_service.dart';
+import 'package:engez/domain/usecases/create_backup_use_case.dart';
+import 'package:engez/domain/usecases/restore_backup_use_case.dart';
+import 'package:engez/l10n/app_localizations.dart';
+import 'package:engez/presentation/screens/main_navigation_screen.dart';
+import 'package:engez/core/theme/app_sizes.dart';
 
 class BackupRestoreScreen extends StatefulWidget {
   const BackupRestoreScreen({super.key});
@@ -96,10 +97,10 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
       await _createUseCase.execute();
       if (mounted) {
         _loadSettings(); // refresh last backup date
-        _showSnack('Backup created !', isError: false);
+        _showSnack(AppLocalizations.of(context).backupSuccessful, isError: false);
       }
     } catch (e) {
-      if (mounted) _showSnack('Export failed: $e', isError: true);
+      if (mounted) _showSnack('${AppLocalizations.of(context).backupFailed}: $e', isError: true);
     } finally {
       if (mounted) setState(() => _isExporting = false);
     }
@@ -130,6 +131,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
   }
 
   Future<void> _showRestorePreviewSheet(BackupPreview preview) async {
+    final l = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
     final dateStr = DateFormat(
       'dd MMM yyyy',
@@ -180,7 +182,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Backup Preview',
+                      l.restoreDialogTitle,
                       style: TextStyle(
                         fontSize: AppSp.sp18,
                         fontWeight: FontWeight.w700,
@@ -231,8 +233,8 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
             _strategyButton(
               ctx: ctx,
               icon: Icons.merge_outlined,
-              label: 'Merge with Current Tasks',
-              subtitle: 'Adds backup tasks • keeps duplicates as-is',
+              label: l.backupMerge,
+              subtitle: l.backupMergeDesc,
               color: colorScheme.primary,
               onTap: () => _applyRestore(ctx, preview, RestoreStrategy.merge),
             ),
@@ -242,10 +244,10 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
             _strategyButton(
               ctx: ctx,
               icon: Icons.swap_horiz_rounded,
-              label: 'Replace Current Tasks',
-              subtitle: 'Deletes all existing tasks first',
+              label: l.backupReplace,
+              subtitle: l.backupReplaceDesc,
               color: colorScheme.error,
-              onTap: () => _confirmReplace(ctx, preview),
+              onTap: () => _confirmReplace(ctx, preview, l),
             ),
             SizedBox(height: AppH.h10),
 
@@ -256,7 +258,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
                 minimumSize: const Size(double.infinity, 48),
               ),
               child: Text(
-                'Cancel',
+                l.cancel,
                 style: TextStyle(color: colorScheme.onSurfaceVariant),
               ),
             ),
@@ -345,24 +347,23 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
   Future<void> _confirmReplace(
     BuildContext sheetCtx,
     BackupPreview preview,
+    AppLocalizations l,
   ) async {
     Navigator.pop(sheetCtx);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Replace Tasks?'),
-        content: Text(
-          'This will permanently delete all your current tasks and replace them with the ${preview.taskCount} tasks from this backup.\n\nThis cannot be undone.',
-        ),
+        title: Text(l.backupReplaceConfirmTitle),
+        content: Text(l.backupReplaceConfirmDesc(preview.taskCount)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(l.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
-              'Replace',
+              l.backupReplaceBtn,
               style: TextStyle(color: Theme.of(ctx).colorScheme.error),
             ),
           ),
@@ -389,13 +390,13 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
       if (mounted) {
         _showSnack(
           strategy == RestoreStrategy.replace
-              ? 'Tasks replaced successfully!'
-              : 'Tasks merged successfully!',
+              ? AppLocalizations.of(context).backupTasksReplaced
+              : AppLocalizations.of(context).backupTasksMerged,
           isError: false,
         );
       }
     } catch (e) {
-      if (mounted) _showSnack('Restore failed: $e', isError: true);
+      if (mounted) _showSnack('${AppLocalizations.of(context).restoreFailed}: $e', isError: true);
     }
   }
 
@@ -419,10 +420,10 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
       await BackupService().writeSilentBackup();
       await _loadSettings();
       if (mounted && !silent) {
-        _showSnack('Backup saved!', isError: false);
+        _showSnack(AppLocalizations.of(context).backupSuccessful, isError: false);
       }
     } catch (e) {
-      if (mounted) _showSnack('Auto backup failed: $e', isError: true);
+      if (mounted) _showSnack('${AppLocalizations.of(context).backupFailed}: $e', isError: true);
     } finally {
       if (mounted) setState(() => _isRunningAutoBackup = false);
     }
@@ -430,23 +431,22 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
 
   /// Shows an explanation dialog then redirects to the All Files Access screen.
   Future<void> _requestFullStorageAccess() async {
+    final l = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Allow File Access'),
-        content: const Text(
-          'To save backups directly to Internal Storage → TaskyBackups '
-          '(visible in the Files app), Tasky needs "All Files Access".\n\n'
-          'Tap Continue → find Tasky → enable the toggle.',
+        title: Text(l.backupStoragePermissionTitle),
+        content: Text(
+          l.backupStoragePermissionDesc,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(l.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Continue'),
+            child: Text(l.continueBtn),
           ),
         ],
       ),
@@ -464,14 +464,10 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
     setState(() => _autoFrequency = days);
   }
 
-  String _frequencyLabel(int days) {
+  String _frequencyLabel(int days, AppLocalizations l) {
     return switch (days) {
-      // 0 => '1 Min 🧪',
-      1 => 'Every Day',
-      2 => 'Every 2 Days',
-      5 => 'Every 5 Days',
-      7 => 'Every Week',
-      _ => 'Every $days Days',
+      1 => l.backupFreqDay,
+      _ => l.backupFreqDays(days),
     };
   }
 
@@ -480,10 +476,11 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Backup & Restore'),
+        title: Text(l.backupRestoreTitle),
         centerTitle: false,
         elevation: 0,
       ),
@@ -493,18 +490,18 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ── Manual Backup ──────────────────────────────
-            _sectionHeader('Manual Backup'),
+            _sectionHeader(l.backupRestoreTitle),
             SizedBox(height: AppH.h12),
             _card(cs, [
               _infoRow(
                 cs,
                 icon: Icons.history,
-                label: 'Last backup',
+                label: l.lastBackup,
                 value: _lastManualBackup != null
                     ? DateFormat(
                         'dd MMM yyyy • hh:mm a',
                       ).format(_lastManualBackup!.toLocal())
-                    : 'Never',
+                    : l.never,
               ),
               const Divider(height: 24),
               SizedBox(
@@ -518,7 +515,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.upload_outlined),
-                  label: Text(_isExporting ? 'Preparing...' : 'Create Backup'),
+                  label: Text(_isExporting ? l.onboardingRestoring : l.backupNow),
                   style: FilledButton.styleFrom(
                     padding: EdgeInsets.symmetric(vertical: AppH.h14),
                     shape: RoundedRectangleBorder(
@@ -531,7 +528,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
             SizedBox(height: AppH.h24),
 
             // ── Restore ────────────────────────────────────
-            _sectionHeader('Restore Backup'),
+            _sectionHeader(l.restoreDialogTitle),
             SizedBox(height: AppH.h12),
             _card(cs, [
               Text(
@@ -555,7 +552,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
                         )
                       : const Icon(Icons.download_outlined),
                   label: Text(
-                    _isImporting ? 'Reading...' : 'Restore from File',
+                    _isImporting ? l.onboardingRestoring : l.restoreFromFile,
                   ),
                   style: OutlinedButton.styleFrom(
                     padding: EdgeInsets.symmetric(vertical: AppH.h14),
@@ -569,7 +566,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
             SizedBox(height: AppH.h24),
 
             // ── Auto Backup ────────────────────────────────
-            _sectionHeader('Auto Backup'),
+            _sectionHeader(l.autoBackup),
             SizedBox(height: AppH.h12),
             _card(cs, [
               Row(
@@ -579,7 +576,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Enable Auto Backup',
+                          l.autoBackup,
                           style: TextStyle(
                             fontSize: AppSp.sp15,
                             fontWeight: FontWeight.w500,
@@ -626,7 +623,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
                         SizedBox(width: AppW.w8),
                         Expanded(
                           child: Text(
-                            'Saves to Internal Storage → TaskyBackups',
+                            l.backupAutoBanner,
                             style: TextStyle(
                               fontSize: AppSp.sp12,
                               color: cs.onPrimaryContainer,
@@ -642,7 +639,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
               if (_autoEnabled) ...[
                 const Divider(height: 24),
                 Text(
-                  'Backup Frequency',
+                  l.backupFreq,
                   style: TextStyle(
                     fontSize: AppSp.sp13,
                     fontWeight: FontWeight.w500,
@@ -655,7 +652,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
                   children: AutoBackupManager.frequencyOptions.map((days) {
                     final selected = _autoFrequency == days;
                     return ChoiceChip(
-                      label: Text(_frequencyLabel(days)),
+                      label: Text(_frequencyLabel(days, l)),
                       selected: selected,
                       onSelected: (_) => _onFrequencyChanged(days),
                       selectedColor: cs.primaryContainer,
@@ -674,12 +671,12 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
                 _infoRow(
                   cs,
                   icon: Icons.schedule_outlined,
-                  label: 'Last auto backup',
+                  label: l.lastBackup,
                   value: _lastAutoBackup != null
                       ? DateFormat(
                           'dd MMM yyyy • hh:mm a',
                         ).format(_lastAutoBackup!.toLocal())
-                      : 'Not yet',
+                      : l.never,
                 ),
                 SizedBox(height: AppH.h12),
                 SizedBox(
@@ -694,7 +691,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
                           )
                         : Icon(Icons.play_arrow_rounded, size: AppSp.sp18),
                     label: Text(
-                      _isRunningAutoBackup ? 'Running...' : 'Backup Now',
+                      _isRunningAutoBackup ? l.onboardingRestoring : l.backupNow,
                     ),
                     style: OutlinedButton.styleFrom(
                       padding: EdgeInsets.symmetric(vertical: AppH.h12),
@@ -726,7 +723,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Saved to your internal storage',
+                                l.backupSavedLocal,
                                 style: TextStyle(
                                   fontSize: AppSp.sp11,
                                   color: cs.onSurfaceVariant,

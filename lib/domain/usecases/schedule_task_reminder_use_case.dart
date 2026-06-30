@@ -1,5 +1,5 @@
-import 'package:tasky/core/notifications/notification_service.dart';
-import 'package:tasky/data/models/task_model.dart';
+import 'package:engez/core/notifications/notification_service.dart';
+import 'package:engez/data/models/task_model.dart';
 
 /// Schedules a reminder notification for the given [task].
 /// Only runs if [task.reminderEnabled] is true and the reminder date is in

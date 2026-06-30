@@ -2,8 +2,9 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tasky/core/theme/app_sizes.dart';
-import 'package:tasky/data/models/user_model.dart';
+import 'package:engez/core/theme/app_sizes.dart';
+import 'package:engez/data/models/user_model.dart';
+import 'package:engez/l10n/app_localizations.dart';
 
 class UserDetailsScreen extends StatefulWidget {
   const UserDetailsScreen({super.key});
@@ -58,8 +59,9 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('User Details')),
+      appBar: AppBar(title: Text(l.userDetailsTitle)),
       body: Column(
         children: [
           Expanded(
@@ -69,7 +71,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Your Name',
+                    l.userDetailsName,
                     style: TextStyle(fontSize: AppSp.sp18, fontWeight: FontWeight.w400),
                   ),
                   SizedBox(height: AppH.h6),
@@ -79,12 +81,12 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                     maxLines: 1,
                     controller: nameController,
                     decoration: InputDecoration(
-                      hintText: userModel?.name ?? 'Write Your Name',
+                      hintText: userModel?.name ?? l.userDetailsNameHint,
                     ),
                   ),
                   SizedBox(height: AppH.h12),
                   Text(
-                    'Motivation Quote',
+                    l.userDetailsQuote,
                     style: TextStyle(fontSize: AppSp.sp18, fontWeight: FontWeight.w400),
                   ),
                   SizedBox(height: AppH.h6),
@@ -96,7 +98,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                     decoration: InputDecoration(
                       hintText:
                           userModel?.motivationQuote ??
-                          'Write a quote that motivates you to do your tasks.',
+                          l.userDetailsQuoteHint,
                     ),
                   ),
                 ],
@@ -109,7 +111,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                     final user = UserModel(
                       name: nameController.text.isNotEmpty
                           ? nameController.text
-                          : userModel?.name ?? 'Write Your Name',
+                          : userModel?.name ?? l.userDetailsNameHint,
                       motivationQuote: quoteController.text.isNotEmpty
                           ? quoteController.text
                           : userModel?.motivationQuote,
@@ -119,15 +121,15 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                     await prefs.setString('user', jsonEncode(user.toJson()));
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('User details updated successfully'),
+                        SnackBar(
+                          content: Text(l.userDetailsSave),
                         ),
                       );
                       Navigator.pop(context, user);
                     }
                   }
                 : null,
-            label: Text('Save Changes', style: TextStyle(fontSize: AppSp.sp14)),
+            label: Text(l.userDetailsSave, style: TextStyle(fontSize: AppSp.sp14)),
             style: ElevatedButton.styleFrom(fixedSize: Size(AppW.w300 + AppW.w40, AppH.h40)),
           ),
           SizedBox(height: AppH.h34),

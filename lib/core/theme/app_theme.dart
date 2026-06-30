@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
+import 'app_sizes.dart';
 
 /// ─────────────────────────────────────────────
 ///  Tasky – App Theme
@@ -12,6 +14,7 @@ abstract class AppTheme {
   static ThemeData get dark => ThemeData(
         brightness: Brightness.dark,
         useMaterial3: true,
+        fontFamily: GoogleFonts.notoSans().fontFamily,
 
         // Core colours
         colorScheme: const ColorScheme.dark(
@@ -30,16 +33,17 @@ abstract class AppTheme {
         scaffoldBackgroundColor: AppColors.darkBackground,
 
         // AppBar
-        appBarTheme: const AppBarTheme(
+        appBarTheme: AppBarTheme(
           backgroundColor: AppColors.darkBackground,
           elevation: 0,
           centerTitle: false,
           titleTextStyle: TextStyle(
             color: AppColors.darkTextPrimary,
-            fontSize: 20,
+            fontSize: AppSp.sp20,
             fontWeight: FontWeight.w500,
+            fontFamily: GoogleFonts.notoSans().fontFamily,
           ),
-          iconTheme: IconThemeData(color: AppColors.darkTextPrimary),
+          iconTheme: const IconThemeData(color: AppColors.darkTextPrimary),
         ),
 
         // Bottom Navigation Bar
@@ -82,9 +86,9 @@ abstract class AppTheme {
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: AppColors.darkSurface,
-          hintStyle: const TextStyle(
+          hintStyle: TextStyle(
             color: AppColors.darkTextHint,
-            fontSize: 16,
+            fontSize: AppSp.sp16,
             fontWeight: FontWeight.w400,
           ),
           border: OutlineInputBorder(
@@ -142,9 +146,9 @@ abstract class AppTheme {
         ),
 
         // Snackbar
-        snackBarTheme: const SnackBarThemeData(
+        snackBarTheme: SnackBarThemeData(
           backgroundColor: AppColors.darkPrimary,
-          contentTextStyle: TextStyle(color: AppColors.darkOnPrimary),
+          contentTextStyle: TextStyle(color: AppColors.darkOnPrimary, fontFamily: GoogleFonts.notoSans().fontFamily,),
         ),
 
         // Card
@@ -157,23 +161,23 @@ abstract class AppTheme {
         ),
 
         // Text
-        textTheme: const TextTheme(
-          bodyLarge: TextStyle(color: AppColors.darkTextPrimary, fontSize: 16),
-          bodyMedium: TextStyle(color: AppColors.darkTextSecondary, fontSize: 14),
-          bodySmall: TextStyle(color: AppColors.darkTextMuted, fontSize: 12),
+        textTheme: TextTheme(
+          bodyLarge: TextStyle(color: AppColors.darkTextPrimary, fontSize: AppSp.sp16),
+          bodyMedium: TextStyle(color: AppColors.darkTextSecondary, fontSize: AppSp.sp14),
+          bodySmall: TextStyle(color: AppColors.darkTextMuted, fontSize: AppSp.sp12),
           titleLarge: TextStyle(
             color: AppColors.darkTextPrimary,
-            fontSize: 24,
+            fontSize: AppSp.sp24,
             fontWeight: FontWeight.w600,
           ),
           titleMedium: TextStyle(
             color: AppColors.darkTextPrimary,
-            fontSize: 20,
+            fontSize: AppSp.sp20,
             fontWeight: FontWeight.w500,
           ),
           labelLarge: TextStyle(
             color: AppColors.darkTextPrimary,
-            fontSize: 16,
+            fontSize: AppSp.sp16,
             fontWeight: FontWeight.w400,
           ),
         ),
@@ -183,6 +187,7 @@ abstract class AppTheme {
   static ThemeData get light => ThemeData(
         brightness: Brightness.light,
         useMaterial3: true,
+        fontFamily: GoogleFonts.notoSans().fontFamily,
 
         // TODO: swap AppColors.light* values with real brand colours
 
@@ -201,16 +206,17 @@ abstract class AppTheme {
 
         scaffoldBackgroundColor: AppColors.lightBackground,
 
-        appBarTheme: const AppBarTheme(
+        appBarTheme: AppBarTheme(
           backgroundColor: AppColors.lightBackground,
           elevation: 0,
           centerTitle: false,
           titleTextStyle: TextStyle(
             color: AppColors.lightTextPrimary,
-            fontSize: 20,
+            fontSize: AppSp.sp20,
             fontWeight: FontWeight.w500,
+            fontFamily: GoogleFonts.notoSans().fontFamily,
           ),
-          iconTheme: IconThemeData(color: AppColors.lightTextPrimary),
+          iconTheme: const IconThemeData(color: AppColors.lightTextPrimary),
         ),
 
         bottomNavigationBarTheme: const BottomNavigationBarThemeData(
@@ -246,9 +252,9 @@ abstract class AppTheme {
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: AppColors.lightSurfaceAlt,
-          hintStyle: const TextStyle(
+          hintStyle: TextStyle(
             color: AppColors.lightTextHint,
-            fontSize: 16,
+            fontSize: AppSp.sp16,
             fontWeight: FontWeight.w400,
           ),
           border: OutlineInputBorder(
@@ -302,9 +308,9 @@ abstract class AppTheme {
           space: 0,
         ),
 
-        snackBarTheme: const SnackBarThemeData(
+        snackBarTheme: SnackBarThemeData(
           backgroundColor: AppColors.lightPrimary,
-          contentTextStyle: TextStyle(color: AppColors.lightOnPrimary),
+          contentTextStyle: TextStyle(color: AppColors.lightOnPrimary, fontFamily: GoogleFonts.notoSans().fontFamily),
         ),
 
         cardTheme: CardThemeData(
@@ -315,23 +321,23 @@ abstract class AppTheme {
           ),
         ),
 
-        textTheme: const TextTheme(
-          bodyLarge: TextStyle(color: AppColors.lightTextPrimary, fontSize: 16),
-          bodyMedium: TextStyle(color: AppColors.lightTextSecondary, fontSize: 14),
-          bodySmall: TextStyle(color: AppColors.lightTextMuted, fontSize: 12),
+        textTheme: TextTheme(
+          bodyLarge: TextStyle(color: AppColors.lightTextPrimary, fontSize: AppSp.sp16),
+          bodyMedium: TextStyle(color: AppColors.lightTextSecondary, fontSize: AppSp.sp14),
+          bodySmall: TextStyle(color: AppColors.lightTextMuted, fontSize: AppSp.sp12),
           titleLarge: TextStyle(
             color: AppColors.lightTextPrimary,
-            fontSize: 24,
+            fontSize: AppSp.sp24,
             fontWeight: FontWeight.w600,
           ),
           titleMedium: TextStyle(
             color: AppColors.lightTextPrimary,
-            fontSize: 20,
+            fontSize: AppSp.sp20,
             fontWeight: FontWeight.w500,
           ),
           labelLarge: TextStyle(
             color: AppColors.lightTextPrimary,
-            fontSize: 16,
+            fontSize: AppSp.sp16,
             fontWeight: FontWeight.w400,
           ),
         ),

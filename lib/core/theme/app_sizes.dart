@@ -10,6 +10,7 @@ class AppSp {
   static double get sp16 => 14.sp;
   static double get sp18 => 16.sp;
   static double get sp20 => 18.sp;
+  static double get sp22 => 20.sp;
   static double get sp24 => 22.sp;
   static double get sp28 => 26.sp;
   static double get sp30 => 28.sp;

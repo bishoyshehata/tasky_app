@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tasky/presentation/screens/main_navigation_Screen.dart';
-import 'package:tasky/core/theme/app_sizes.dart';
+import 'package:engez/core/theme/app_sizes.dart';
+import 'package:engez/presentation/screens/main_navigation_screen.dart';
 import 'onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -46,10 +46,14 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SvgPicture.asset('assets/images/logo.svg', width: AppW.w120, height: AppH.h120),
+            SvgPicture.asset(
+              'assets/images/logo.svg',
+              width: AppW.w120,
+              height: AppH.h120,
+            ),
             SizedBox(height: AppH.h24),
             Text(
-              'Tasky',
+              'Engez',
               style: TextStyle(
                 fontSize: AppSp.sp32,
                 fontWeight: FontWeight.w600,

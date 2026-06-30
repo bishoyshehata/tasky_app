@@ -1,4 +1,4 @@
-import 'package:tasky/data/models/task_model.dart';
+import 'package:engez/data/models/task_model.dart';
 
 /// Abstract contract for the notification system.
 /// Any feature in the project interacts ONLY with this interface.

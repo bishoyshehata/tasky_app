@@ -1,7 +1,8 @@
+import 'package:engez/core/theme/app_sizes.dart';
+import 'package:engez/data/models/task_model.dart';
+import 'package:engez/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:tasky/core/theme/app_sizes.dart';
-import 'package:tasky/data/models/task_model.dart';
 
 class TaskCard extends StatefulWidget {
   const TaskCard({
@@ -44,6 +45,7 @@ class _TaskCardState extends State<TaskCard> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l = AppLocalizations.of(context);
     final isDone = widget.task.isDone;
     final activeColor = colorScheme.onSurface;
     final doneColor = colorScheme.onSurfaceVariant;
@@ -62,7 +64,8 @@ class _TaskCardState extends State<TaskCard> {
             Checkbox(
               value: isDone,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppR.r5)),
+                borderRadius: BorderRadius.circular(AppR.r5),
+              ),
               onChanged: (value) {
                 setState(() {
                   widget.task.isDone = value!;
@@ -89,8 +92,7 @@ class _TaskCardState extends State<TaskCard> {
                     color: isDone ? doneColor : activeColor,
                     fontSize: AppSp.sp16,
                     fontWeight: FontWeight.w400,
-                    decoration:
-                        isDone ? TextDecoration.lineThrough : null,
+                    decoration: isDone ? TextDecoration.lineThrough : null,
                     decorationColor: doneColor,
                     decorationThickness: 2,
                   ),
@@ -105,8 +107,7 @@ class _TaskCardState extends State<TaskCard> {
                     style: TextStyle(
                       color: isDone ? doneColor : colorScheme.onSurfaceVariant,
                       fontSize: AppSp.sp14,
-                      decoration:
-                          isDone ? TextDecoration.lineThrough : null,
+                      decoration: isDone ? TextDecoration.lineThrough : null,
                       decorationColor: doneColor,
                       decorationThickness: 1,
                     ),
@@ -117,8 +118,9 @@ class _TaskCardState extends State<TaskCard> {
                 Row(
                   children: [
                     Text(
-                      DateFormat('dd MMM yyyy • hh:mm a')
-                          .format(DateTime.parse(widget.task.dateTime)),
+                      DateFormat(
+                        'dd MMM yyyy • hh:mm a',
+                      ).format(DateTime.parse(widget.task.dateTime)),
                       style: TextStyle(
                         color: colorScheme.onSurfaceVariant,
                         fontSize: AppSp.sp12,
@@ -131,17 +133,20 @@ class _TaskCardState extends State<TaskCard> {
                       Icon(
                         Icons.alarm,
                         size: AppSp.sp13,
-                        color: widget.task.reminderDate!.isBefore(DateTime.now())
+                        color:
+                            widget.task.reminderDate!.isBefore(DateTime.now())
                             ? colorScheme.onSurfaceVariant.withOpacity(0.6)
                             : colorScheme.primary,
                       ),
                       SizedBox(width: AppW.w2),
                       Text(
-                        DateFormat('hh:mm a')
-                            .format(widget.task.reminderDate!),
+                        DateFormat('hh:mm a').format(widget.task.reminderDate!),
                         style: TextStyle(
-                          color: widget.task.reminderDate!.isBefore(DateTime.now())
-                              ? colorScheme.onSurfaceVariant.withValues(alpha: 0.6)
+                          color:
+                              widget.task.reminderDate!.isBefore(DateTime.now())
+                              ? colorScheme.onSurfaceVariant.withValues(
+                                  alpha: 0.6,
+                                )
                               : colorScheme.primary,
                           fontSize: AppSp.sp11,
                           fontWeight: FontWeight.w600,
@@ -176,11 +181,14 @@ class _TaskCardState extends State<TaskCard> {
                     value: 'archive',
                     child: Row(
                       children: [
-                        Icon(Icons.archive_outlined,
-                            color: colorScheme.onSurface, size: AppSp.sp20),
+                        Icon(
+                          Icons.archive_outlined,
+                          color: colorScheme.onSurface,
+                          size: AppSp.sp20,
+                        ),
                         SizedBox(width: AppW.w8),
                         Text(
-                          'Archive',
+                          l.taskActionArchive,
                           style: TextStyle(color: colorScheme.onSurface),
                         ),
                       ],
@@ -190,11 +198,14 @@ class _TaskCardState extends State<TaskCard> {
                   value: 'edit',
                   child: Row(
                     children: [
-                      Icon(Icons.edit_outlined,
-                          color: colorScheme.onSurface, size: AppSp.sp20),
+                      Icon(
+                        Icons.edit_outlined,
+                        color: colorScheme.onSurface,
+                        size: AppSp.sp20,
+                      ),
                       SizedBox(width: AppW.w8),
                       Text(
-                        'Edit',
+                        l.taskActionEdit,
                         style: TextStyle(color: colorScheme.onSurface),
                       ),
                     ],
@@ -204,11 +215,14 @@ class _TaskCardState extends State<TaskCard> {
                   value: 'delete',
                   child: Row(
                     children: [
-                      Icon(Icons.delete_outline,
-                          color: colorScheme.error, size: AppSp.sp20),
+                      Icon(
+                        Icons.delete_outline,
+                        color: colorScheme.error,
+                        size: AppSp.sp20,
+                      ),
                       SizedBox(width: AppW.w8),
                       Text(
-                        'Delete',
+                        l.taskActionDelete,
                         style: TextStyle(color: colorScheme.error),
                       ),
                     ],
@@ -222,17 +236,16 @@ class _TaskCardState extends State<TaskCard> {
   }
 
   void _confirmDelete(BuildContext context) {
+    final l = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Task'),
-        content: Text(
-          'Delete "${widget.task.taskName}"? This action cannot be undone.',
-        ),
+        title: Text(l.deleteTaskTitle),
+        content: Text(l.deleteTaskDesc(widget.task.taskName)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text(l.cancel),
           ),
           TextButton(
             onPressed: () {
@@ -240,9 +253,8 @@ class _TaskCardState extends State<TaskCard> {
               widget.onDelete();
             },
             child: Text(
-              'Delete',
-              style:
-                  TextStyle(color: Theme.of(context).colorScheme.error),
+              l.deleteTaskConfirm,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
           ),
         ],

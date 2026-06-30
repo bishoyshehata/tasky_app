@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
-import 'package:tasky/core/theme/app_sizes.dart';
+import 'package:engez/core/theme/app_sizes.dart';
+import 'package:engez/l10n/app_localizations.dart';
 
 class AchievedTasks extends StatelessWidget {
   final int allTasks;
@@ -15,6 +16,7 @@ class AchievedTasks extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l = AppLocalizations.of(context);
     final percent = allTasks == 0 ? 0.0 : achievedTasks / allTasks;
 
     return Container(
@@ -31,13 +33,13 @@ class AchievedTasks extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Achieved Tasks',
+                  l.achievedTasksTitle,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(fontSize: AppSp.sp20, fontWeight: FontWeight.w400),
                 ),
                 Text(
-                  '$achievedTasks Out of $allTasks Done',
+                  l.achievedTasksCount(achievedTasks, allTasks),
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(

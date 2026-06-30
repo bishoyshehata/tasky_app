@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import 'package:tasky/data/models/task_model.dart';
-import 'package:tasky/presentation/components/tasks_card.dart';
-import 'package:tasky/presentation/screens/add_task._screen.dart';
-import 'package:tasky/core/theme/app_sizes.dart';
+import 'package:engez/core/theme/app_sizes.dart';
+import 'package:engez/data/models/task_model.dart';
+import 'package:engez/l10n/app_localizations.dart';
+import 'package:engez/presentation/components/tasks_card.dart';
+import 'package:engez/presentation/screens/add_task._screen.dart';
 
 class CompletedTasksScreen extends StatefulWidget {
   final List<TaskModel> tasks;
@@ -30,16 +31,17 @@ class CompletedTasksScreen extends StatefulWidget {
 class _CompletedTasksScreenState extends State<CompletedTasksScreen> {
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Completed Tasks')),
+      appBar: AppBar(title: Text(l.completedTitle)),
       body: Container(
         margin: EdgeInsets.symmetric(horizontal: AppW.w12),
-        child: _buildCards(context),
+        child: _buildCards(context, l),
       ),
     );
   }
 
-  Widget _buildCards(BuildContext context) {
+  Widget _buildCards(BuildContext context, AppLocalizations l) {
     final done = widget.tasks.where((t) => t.isDone && !t.isArchived).toList();
 
     if (done.isEmpty) {
@@ -56,14 +58,10 @@ class _CompletedTasksScreenState extends State<CompletedTasksScreen> {
               shape: BoxShape.circle,
               color: Theme.of(context).colorScheme.surface,
             ),
-            child: Lottie.asset(
-              'assets/lottie/completed.json',
-
-              fit: BoxFit.cover,
-            ),
+            child: Lottie.asset('assets/lottie/completed.json', fit: BoxFit.cover),
           ),
           Text(
-            'No Completed Tasks Yet',
+            l.noCompletedTasks,
             style: TextStyle(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontSize: AppSp.sp18,
@@ -86,7 +84,7 @@ class _CompletedTasksScreenState extends State<CompletedTasksScreen> {
             task: done[i],
             index: i,
             onChanged: () => widget.onTasksChanged(widget.tasks),
-            onEdit: () => _handleEdit(done[i]),
+            onEdit: () => _handleEdit(done[i], l),
             onDelete: () => widget.onDeleteTask(done[i]),
             onMarkComplete: () => widget.onTaskCompleted(done[i]),
             onArchive: () => widget.onArchiveTask(done[i]),
@@ -102,30 +100,25 @@ class _CompletedTasksScreenState extends State<CompletedTasksScreen> {
             shape: BoxShape.circle,
             color: Theme.of(context).colorScheme.surface,
           ),
-          child: Lottie.asset(
-            'assets/lottie/completed.json',
-
-            fit: BoxFit.cover,
-          ),
+          child: Lottie.asset('assets/lottie/completed.json', fit: BoxFit.cover),
         ),
       ],
     );
   }
 
-  Future<void> _handleEdit(TaskModel task) async {
+  Future<void> _handleEdit(TaskModel task, AppLocalizations l) async {
     final updated = await Navigator.push<TaskModel>(
       context,
       MaterialPageRoute(builder: (_) => AddTaskScreen(taskToEdit: task)),
     );
     if (updated != null) {
       widget.onEditTask(updated);
-      _showReminderSnackbar(updated, 'updated');
+      _showReminderSnackbar(updated, l.taskUpdated, l);
     }
   }
 
-  void _showReminderSnackbar(TaskModel task, String action) {
+  void _showReminderSnackbar(TaskModel task, String action, AppLocalizations l) {
     if (!task.reminderEnabled || task.reminderDate == null) return;
-
     final diff = task.reminderDate!.difference(DateTime.now());
     if (diff.isNegative) return;
 
@@ -140,7 +133,7 @@ class _CompletedTasksScreenState extends State<CompletedTasksScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Task $action. You will be reminded in $timeStr.'),
+        content: Text('$action. ${l.reminderIn} $timeStr.'),
         behavior: SnackBarBehavior.floating,
       ),
     );

@@ -1,4 +1,4 @@
-import 'package:tasky/core/notifications/notification_service.dart';
+import 'package:engez/core/notifications/notification_service.dart';
 
 /// Cancels the scheduled reminder for the given [taskId].
 /// Used when a task is deleted or marked as completed.

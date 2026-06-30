@@ -4,7 +4,8 @@ import 'package:intl/intl.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/services.dart';
 import 'dart:io';
-import 'package:tasky/core/theme/app_sizes.dart';
+import 'package:engez/core/theme/app_sizes.dart';
+import 'package:engez/l10n/app_localizations.dart';
 
 class AlarmScreen extends StatefulWidget {
   final String taskId;
@@ -108,6 +109,7 @@ class _AlarmScreenState extends State<AlarmScreen>
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -196,7 +198,7 @@ class _AlarmScreenState extends State<AlarmScreen>
                         ),
                       ),
                       child: Text(
-                        'Snooze (${widget.snoozeDuration}m)',
+                        '${l.alarmSnooze} (${widget.snoozeDuration}m)',
                         style: TextStyle(fontSize: AppSp.sp18, fontWeight: FontWeight.bold),
                       ),
                     ),
@@ -214,7 +216,7 @@ class _AlarmScreenState extends State<AlarmScreen>
                         ),
                       ),
                       child: Text(
-                        'Stop',
+                        l.alarmStop,
                         style: TextStyle(fontSize: AppSp.sp18, fontWeight: FontWeight.bold),
                       ),
                     ),

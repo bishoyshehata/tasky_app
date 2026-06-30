@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:tasky/data/models/task_model.dart';
+import 'package:engez/data/models/task_model.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_system_ringtones/flutter_system_ringtones.dart';
-import 'package:tasky/core/theme/app_sizes.dart';
+import 'package:engez/core/theme/app_sizes.dart';
+import 'package:engez/l10n/app_localizations.dart';
 
 class AddTaskScreen extends StatefulWidget {
   final TaskModel? taskToEdit;
@@ -185,7 +186,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Select Alarm Sound',
+                          AppLocalizations.of(context).taskAlarmSound,
                           style: TextStyle(
                             fontSize: AppSp.sp18,
                             fontWeight: FontWeight.bold,
@@ -212,7 +213,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                       child: Icon(Icons.add, color: colorScheme.primary),
                     ),
                     title: Text(
-                      'Add Custom Sound from Files',
+                      AppLocalizations.of(context).addCustomSound,
                       style: TextStyle(
                         color: colorScheme.primary,
                         fontWeight: FontWeight.bold,
@@ -253,7 +254,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                         }
                       } catch (e) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Error picking file: $e')),
+                          SnackBar(content: Text('${AppLocalizations.of(context).errorPickingFile}: $e')),
                         );
                       }
                     },
@@ -283,7 +284,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                                 }
                               },
                             ),
-                            title: const Text('Default Notification'),
+                            title: Text(AppLocalizations.of(context).defaultNotification),
                             onTap: () async {
                               setSheetState(() {
                                 tempSelectedSound = 'default';
@@ -402,7 +403,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                         ),
                       ),
                       child: Text(
-                        'Confirm Selection',
+                        AppLocalizations.of(context).confirmSelection,
                         style: TextStyle(fontSize: AppSp.sp16),
                       ),
                     ),
@@ -422,10 +423,11 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.taskToEdit == null ? 'New Task' : 'Edit Task'),
+        title: Text(widget.taskToEdit == null ? l.addTaskTitle : l.editTaskTitle),
       ),
       body: Form(
         key: _formKey,
@@ -443,7 +445,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                     children: [
                       // ── Task Name ────────────────────────────
                       Text(
-                        'Task Name',
+                        l.taskNameLabel,
                         style: TextStyle(
                           fontSize: AppSp.sp16,
                           fontWeight: FontWeight.w400,
@@ -454,12 +456,12 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                         textInputAction: TextInputAction.next,
                         focusNode: _nameFocus,
                         controller: _nameController,
-                        decoration: const InputDecoration(
-                          hintText: 'Task Name',
+                        decoration: InputDecoration(
+                          hintText: '${l.taskNameHint} ',
                         ),
                         validator: (value) {
                           if (value?.trim().isEmpty ?? true) {
-                            return 'Please enter your task name';
+                            return l.taskNameRequired;
                           }
                           return null;
                         },
@@ -469,7 +471,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
 
                       // ── Task Description ─────────────────────
                       Text(
-                        'Task Description',
+                        l.taskDescLabel,
                         style: TextStyle(
                           fontSize: AppSp.sp16,
                           fontWeight: FontWeight.w400,
@@ -481,8 +483,8 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                         textInputAction: TextInputAction.done,
                         maxLines: 5,
                         controller: _descController,
-                        decoration: const InputDecoration(
-                          hintText: 'Write your task description here ...',
+                        decoration: InputDecoration(
+                          hintText: l.taskDescHint,
                         ),
                       ),
 
@@ -493,7 +495,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'High Priority',
+                            l.highPriorityTasks,
                             style: TextStyle(
                               fontSize: AppSp.sp16,
                               fontWeight: FontWeight.w400,
@@ -511,7 +513,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
 
                       // ── Reminder ─────────────────────────────
                       Text(
-                        'Reminder',
+                        l.taskReminderLabel,
                         style: TextStyle(
                           fontSize: AppSp.sp16,
                           fontWeight: FontWeight.w400,
@@ -594,7 +596,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Alarm Sound',
+                                    l.taskAlarmSound,
                                     style: TextStyle(fontSize: AppSp.sp12),
                                   ),
                                   SizedBox(height: AppH.h4),
@@ -624,7 +626,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                                             child: Text(
                                               _alarmSound.contains('|')
                                                   ? _alarmSound.split('|')[1]
-                                                  : 'Default Notification',
+                                                  : l.defaultNotification,
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                             ),
@@ -643,7 +645,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Snooze Duration',
+                                    l.taskSnoozeDuration,
                                     style: TextStyle(fontSize: AppSp.sp12),
                                   ),
                                   SizedBox(height: AppH.h4),
@@ -697,7 +699,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               ElevatedButton.icon(
                 onPressed: _submit,
                 label: Text(
-                  widget.taskToEdit == null ? 'Add Task' : 'Update Task',
+                  widget.taskToEdit == null ? l.taskAddButton : l.taskUpdateButton,
                   style: TextStyle(fontSize: AppSp.sp14),
                 ),
                 icon: Icon(widget.taskToEdit == null ? Icons.add : Icons.save),
@@ -723,7 +725,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     if (_reminderEnabled && _reminderDate != null) {
       if (_reminderDate!.isBefore(DateTime.now())) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Reminder time cannot be in the past.')),
+          SnackBar(content: Text(AppLocalizations.of(context).taskReminderPast)),
         );
         return;
       }

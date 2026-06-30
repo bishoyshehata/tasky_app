@@ -3,12 +3,12 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tasky/core/backup/backup_model.dart';
-import 'package:tasky/core/backup/backup_service.dart';
-import 'package:tasky/core/backup/backup_validator.dart';
-import 'package:tasky/data/models/user_model.dart';
-import 'package:tasky/presentation/screens/main_navigation_Screen.dart';
-import 'package:tasky/core/theme/app_sizes.dart';
+import 'package:engez/core/backup/backup_model.dart';
+import 'package:engez/core/backup/backup_service.dart';
+import 'package:engez/core/theme/app_sizes.dart';
+import 'package:engez/data/models/user_model.dart';
+import 'package:engez/l10n/app_localizations.dart';
+import 'package:engez/presentation/screens/main_navigation_Screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -47,32 +47,35 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       return;
     }
 
-    // ── Confirm ──────────────────────────────────────────────
+    final l = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) {
         final cs = Theme.of(ctx).colorScheme;
         return AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Text('Restore Backup'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Text(l.restoreDialogTitle),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Found ${preview!.taskCount} task${preview.taskCount != 1 ? 's' : ''} in this backup.',
+                l.restoreDialogContent(preview!.taskCount),
                 style: TextStyle(fontSize: AppSp.sp15),
               ),
               SizedBox(height: AppH.h6),
               Text(
-                'Created: ${_fmtDate(preview.createdAt)}',
-                style:
-                    TextStyle(color: cs.onSurfaceVariant, fontSize: AppSp.sp13),
+                l.restoreDialogCreated(_fmtDate(preview.createdAt)),
+                style: TextStyle(
+                  color: cs.onSurfaceVariant,
+                  fontSize: AppSp.sp13,
+                ),
               ),
               SizedBox(height: AppH.h14),
               Text(
-                'All tasks will be restored and you\'ll go straight to the app.',
+                l.restoreDialogWarning,
                 style: TextStyle(fontSize: AppSp.sp13),
               ),
             ],
@@ -80,11 +83,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel'),
+              child: Text(l.cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Restore'),
+              child: Text(l.restore),
             ),
           ],
         );
@@ -97,11 +100,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
 
     try {
-      // Apply replace restore
       await BackupService().applyRestore(preview, RestoreStrategy.replace);
 
-      // User profile is already saved by applyRestore if backup contained one.
-      // Only create a fallback user if none was in the backup.
       final prefs = await SharedPreferences.getInstance();
       final existingUser = prefs.getString('user');
       if (existingUser == null) {
@@ -111,7 +111,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         final user = UserModel(
           name: name,
           motivationQuote:
-              preview.model.user?.motivationQuote ?? 'You got this, Just do your best',
+              preview.model.user?.motivationQuote ??
+              'You got this, Just do your best',
           profileImageBase64: preview.model.user?.profileImageBase64,
         );
         await prefs.setString('user', jsonEncode(user.toJson()));
@@ -124,7 +125,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         );
       }
     } catch (e) {
-      if (mounted) _showSnack('Restore failed: $e', isError: true);
+      if (mounted) _showSnack('${AppLocalizations.of(context).restoreFailed}: $e', isError: true);
       setState(() => _isRestoring = false);
     }
   }
@@ -133,7 +134,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final local = dt.toLocal();
     const months = [
       'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
     ];
     return '${local.day} ${months[local.month - 1]} ${local.year}';
   }
@@ -147,8 +148,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ? Theme.of(context).colorScheme.error
             : Theme.of(context).colorScheme.primary,
         behavior: SnackBarBehavior.floating,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppR.r10)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppR.r10),
+        ),
       ),
     );
   }
@@ -157,6 +159,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final cs = Theme.of(context).colorScheme;
+    final l = AppLocalizations.of(context);
 
     return Scaffold(
       body: Padding(
@@ -179,7 +182,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                       SizedBox(width: AppW.w16),
                       Text(
-                        'Tasky',
+                        'Engez',
                         style: TextStyle(
                           fontSize: AppSp.sp28,
                           fontWeight: FontWeight.w400,
@@ -192,7 +195,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Welcome To Taskey',
+                        l.onboardingWelcome,
                         style: TextStyle(
                           fontSize: AppSp.sp24,
                           fontWeight: FontWeight.w400,
@@ -208,8 +211,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                   SizedBox(height: AppH.h8),
                   Text(
-                    'Your productivity journey starts here.',
-                    style: TextStyle(fontSize: AppSp.sp16, fontWeight: FontWeight.w400),
+                    l.onboardingSubtitle,
+                    style: TextStyle(
+                      fontSize: AppSp.sp16,
+                      fontWeight: FontWeight.w400,
+                    ),
                   ),
                   SizedBox(height: AppH.h24),
                   SvgPicture.asset(
@@ -224,7 +230,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Full Name',
+                          l.onboardingFullName,
                           style: TextStyle(
                             fontSize: AppSp.sp16,
                             fontWeight: FontWeight.w400,
@@ -233,14 +239,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         SizedBox(height: AppH.h8),
                         TextFormField(
                           controller: controller,
-                          decoration: const InputDecoration(
-                            hintText: 'e.g. Sarah Khalid',
+                          decoration: InputDecoration(
+                            hintText: l.onboardingNameHint,
                           ),
                           validator: (value) {
                             if (value?.trim().isEmpty ?? false) {
-                              return 'Please enter your full name';
+                              return l.onboardingValidateName;
                             } else if (value!.trim().length < 3) {
-                              return 'Please enter a valid full name';
+                              return l.onboardingValidateNameLength;
                             }
                             return null;
                           },
@@ -276,7 +282,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             fixedSize: Size(screenWidth, AppH.h40),
                           ),
                           child: Text(
-                            'Let\'s Get Started',
+                            l.onboardingGetStarted,
                             style: TextStyle(
                               fontSize: AppSp.sp20,
                               fontWeight: FontWeight.w500,
@@ -289,7 +295,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         SizedBox(
                           width: double.infinity,
                           child: OutlinedButton.icon(
-                            onPressed: _isRestoring ? null : _restoreFromBackup,
+                            onPressed:
+                                _isRestoring ? null : _restoreFromBackup,
                             icon: _isRestoring
                                 ? SizedBox(
                                     width: 16,
@@ -302,8 +309,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 : const Icon(Icons.restore_outlined),
                             label: Text(
                               _isRestoring
-                                  ? 'Restoring...'
-                                  : 'Restore from Backup',
+                                  ? l.onboardingRestoring
+                                  : l.onboardingRestoreBackup,
                               style: TextStyle(fontSize: AppSp.sp15),
                             ),
                             style: OutlinedButton.styleFrom(
@@ -314,7 +321,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         SizedBox(height: AppH.h8),
                         Center(
                           child: Text(
-                            'Have a backup file? Restore everything in one tap.',
+                            l.onboardingRestoreHint,
                             style: TextStyle(
                               fontSize: AppSp.sp12,
                               color: cs.onSurfaceVariant,
@@ -335,5 +342,3 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 }
-
-

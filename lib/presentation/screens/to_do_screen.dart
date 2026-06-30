@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import 'package:tasky/data/models/task_model.dart';
-import 'package:tasky/presentation/components/tasks_card.dart';
-import 'package:tasky/presentation/screens/add_task._screen.dart';
-import 'package:tasky/core/theme/app_sizes.dart';
+import 'package:engez/core/theme/app_sizes.dart';
+import 'package:engez/data/models/task_model.dart';
+import 'package:engez/l10n/app_localizations.dart';
+import 'package:engez/presentation/components/tasks_card.dart';
+import 'package:engez/presentation/screens/add_task._screen.dart';
 
 class TodoScreen extends StatefulWidget {
   final List<TaskModel> tasks;
@@ -28,16 +29,17 @@ class TodoScreen extends StatefulWidget {
 class _TodoScreenState extends State<TodoScreen> {
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('To Do Tasks')),
+      appBar: AppBar(title: Text(l.todoTitle)),
       body: Container(
         margin: EdgeInsets.symmetric(horizontal: AppW.w12),
-        child: _buildCards(context),
+        child: _buildCards(context, l),
       ),
     );
   }
 
-  Widget _buildCards(BuildContext context) {
+  Widget _buildCards(BuildContext context, AppLocalizations l) {
     final todo = widget.tasks.where((t) => !t.isDone).toList();
 
     if (todo.isEmpty) {
@@ -57,7 +59,7 @@ class _TodoScreenState extends State<TodoScreen> {
             child: Lottie.asset('assets/lottie/to_do.json', fit: BoxFit.cover),
           ),
           Text(
-            'No Tasks Yet',
+            l.noTodoTasks,
             style: TextStyle(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontSize: AppSp.sp18,
@@ -80,7 +82,7 @@ class _TodoScreenState extends State<TodoScreen> {
             task: todo[i],
             index: i,
             onChanged: () => widget.onTasksChanged(widget.tasks),
-            onEdit: () => _handleEdit(todo[i]),
+            onEdit: () => _handleEdit(todo[i], l),
             onDelete: () => widget.onDeleteTask(todo[i]),
             onMarkComplete: () => widget.onTaskCompleted(todo[i]),
           ),
@@ -101,20 +103,19 @@ class _TodoScreenState extends State<TodoScreen> {
     );
   }
 
-  Future<void> _handleEdit(TaskModel task) async {
+  Future<void> _handleEdit(TaskModel task, AppLocalizations l) async {
     final updated = await Navigator.push<TaskModel>(
       context,
       MaterialPageRoute(builder: (_) => AddTaskScreen(taskToEdit: task)),
     );
     if (updated != null) {
       widget.onEditTask(updated);
-      _showReminderSnackbar(updated, 'updated');
+      _showReminderSnackbar(updated, l.taskUpdated, l);
     }
   }
 
-  void _showReminderSnackbar(TaskModel task, String action) {
+  void _showReminderSnackbar(TaskModel task, String action, AppLocalizations l) {
     if (!task.reminderEnabled || task.reminderDate == null) return;
-
     final diff = task.reminderDate!.difference(DateTime.now());
     if (diff.isNegative) return;
 
@@ -129,7 +130,7 @@ class _TodoScreenState extends State<TodoScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Task $action. You will be reminded in $timeStr.'),
+        content: Text('$action. ${l.reminderIn} $timeStr.'),
         behavior: SnackBarBehavior.floating,
       ),
     );

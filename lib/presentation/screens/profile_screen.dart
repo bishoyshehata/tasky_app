@@ -1,19 +1,20 @@
-import 'dart:io';
+import 'dart:convert';
 
+import 'package:engez/core/l10n/app_locale_notifier.dart';
+import 'package:engez/core/theme/app_sizes.dart';
+import 'package:engez/core/theme/app_theme_notifier.dart';
+import 'package:engez/core/utils/picker_manager.dart';
+import 'package:engez/data/models/task_model.dart';
+import 'package:engez/data/models/user_model.dart';
+import 'package:engez/l10n/app_localizations.dart';
+import 'package:engez/presentation/screens/archived_tasks_screen.dart';
+import 'package:engez/presentation/screens/backup_restore_screen.dart';
+import 'package:engez/presentation/screens/privacy_security_screen.dart';
+import 'package:engez/presentation/screens/splash_screen.dart';
+import 'package:engez/presentation/screens/user_details_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tasky/core/theme/app_theme_notifier.dart';
-import 'package:tasky/core/utils/picker_manager.dart';
-import 'package:tasky/data/models/user_model.dart';
-import 'dart:convert';
-import 'package:tasky/presentation/screens/splash_screen.dart';
-import 'package:tasky/presentation/screens/user_details_screen.dart';
-import 'package:tasky/presentation/screens/backup_restore_screen.dart';
-import 'package:tasky/presentation/screens/archived_tasks_screen.dart';
-import 'package:tasky/presentation/screens/archived_tasks_screen.dart';
-import 'package:tasky/data/models/task_model.dart';
-import 'package:tasky/core/theme/app_sizes.dart';
 
 class ProfileScreen extends StatefulWidget {
   final VoidCallback onUserChanged;
@@ -53,12 +54,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
         centerTitle: false,
-        title: const Text('My Profile'),
+        title: Text(l.profileTitle),
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(horizontal: AppW.w24, vertical: AppH.h24),
@@ -130,8 +132,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: AppW.w4),
                 child: Text(
-                  'Profile Info',
-                  style: TextStyle(fontSize: AppSp.sp18, fontWeight: FontWeight.w500),
+                  l.profileSectionLabel,
+                  style: TextStyle(
+                    fontSize: AppSp.sp18,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ),
@@ -141,7 +146,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _buildMenuItem(
               context: context,
               icon: Icons.person_outline,
-              title: 'User Details',
+              title: l.menuUserDetails,
               onTap: () async {
                 final result = await Navigator.of(context).push(
                   MaterialPageRoute(builder: (context) => UserDetailsScreen()),
@@ -155,7 +160,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _buildMenuItem(
               context: context,
               icon: Icons.archive_outlined,
-              title: 'Archived Tasks',
+              title: l.menuArchivedTasks,
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
@@ -170,17 +175,57 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _buildMenuItem(
               context: context,
               icon: Icons.backup_outlined,
-              title: 'Backup & Restore',
+              title: l.menuBackupRestore,
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const BackupRestoreScreen()),
+              ),
+            ),
+            _buildMenuItem(
+              context: context,
+              icon: Icons.shield_outlined,
+              title: l.menuPrivacySecurity,
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (_) => const BackupRestoreScreen(),
+                  builder: (_) => const PrivacySecurityScreen(),
+                ),
+              ),
+            ),
+            // ── Language toggle ──────────────────────────────────
+            _buildMenuItem(
+              context: context,
+              icon: Icons.language_outlined,
+              title: l.menuLanguage,
+              trailing: ValueListenableBuilder<Locale>(
+                valueListenable: AppLocaleNotifier.instance,
+                builder: (_, locale, __) => GestureDetector(
+                  onTap: () => AppLocaleNotifier.instance.toggle(),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: AppW.w12,
+                      vertical: AppH.h4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(AppR.r20),
+                    ),
+                    child: Text(
+                      locale.languageCode == 'ar' ? 'العربية' : 'English',
+                      style: TextStyle(
+                        fontSize: AppSp.sp13,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
             _buildMenuItem(
               context: context,
               icon: Icons.dark_mode_outlined,
-              title: 'Dark Mode',
+              title: l.menuDarkMode,
               trailing: ValueListenableBuilder<ThemeMode>(
                 valueListenable: AppThemeNotifier.instance,
                 builder: (_, themeMode, __) => Switch(
@@ -192,7 +237,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _buildMenuItem(
               context: context,
               icon: Icons.logout,
-              title: 'Log Out',
+              title: l.menuLogOut,
               onTap: () async {
                 final prefs = await SharedPreferences.getInstance();
                 await prefs.remove('user');
@@ -245,6 +290,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 style: TextStyle(
                   fontSize: AppSp.sp16,
                   fontWeight: FontWeight.w400,
+                  color: isDestructive ? colorScheme.error : null,
                 ),
               ),
             ),
@@ -286,6 +332,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _showImagePickerDialog() {
     final colorScheme = Theme.of(context).colorScheme;
+    final l = AppLocalizations.of(context);
 
     showModalBottomSheet(
       context: context,
@@ -300,7 +347,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 borderRadius: BorderRadius.circular(AppR.r12),
               ),
               leading: Icon(Icons.photo, color: colorScheme.onSurface),
-              title: const Text('Choose from Gallery'),
+              title: Text(l.galleryOption),
               onTap: () async {
                 Navigator.pop(context);
                 await pickImageFromGallery();
@@ -313,7 +360,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 borderRadius: BorderRadius.circular(AppR.r12),
               ),
               leading: Icon(Icons.camera_alt, color: colorScheme.onSurface),
-              title: const Text('Take from Camera'),
+              title: Text(l.cameraOption),
               onTap: () async {
                 Navigator.pop(context);
                 await pickImageFromCamera();

@@ -1,0 +1,13 @@
+subprojects {
+    afterEvaluate { project ->
+        if (project.hasProperty("android")) {
+            if (project.name == "flutter_system_ringtones") {
+                project.android {
+                    if (namespace == null) {
+                        namespace "com.pavlok.flutter_system_ringtones"
+                    }
+                }
+            }
+        }
+    }
+}

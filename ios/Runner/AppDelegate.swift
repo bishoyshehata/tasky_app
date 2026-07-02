@@ -41,12 +41,14 @@ import AVFoundation
   }
 
   private func handleAudioConversion(sourcePath: String, destFileName: String, result: @escaping FlutterResult) {
-    let sourceUrl: URL
-    if sourcePath.hasPrefix("file://") {
-        sourceUrl = URL(string: sourcePath) ?? URL(fileURLWithPath: sourcePath)
-    } else {
-        sourceUrl = URL(fileURLWithPath: sourcePath)
+    var cleanPath = sourcePath
+    if cleanPath.hasPrefix("file://") {
+        cleanPath = String(cleanPath.dropFirst(7))
     }
+    if let decodedPath = cleanPath.removingPercentEncoding {
+        cleanPath = decodedPath
+    }
+    let sourceUrl = URL(fileURLWithPath: cleanPath)
     
     let libraryDirs = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)
     guard let libraryDir = libraryDirs.first else {
@@ -91,63 +93,116 @@ import AVFoundation
   }
 
   private func convertToWav(sourceUrl: URL, destUrl: URL, completion: @escaping (Error?) -> Void) {
-    let asset = AVAsset(url: sourceUrl)
-    guard let reader = try? AVAssetReader(asset: asset) else {
-      completion(NSError(domain: "AudioConverter", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to create AVAssetReader"]))
-      return
+    // Start accessing security-scoped resource if it's a security-scoped URL
+    let accessed = sourceUrl.startAccessingSecurityScopedResource()
+    
+    // We want to make sure completion is called exactly once
+    var isCompleted = false
+    let completionOnce: (Error?) -> Void = { error in
+      guard !isCompleted else { return }
+      isCompleted = true
+      if accessed {
+        sourceUrl.stopAccessingSecurityScopedResource()
+      }
+      completion(error)
     }
+
+    let asset = AVURLAsset(url: sourceUrl, options: nil)
     
-    guard let track = asset.tracks(withMediaType: .audio).first else {
-      completion(NSError(domain: "AudioConverter", code: 2, userInfo: [NSLocalizedDescriptionKey: "No audio track found in source file"]))
-      return
-    }
-    
-    let readerOutput = AVAssetReaderTrackOutput(track: track, outputSettings: [
-      AVFormatIDKey: kAudioFormatLinearPCM,
-      AVSampleRateKey: 44100.0,
-      AVNumberOfChannelsKey: 1,
-      AVLinearPCMBitDepthKey: 16,
-      AVLinearPCMIsBigEndianKey: false,
-      AVLinearPCMIsFloatKey: false,
-      AVLinearPCMIsNonInterleaved: false
-    ])
-    reader.add(readerOutput)
-    
-    guard let writer = try? AVAssetWriter(outputURL: destUrl, fileType: .wav) else {
-      completion(NSError(domain: "AudioConverter", code: 3, userInfo: [NSLocalizedDescriptionKey: "Failed to create AVAssetWriter"]))
-      return
-    }
-    
-    let writerInput = AVAssetWriterInput(mediaType: .audio, outputSettings: [
-      AVFormatIDKey: kAudioFormatLinearPCM,
-      AVSampleRateKey: 44100.0,
-      AVNumberOfChannelsKey: 1,
-      AVLinearPCMBitDepthKey: 16,
-      AVLinearPCMIsBigEndianKey: false,
-      AVLinearPCMIsFloatKey: false,
-      AVLinearPCMIsNonInterleaved: false
-    ])
-    writer.add(writerInput)
-    
-    reader.startReading()
-    writer.startWriting()
-    writer.startSession(atSourceTime: .zero)
-    
-    let queue = DispatchQueue(label: "audio-conversion-queue")
-    writerInput.requestMediaDataWhenReady(on: queue) {
-      while writerInput.isReadyForMoreMediaData {
-        if let sampleBuffer = readerOutput.copyNextSampleBuffer() {
-          writerInput.append(sampleBuffer)
-        } else {
-          writerInput.markAsFinished()
-          writer.finishWriting {
-            if writer.status == .failed {
-              completion(writer.error)
-            } else {
-              completion(nil)
-            }
+    // Load tracks asynchronously to support modern iOS and avoid blocking
+    asset.loadValuesAsynchronously(forKeys: ["tracks"]) {
+      var error: NSError?
+      let status = asset.statusOfValue(forKey: "tracks", error: &error)
+      
+      guard status == .loaded else {
+        completionOnce(error ?? NSError(domain: "AudioConverter", code: 4, userInfo: [NSLocalizedDescriptionKey: "Failed to load tracks asynchronously"]))
+        return
+      }
+      
+      guard let reader = try? AVAssetReader(asset: asset) else {
+        completionOnce(NSError(domain: "AudioConverter", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to create AVAssetReader"]))
+        return
+      }
+      
+      guard let track = asset.tracks(withMediaType: .audio).first else {
+        completionOnce(NSError(domain: "AudioConverter", code: 2, userInfo: [NSLocalizedDescriptionKey: "No audio track found in source file"]))
+        return
+      }
+      
+      let readerOutput = AVAssetReaderTrackOutput(track: track, outputSettings: [
+        AVFormatIDKey: kAudioFormatLinearPCM,
+        AVSampleRateKey: 44100.0,
+        AVNumberOfChannelsKey: 1,
+        AVLinearPCMBitDepthKey: 16,
+        AVLinearPCMIsBigEndianKey: false,
+        AVLinearPCMIsFloatKey: false,
+        AVLinearPCMIsNonInterleaved: false
+      ])
+      reader.add(readerOutput)
+      
+      guard let writer = try? AVAssetWriter(outputURL: destUrl, fileType: .wav) else {
+        completionOnce(NSError(domain: "AudioConverter", code: 3, userInfo: [NSLocalizedDescriptionKey: "Failed to create AVAssetWriter"]))
+        return
+      }
+      
+      let writerInput = AVAssetWriterInput(mediaType: .audio, outputSettings: [
+        AVFormatIDKey: kAudioFormatLinearPCM,
+        AVSampleRateKey: 44100.0,
+        AVNumberOfChannelsKey: 1,
+        AVLinearPCMBitDepthKey: 16,
+        AVLinearPCMIsBigEndianKey: false,
+        AVLinearPCMIsFloatKey: false,
+        AVLinearPCMIsNonInterleaved: false
+      ])
+      writer.add(writerInput)
+      
+      guard reader.startReading() else {
+        completionOnce(reader.error)
+        return
+      }
+      
+      guard writer.startWriting() else {
+        completionOnce(writer.error)
+        return
+      }
+      
+      writer.startSession(atSourceTime: .zero)
+      
+      let queue = DispatchQueue(label: "audio-conversion-queue")
+      writerInput.requestMediaDataWhenReady(on: queue) {
+        while writerInput.isReadyForMoreMediaData {
+          if reader.status == .failed {
+            writerInput.markAsFinished()
+            completionOnce(reader.error)
+            return
           }
-          break
+          
+          if reader.status == .completed {
+            writerInput.markAsFinished()
+            writer.finishWriting {
+              completionOnce(writer.error)
+            }
+            return
+          }
+          
+          guard let sampleBuffer = readerOutput.copyNextSampleBuffer() else {
+            // copyNextSampleBuffer returned nil, check status
+            writerInput.markAsFinished()
+            if reader.status == .failed {
+              completionOnce(reader.error)
+            } else {
+              writer.finishWriting {
+                completionOnce(writer.error)
+              }
+            }
+            return
+          }
+          
+          if !writerInput.append(sampleBuffer) {
+            writerInput.markAsFinished()
+            completionOnce(writer.error)
+            return
+          }
         }
       }
     }

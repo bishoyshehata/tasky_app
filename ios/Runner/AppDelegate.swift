@@ -41,7 +41,12 @@ import AVFoundation
   }
 
   private func handleAudioConversion(sourcePath: String, destFileName: String, result: @escaping FlutterResult) {
-    let sourceUrl = URL(fileURLWithPath: sourcePath)
+    let sourceUrl: URL
+    if sourcePath.hasPrefix("file://") {
+        sourceUrl = URL(string: sourcePath) ?? URL(fileURLWithPath: sourcePath)
+    } else {
+        sourceUrl = URL(fileURLWithPath: sourcePath)
+    }
     
     let libraryDirs = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)
     guard let libraryDir = libraryDirs.first else {
@@ -57,8 +62,17 @@ import AVFoundation
       return
     }
     
+    // Sanitize destination filename: replace characters not in a-zA-Z0-9.-_ with "_"
+    let safeDestFileName: String
+    if let regex = try? NSRegularExpression(pattern: "[^a-zA-Z0-9.\\-_]", options: []) {
+        let range = NSRange(location: 0, length: destFileName.utf16.count)
+        safeDestFileName = regex.stringByReplacingMatches(in: destFileName, options: [], range: range, withTemplate: "_")
+    } else {
+        safeDestFileName = destFileName
+    }
+    
     // Ensure the destination filename ends with .wav
-    let baseName = (destFileName as NSString).deletingPathExtension
+    let baseName = (safeDestFileName as NSString).deletingPathExtension
     let finalDestFileName = "\(baseName).wav"
     let destUrl = soundsDir.appendingPathComponent(finalDestFileName)
     

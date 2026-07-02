@@ -290,11 +290,15 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                             finalPath = newPath;
                             name = safeName;
                           } else if (Platform.isIOS) {
+                            final safeName = name.replaceAll(
+                              RegExp(r'[^a-zA-Z0-9.\-_]'),
+                              '_',
+                            );
                             final String? wavPath = await const MethodChannel(
                                     'app.fikrasoft.engez/audio_converter')
                                 .invokeMethod<String>('convertToWav', {
                               'sourcePath': path,
-                              'destFileName': name,
+                              'destFileName': safeName,
                             });
                             if (wavPath != null) {
                               finalPath = wavPath;

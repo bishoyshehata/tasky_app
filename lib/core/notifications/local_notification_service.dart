@@ -152,7 +152,7 @@ class LocalNotificationService implements NotificationService {
     tz.setLocalLocation(tz.getLocation(localTz));
 
     // 2 — Plugin init settings
-    const android = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const android = AndroidInitializationSettings('notification_icon');
     const ios = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,

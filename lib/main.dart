@@ -54,8 +54,8 @@ class EngezApp extends StatelessWidget {
                   ],
 
                   // ── Theme ─────────────────────────────────────
-                  theme: AppTheme.light,
-                  darkTheme: AppTheme.dark,
+                  theme: AppTheme.lightTheme(locale),
+                  darkTheme: AppTheme.darkTheme(locale),
                   themeMode: themeMode,
 
                   home: const SplashScreen(),

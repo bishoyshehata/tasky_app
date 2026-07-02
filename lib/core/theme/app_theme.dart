@@ -10,11 +10,23 @@ import 'app_sizes.dart';
 /// [AppTheme.dark]  → current production design (extracted from the app).
 /// [AppTheme.light] → dummy theme; replace AppColors.light* values when ready.
 abstract class AppTheme {
+  static String? _fontFamily(Locale? locale) {
+    if (locale?.languageCode == 'ar') {
+      return GoogleFonts.cairo().fontFamily;
+    }
+    return GoogleFonts.notoSans().fontFamily;
+  }
+
+  static ThemeData get dark => darkTheme(null);
+  static ThemeData get light => lightTheme(null);
+
   // ─────────────────────────── Dark ────────────────────────────
-  static ThemeData get dark => ThemeData(
+  static ThemeData darkTheme(Locale? locale) {
+    final font = _fontFamily(locale);
+    return ThemeData(
         brightness: Brightness.dark,
         useMaterial3: true,
-        fontFamily: GoogleFonts.notoSans().fontFamily,
+        fontFamily: font,
 
         // Core colours
         colorScheme: const ColorScheme.dark(
@@ -41,7 +53,7 @@ abstract class AppTheme {
             color: AppColors.darkTextPrimary,
             fontSize: AppSp.sp20,
             fontWeight: FontWeight.w500,
-            fontFamily: GoogleFonts.notoSans().fontFamily,
+            fontFamily: font,
           ),
           iconTheme: const IconThemeData(color: AppColors.darkTextPrimary),
         ),
@@ -66,8 +78,8 @@ abstract class AppTheme {
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.darkPrimary,
             foregroundColor: AppColors.darkOnPrimary,
-            disabledBackgroundColor: Color(0xFF0D7A47), // darkPrimary ~50%
-            disabledForegroundColor: Color(0x80FFFCFC),
+            disabledBackgroundColor: const Color(0xFF0D7A47), // darkPrimary ~50%
+            disabledForegroundColor: const Color(0x80FFFCFC),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
@@ -148,7 +160,7 @@ abstract class AppTheme {
         // Snackbar
         snackBarTheme: SnackBarThemeData(
           backgroundColor: AppColors.darkPrimary,
-          contentTextStyle: TextStyle(color: AppColors.darkOnPrimary, fontFamily: GoogleFonts.notoSans().fontFamily,),
+          contentTextStyle: TextStyle(color: AppColors.darkOnPrimary, fontFamily: font,),
         ),
 
         // Card
@@ -182,12 +194,15 @@ abstract class AppTheme {
           ),
         ),
       );
+  }
 
   // ─────────────────────────── Light (Dummy) ───────────────────
-  static ThemeData get light => ThemeData(
+  static ThemeData lightTheme(Locale? locale) {
+    final font = _fontFamily(locale);
+    return ThemeData(
         brightness: Brightness.light,
         useMaterial3: true,
-        fontFamily: GoogleFonts.notoSans().fontFamily,
+        fontFamily: font,
 
         // TODO: swap AppColors.light* values with real brand colours
 
@@ -214,7 +229,7 @@ abstract class AppTheme {
             color: AppColors.lightTextPrimary,
             fontSize: AppSp.sp20,
             fontWeight: FontWeight.w500,
-            fontFamily: GoogleFonts.notoSans().fontFamily,
+            fontFamily: font,
           ),
           iconTheme: const IconThemeData(color: AppColors.lightTextPrimary),
         ),
@@ -310,7 +325,7 @@ abstract class AppTheme {
 
         snackBarTheme: SnackBarThemeData(
           backgroundColor: AppColors.lightPrimary,
-          contentTextStyle: TextStyle(color: AppColors.lightOnPrimary, fontFamily: GoogleFonts.notoSans().fontFamily),
+          contentTextStyle: TextStyle(color: AppColors.lightOnPrimary, fontFamily: font),
         ),
 
         cardTheme: CardThemeData(
@@ -342,4 +357,5 @@ abstract class AppTheme {
           ),
         ),
       );
+  }
 }

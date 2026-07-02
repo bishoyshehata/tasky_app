@@ -4,7 +4,7 @@ import 'app_colors.dart';
 import 'app_sizes.dart';
 
 /// ─────────────────────────────────────────────
-///  Tasky – App Theme
+///  Engez – App Theme
 /// ─────────────────────────────────────────────
 ///
 /// [AppTheme.dark]  → current production design (extracted from the app).

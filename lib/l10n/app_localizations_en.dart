@@ -297,7 +297,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyBackupBody =>
-      'Backup files are saved to your device storage (TaskyBackups folder). They are not encrypted – avoid sharing them with untrusted parties.';
+      'Backup files are saved to your device storage (EngezBackups folder). They are not encrypted – avoid sharing them with untrusted parties.';
 
   @override
   String get privacyNotifTitle => 'Notifications & Alarms';
@@ -360,7 +360,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backupTasksMerged => 'Tasks merged successfully!';
 
   @override
-  String get backupAutoBanner => 'Saves to Internal Storage → TaskyBackups';
+  String get backupAutoBanner => 'Saves to Internal Storage → EngezBackups';
 
   @override
   String get backupFreq => 'Backup Frequency';
@@ -409,7 +409,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupStoragePermissionDesc =>
-      'To save backups directly to Internal Storage → TaskyBackups (visible in the Files app), Engez needs \"All Files Access\".\n\nTap Continue → find Engez → enable the toggle.';
+      'To save backups directly to Internal Storage → EngezBackups (visible in the Files app), Engez needs \"All Files Access\".\n\nTap Continue → find Engez → enable the toggle.';
 
   @override
   String get continueBtn => 'Continue';

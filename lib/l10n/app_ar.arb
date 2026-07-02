@@ -112,7 +112,7 @@
   "privacyDataTitle": "بياناتك",
   "privacyDataBody": "تخزّن أنجز جميع مهامك وبياناتك الشخصية محليًا على جهازك. لا يُرسَل أي بيانات إلى خوادم خارجية.",
   "privacyBackupTitle": "ملفات النسخ الاحتياطي",
-  "privacyBackupBody": "تُحفَظ النسخ الاحتياطية في مجلد TaskyBackups على جهازك. الملفات غير مشفرة – تجنب مشاركتها مع أطراف غير موثوقة.",
+  "privacyBackupBody": "تُحفَظ النسخ الاحتياطية في مجلد EngezBackups على جهازك. الملفات غير مشفرة – تجنب مشاركتها مع أطراف غير موثوقة.",
   "privacyNotifTitle": "الإشعارات والتنبيهات",
   "privacyNotifBody": "تستخدم أنجز الإشعارات المحلية لتذكيرك بمهامك. لا يلزم أي وصول إلى الإنترنت لإرسال التذكيرات.",
   "privacyPermTitle": "الأذونات المستخدمة",
@@ -132,7 +132,7 @@
   "backupReplaceBtn": "استبدال",
   "backupTasksReplaced": "تم استبدال المهام بنجاح!",
   "backupTasksMerged": "تم دمج المهام بنجاح!",
-  "backupAutoBanner": "يُحفظ في وحدة التخزين الداخلية → TaskyBackups",
+  "backupAutoBanner": "يُحفظ في وحدة التخزين الداخلية → EngezBackups",
   "backupFreq": "معدل النسخ الاحتياطي",
   "backupFreqDays": "كل {days} أيام",
   "backupFreqDay": "كل يوم",
@@ -148,7 +148,7 @@
   "achievedTasksCount": "تم إنجاز {achieved} من أصل {total}",
 
   "backupStoragePermissionTitle": "السماح بالوصول إلى الملفات",
-  "backupStoragePermissionDesc": "لحفظ النسخ الاحتياطية مباشرة في وحدة التخزين الداخلية → TaskyBackups (مرئية في تطبيق الملفات)، يحتاج تطبيق أنجز إلى \"الوصول إلى جميع الملفات\".\n\nاضغط على متابعة → ابحث عن أنجز → فعل خيار السماح.",
+  "backupStoragePermissionDesc": "لحفظ النسخ الاحتياطية مباشرة في وحدة التخزين الداخلية → EngezBackups (مرئية في تطبيق الملفات)، يحتاج تطبيق أنجز إلى \"الوصول إلى جميع الملفات\".\n\nاضغط على متابعة → ابحث عن أنجز → فعل خيار السماح.",
   "continueBtn": "متابعة",
   "errorPickingFile": "خطأ في اختيار الملف"
 }

@@ -35,7 +35,7 @@ class AlarmScreen extends StatefulWidget {
 
 class _AlarmScreenState extends State<AlarmScreen>
     with SingleTickerProviderStateMixin {
-  static const _pickerChannel = MethodChannel('com.bsh.tasky/ringtone_picker');
+  static const _pickerChannel = MethodChannel('app.fikrasoft.engez/ringtone_picker');
   
   late AnimationController _controller;
   late Animation<double> _animation;

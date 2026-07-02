@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.bsh.tasky"
+    namespace = "app.fikrasoft.engez"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -22,7 +22,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.bsh.tasky"
+        applicationId = "app.fikrasoft.engez"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

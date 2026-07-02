@@ -71,7 +71,7 @@
 
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="com.bsh.engez.fileprovider"
+            android:authorities="app.fikrasoft.engez.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data

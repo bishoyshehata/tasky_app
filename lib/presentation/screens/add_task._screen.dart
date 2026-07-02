@@ -22,7 +22,7 @@ class AddTaskScreen extends StatefulWidget {
 }
 
 class _AddTaskScreenState extends State<AddTaskScreen> {
-  static const _pickerChannel = MethodChannel('com.bsh.tasky/ringtone_picker');
+  static const _pickerChannel = MethodChannel('app.fikrasoft.engez/ringtone_picker');
   final AudioPlayer _audioPlayer = AudioPlayer();
   Future<String> _getRealIosPath(String savedPath, String name) async {
     if (Platform.isIOS) {
@@ -291,7 +291,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                             name = safeName;
                           } else if (Platform.isIOS) {
                             final String? wavPath = await const MethodChannel(
-                                    'com.bsh.tasky/audio_converter')
+                                    'app.fikrasoft.engez/audio_converter')
                                 .invokeMethod<String>('convertToWav', {
                               'sourcePath': path,
                               'destFileName': name,

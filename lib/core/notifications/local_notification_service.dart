@@ -17,7 +17,7 @@ import 'notification_logger.dart';
 import 'notification_permission.dart';
 import 'notification_service.dart';
 
-const _pickerChannel = MethodChannel('com.bsh.tasky/ringtone_picker');
+const _pickerChannel = MethodChannel('app.fikrasoft.engez/ringtone_picker');
 
 @pragma('vm:entry-point')
 void _onBackgroundNotificationResponse(NotificationResponse response) async {
@@ -67,7 +67,7 @@ class LocalNotificationService implements NotificationService {
   LocalNotificationService._();
   static final LocalNotificationService instance = LocalNotificationService._();
 
-  static const _channelIdBase = 'tasky_alarms_v3';
+  static const _channelIdBase = 'engez_alarms_v3';
   static const _channelName = 'Task Reminders';
   static const _channelDescription = 'Scheduled reminders for your tasks';
 
@@ -93,7 +93,7 @@ class LocalNotificationService implements NotificationService {
       String contentUri = soundModel.uri;
       if (soundModel.uri.contains('/files/')) {
         final relativePath = soundModel.uri.split('/files/').last;
-        contentUri = 'content://com.bsh.tasky.fileprovider/files/$relativePath';
+        contentUri = 'content://app.fikrasoft.engez.fileprovider/files/$relativePath';
       }
       sound = UriAndroidNotificationSound(contentUri);
     }

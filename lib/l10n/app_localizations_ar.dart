@@ -297,7 +297,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get privacyBackupBody =>
-      'تُحفَظ النسخ الاحتياطية في مجلد TaskyBackups على جهازك. الملفات غير مشفرة – تجنب مشاركتها مع أطراف غير موثوقة.';
+      'تُحفَظ النسخ الاحتياطية في مجلد EngezBackups على جهازك. الملفات غير مشفرة – تجنب مشاركتها مع أطراف غير موثوقة.';
 
   @override
   String get privacyNotifTitle => 'الإشعارات والتنبيهات';
@@ -361,7 +361,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get backupAutoBanner =>
-      'يُحفظ في وحدة التخزين الداخلية → TaskyBackups';
+      'يُحفظ في وحدة التخزين الداخلية → EngezBackups';
 
   @override
   String get backupFreq => 'معدل النسخ الاحتياطي';
@@ -410,7 +410,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get backupStoragePermissionDesc =>
-      'لحفظ النسخ الاحتياطية مباشرة في وحدة التخزين الداخلية → TaskyBackups (مرئية في تطبيق الملفات)، يحتاج تطبيق أنجز إلى \"الوصول إلى جميع الملفات\".\n\nاضغط على متابعة → ابحث عن أنجز → فعل خيار السماح.';
+      'لحفظ النسخ الاحتياطية مباشرة في وحدة التخزين الداخلية → EngezBackups (مرئية في تطبيق الملفات)، يحتاج تطبيق أنجز إلى \"الوصول إلى جميع الملفات\".\n\nاضغط على متابعة → ابحث عن أنجز → فعل خيار السماح.';
 
   @override
   String get continueBtn => 'متابعة';

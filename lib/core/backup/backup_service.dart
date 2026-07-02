@@ -34,7 +34,7 @@ class BackupService {
     final backup = BackupModel.create(tasks: tasks, user: user);
     final jsonString = backup.toJsonString();
     final dateStr = DateFormat('yyyy_MM_dd').format(DateTime.now());
-    final fileName = 'tasky_backup_$dateStr.json';
+    final fileName = 'engez_backup_$dateStr.json';
 
     if (Platform.isIOS || Platform.isMacOS) {
       // Use FilePicker on iOS to allow user to pick a location (e.g., iCloud, On My iPhone)
@@ -59,7 +59,7 @@ class BackupService {
 
       await Share.shareXFiles([
         XFile(file.path, mimeType: 'application/json'),
-      ], subject: 'Tasky Backup – $dateStr');
+      ], subject: 'Engez Backup – $dateStr');
     }
 
     // Save last manual backup timestamp
@@ -176,7 +176,7 @@ class BackupService {
   // ── Silent Auto Backup ──────────────────────────────────────
 
   /// Writes a silent backup to the visible external storage under
-  /// `Android/data/com.bsh.tasky/files/TaskyBackups/`.
+  /// `Android/data/app.fikrasoft.engez/files/EngezBackups/`.
   ///
   /// Keeps at most [maxCopies] files — oldest is deleted when the limit
   /// is exceeded.
@@ -193,19 +193,19 @@ class BackupService {
       // Requires MANAGE_EXTERNAL_STORAGE on Android 11+.
       final hasFullAccess = await Permission.manageExternalStorage.isGranted;
       if (hasFullAccess) {
-        backupDir = Directory('/storage/emulated/0/TaskyBackups');
+        backupDir = Directory('/storage/emulated/0/EngezBackups');
       } else {
         // Fall back to app-private external dir (always accessible).
         final extDir = await getExternalStorageDirectory();
         backupDir = extDir != null
-            ? Directory('${extDir.path}/TaskyBackups')
+            ? Directory('${extDir.path}/EngezBackups')
             : Directory(
-                '${(await getApplicationDocumentsDirectory()).path}/TaskyBackups',
+                '${(await getApplicationDocumentsDirectory()).path}/EngezBackups',
               );
       }
     } else {
       final docDir = await getApplicationDocumentsDirectory();
-      backupDir = Directory('${docDir.path}/TaskyBackups');
+      backupDir = Directory('${docDir.path}/EngezBackups');
     }
 
     if (!await backupDir.exists()) {
@@ -231,7 +231,7 @@ class BackupService {
 
     // ── Write new file ────────────────────────────────────────
     final stamp = DateFormat('yyyy_MM_dd_HH_mm').format(DateTime.now());
-    final file = File('${backupDir.path}/tasky_backup_$stamp.json');
+    final file = File('${backupDir.path}/engez_backup_$stamp.json');
     await file.writeAsString(jsonString, encoding: utf8);
 
     final prefs = await SharedPreferences.getInstance();

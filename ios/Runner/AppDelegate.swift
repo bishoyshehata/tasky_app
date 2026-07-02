@@ -18,7 +18,7 @@ import AVFoundation
     }
     
     let controller : FlutterViewController = window?.rootViewController as! FlutterViewController
-    let audioChannel = FlutterMethodChannel(name: "com.bsh.tasky/audio_converter",
+    let audioChannel = FlutterMethodChannel(name: "app.fikrasoft.engez/audio_converter",
                                               binaryMessenger: controller.binaryMessenger)
     audioChannel.setMethodCallHandler({
       (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in

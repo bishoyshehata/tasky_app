@@ -97,10 +97,17 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
       await _createUseCase.execute();
       if (mounted) {
         _loadSettings(); // refresh last backup date
-        _showSnack(AppLocalizations.of(context).backupSuccessful, isError: false);
+        _showSnack(
+          AppLocalizations.of(context).backupSuccessful,
+          isError: false,
+        );
       }
     } catch (e) {
-      if (mounted) _showSnack('${AppLocalizations.of(context).backupFailed}: $e', isError: true);
+      if (mounted)
+        _showSnack(
+          '${AppLocalizations.of(context).backupFailed}: $e',
+          isError: true,
+        );
     } finally {
       if (mounted) setState(() => _isExporting = false);
     }
@@ -287,7 +294,10 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
               ),
               Text(
                 sub,
-                style: TextStyle(fontSize: AppSp.sp11, color: cs.onSurfaceVariant),
+                style: TextStyle(
+                  fontSize: AppSp.sp11,
+                  color: cs.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -332,7 +342,10 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
                   ),
                   Text(
                     subtitle,
-                    style: TextStyle(color: cs.onSurfaceVariant, fontSize: AppSp.sp12),
+                    style: TextStyle(
+                      color: cs.onSurfaceVariant,
+                      fontSize: AppSp.sp12,
+                    ),
                   ),
                 ],
               ),
@@ -396,7 +409,11 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
         );
       }
     } catch (e) {
-      if (mounted) _showSnack('${AppLocalizations.of(context).restoreFailed}: $e', isError: true);
+      if (mounted)
+        _showSnack(
+          '${AppLocalizations.of(context).restoreFailed}: $e',
+          isError: true,
+        );
     }
   }
 
@@ -420,10 +437,17 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
       await BackupService().writeSilentBackup();
       await _loadSettings();
       if (mounted && !silent) {
-        _showSnack(AppLocalizations.of(context).backupSuccessful, isError: false);
+        _showSnack(
+          AppLocalizations.of(context).backupSuccessful,
+          isError: false,
+        );
       }
     } catch (e) {
-      if (mounted) _showSnack('${AppLocalizations.of(context).backupFailed}: $e', isError: true);
+      if (mounted)
+        _showSnack(
+          '${AppLocalizations.of(context).backupFailed}: $e',
+          isError: true,
+        );
     } finally {
       if (mounted) setState(() => _isRunningAutoBackup = false);
     }
@@ -436,9 +460,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l.backupStoragePermissionTitle),
-        content: Text(
-          l.backupStoragePermissionDesc,
-        ),
+        content: Text(l.backupStoragePermissionDesc),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -515,7 +537,9 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.upload_outlined),
-                  label: Text(_isExporting ? l.onboardingRestoring : l.backupNow),
+                  label: Text(
+                    _isExporting ? l.onboardingRestoring : l.backupNow,
+                  ),
                   style: FilledButton.styleFrom(
                     padding: EdgeInsets.symmetric(vertical: AppH.h14),
                     shape: RoundedRectangleBorder(
@@ -691,7 +715,9 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
                           )
                         : Icon(Icons.play_arrow_rounded, size: AppSp.sp18),
                     label: Text(
-                      _isRunningAutoBackup ? l.onboardingRestoring : l.backupNow,
+                      _isRunningAutoBackup
+                          ? l.onboardingRestoring
+                          : l.backupNow,
                     ),
                     style: OutlinedButton.styleFrom(
                       padding: EdgeInsets.symmetric(vertical: AppH.h12),
@@ -760,7 +786,9 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
   Widget _card(ColorScheme cs, List<Widget> children) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(AppW.w18), // Let's add AppW.w18 instead of fallback
+      padding: EdgeInsets.all(
+        AppW.w18,
+      ), // Let's add AppW.w18 instead of fallback
       decoration: BoxDecoration(
         color: cs.surface,
         borderRadius: BorderRadius.circular(AppR.r16),

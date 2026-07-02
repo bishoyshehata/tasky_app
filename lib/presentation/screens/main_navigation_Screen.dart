@@ -19,11 +19,16 @@ class MainNavigationScreen extends StatefulWidget {
 
   static final ValueNotifier<bool> refreshTrigger = ValueNotifier(false);
 
+  static void refresh() {
+    refreshTrigger.value = !refreshTrigger.value;
+  }
+
   @override
   State<MainNavigationScreen> createState() => _MainNavigationScreenState();
 }
 
-class _MainNavigationScreenState extends State<MainNavigationScreen> {
+class _MainNavigationScreenState extends State<MainNavigationScreen>
+    with WidgetsBindingObserver {
   int _selectedIndex = 0;
   List<TaskModel> tasks = [];
   UserModel? userModel;
@@ -43,12 +48,22 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     _loadTasksAndReschedule();
     MainNavigationScreen.refreshTrigger.addListener(_onGlobalRefresh);
     AutoBackupManager.checkAndRun();
+    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     MainNavigationScreen.refreshTrigger.removeListener(_onGlobalRefresh);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _loadUser();
+      _loadTasksAndReschedule();
+    }
   }
 
   void _onGlobalRefresh() {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'core/l10n/app_locale_notifier.dart';
 import 'core/notifications/notification_initializer.dart';
 import 'core/theme/app_theme.dart';
@@ -11,7 +12,9 @@ import 'presentation/screens/splash_screen.dart';
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+
   await AppThemeNotifier.instance.load();
   await AppLocaleNotifier.instance.load();
   await NotificationInitializer.init();

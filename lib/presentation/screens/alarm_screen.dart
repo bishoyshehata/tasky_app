@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'dart:io';
 import 'package:engez/core/theme/app_sizes.dart';
 import 'package:engez/l10n/app_localizations.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:engez/data/models/alarm_sound_model.dart';
 
 class AlarmScreen extends StatefulWidget {
   final String taskId;
@@ -13,8 +15,8 @@ class AlarmScreen extends StatefulWidget {
   final String description;
   final String alarmSound;
   final int snoozeDuration;
-  final VoidCallback onSnooze;
-  final VoidCallback onStop;
+  final Future<void> Function() onSnooze;
+  final Future<void> Function() onStop;
 
   const AlarmScreen({
     super.key,
@@ -54,27 +56,39 @@ class _AlarmScreenState extends State<AlarmScreen>
     );
   }
 
+  Future<String> _getRealIosPath(String savedPath, String name) async {
+    if (Platform.isIOS) {
+      final libDir = await getLibraryDirectory();
+      final safeName = name.replaceAll(RegExp(r'[^a-zA-Z0-9.\-_]'), '_');
+      return '${libDir.path}/Sounds/$safeName';
+    }
+    return savedPath;
+  }
+
   Future<void> _playAlarmSound() async {
-    final soundData = widget.alarmSound;
-    if (soundData.contains('|')) {
-      final uri = soundData.split('|')[0];
+    final soundModel = AlarmSoundModel.fromKey(widget.alarmSound);
+    if (soundModel.type == AlarmSoundType.defaultSound) {
+      FlutterRingtonePlayer().playAlarm(looping: true, asAlarm: true);
+    } else {
       if (Platform.isAndroid) {
         try {
-          await _pickerChannel.invokeMethod('playRingtone', {'uri': uri});
+          await _pickerChannel.invokeMethod('playRingtone', {'uri': soundModel.uri});
         } catch (e) {
           FlutterRingtonePlayer().playAlarm(looping: true, asAlarm: true);
         }
-      } else {
-        try {
-          await _audioPlayer.setReleaseMode(ReleaseMode.loop);
-          await _audioPlayer.play(DeviceFileSource(uri));
-        } catch (e) {
+      } else if (Platform.isIOS) {
+        if (soundModel.type == AlarmSoundType.custom) {
+          try {
+            final realPath = await _getRealIosPath(soundModel.uri, soundModel.fileName ?? soundModel.title);
+            await _audioPlayer.setReleaseMode(ReleaseMode.loop);
+            await _audioPlayer.play(DeviceFileSource(realPath));
+          } catch (e) {
+            FlutterRingtonePlayer().playAlarm(looping: true, asAlarm: true);
+          }
+        } else {
           FlutterRingtonePlayer().playAlarm(looping: true, asAlarm: true);
         }
       }
-    } else {
-      // Play default system alarm
-      FlutterRingtonePlayer().playAlarm(looping: true, asAlarm: true);
     }
   }
 
@@ -94,16 +108,20 @@ class _AlarmScreenState extends State<AlarmScreen>
     super.dispose();
   }
 
-  void _stop() {
+  void _stop() async {
     _stopRingtone();
-    widget.onStop();
-    Navigator.of(context).pop();
+    await widget.onStop();
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
   }
 
-  void _snooze() {
+  void _snooze() async {
     _stopRingtone();
-    widget.onSnooze();
-    Navigator.of(context).pop();
+    await widget.onSnooze();
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
   }
 
   @override

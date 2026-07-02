@@ -43,13 +43,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final l = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        centerTitle: false,
-        title: Text(l.profileTitle),
-      ),
+      appBar: AppBar(centerTitle: false, title: Text(l.profileTitle)),
       body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: AppW.w24, vertical: AppH.h24),
+        padding: EdgeInsets.only(
+          left: AppW.w24,
+          right: AppW.w24,
+          bottom: AppH.h24,
+        ),
         child: Column(
           children: [
             // ── Avatar ─────────────────────────────────────────
@@ -91,7 +91,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ],
             ),
-            SizedBox(height: AppH.h24),
+            SizedBox(height: AppH.h14),
 
             // ── Identity ────────────────────────────────────────
             Text(
@@ -111,7 +111,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 fontWeight: FontWeight.w300,
               ),
             ),
-            SizedBox(height: AppH.h40),
+            SizedBox(height: AppH.h10),
 
             // ── Section Label ───────────────────────────────────
             Align(
@@ -164,7 +164,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               title: l.menuBackupRestore,
               onTap: () async {
                 await Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const BackupRestoreScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => const BackupRestoreScreen(),
+                  ),
                 );
                 // Refresh profile data when returning from Backup/Restore
                 widget.onUserChanged();
@@ -233,7 +235,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 await prefs.remove('user');
                 if (context.mounted) {
                   Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (context) => SplashScreen()),
+                    MaterialPageRoute(
+                      builder: (context) => const SplashScreen(),
+                    ),
                   );
                 }
               },
@@ -301,13 +305,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (image == null) return;
     final bytes = await image.readAsBytes();
     final base64Str = base64Encode(bytes);
-    
+
     // Save locally to preferences
     final updatedUser = (widget.userModel ?? UserModel(name: '')).copyWith(
       profileImageBase64: base64Str,
     );
     await _saveUserData(updatedUser);
-    
+
     // Notify parent to refresh user
     widget.onUserChanged();
   }
@@ -317,13 +321,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (image == null) return;
     final bytes = await image.readAsBytes();
     final base64Str = base64Encode(bytes);
-    
+
     // Save locally to preferences
     final updatedUser = (widget.userModel ?? UserModel(name: '')).copyWith(
       profileImageBase64: base64Str,
     );
     await _saveUserData(updatedUser);
-    
+
     // Notify parent to refresh user
     widget.onUserChanged();
   }

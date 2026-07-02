@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:engez/core/theme/app_sizes.dart';
-import 'package:engez/presentation/screens/main_navigation_screen.dart';
+import 'package:engez/presentation/screens/main_navigation_Screen.dart';
 import 'onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -16,6 +16,9 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FlutterNativeSplash.remove();
+    });
     _navigateToInitialRoute();
   }
 
@@ -46,19 +49,12 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SvgPicture.asset(
-              'assets/images/logo.svg',
-              width: AppW.w120,
-              height: AppH.h120,
+            Image.asset(
+              'assets/images/splash_logo.png',
+              width: AppW.w200,
+              height: AppH.h200,
             ),
             SizedBox(height: AppH.h24),
-            Text(
-              'Engez',
-              style: TextStyle(
-                fontSize: AppSp.sp32,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
           ],
         ),
       ),

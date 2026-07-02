@@ -142,17 +142,30 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   Future<void> _pickReminder() async {
     final now = DateTime.now();
 
+    final initialDate = _reminderDate ?? now.add(const Duration(hours: 1));
+    final firstDate = _reminderDate != null && _reminderDate!.isBefore(now)
+        ? _reminderDate!
+        : now;
+    final limitFuture = now.add(const Duration(days: 365));
+    final lastDate = _reminderDate != null && _reminderDate!.isAfter(limitFuture)
+        ? _reminderDate!
+        : limitFuture;
+
     final date = await showDatePicker(
       context: context,
-      initialDate: now.add(const Duration(hours: 1)),
-      firstDate: now,
-      lastDate: now.add(const Duration(days: 365)),
+      initialDate: initialDate,
+      firstDate: firstDate,
+      lastDate: lastDate,
     );
     if (date == null || !mounted) return;
 
+    final initialTime = _reminderDate != null
+        ? TimeOfDay.fromDateTime(_reminderDate!)
+        : TimeOfDay.fromDateTime(now.add(const Duration(hours: 1)));
+
     final time = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.fromDateTime(now.add(const Duration(hours: 1))),
+      initialTime: initialTime,
     );
     if (time == null || !mounted) return;
 

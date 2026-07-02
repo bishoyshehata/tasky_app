@@ -659,7 +659,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyBackupBody.
   ///
   /// In en, this message translates to:
-  /// **'Backup files are saved to your device storage (TaskyBackups folder). They are not encrypted – avoid sharing them with untrusted parties.'**
+  /// **'Backup files are saved to your device storage (EngezBackups folder). They are not encrypted – avoid sharing them with untrusted parties.'**
   String get privacyBackupBody;
 
   /// No description provided for @privacyNotifTitle.
@@ -773,7 +773,7 @@ abstract class AppLocalizations {
   /// No description provided for @backupAutoBanner.
   ///
   /// In en, this message translates to:
-  /// **'Saves to Internal Storage → TaskyBackups'**
+  /// **'Saves to Internal Storage → EngezBackups'**
   String get backupAutoBanner;
 
   /// No description provided for @backupFreq.
@@ -857,7 +857,7 @@ abstract class AppLocalizations {
   /// No description provided for @backupStoragePermissionDesc.
   ///
   /// In en, this message translates to:
-  /// **'To save backups directly to Internal Storage → TaskyBackups (visible in the Files app), Engez needs \"All Files Access\".\n\nTap Continue → find Engez → enable the toggle.'**
+  /// **'To save backups directly to Internal Storage → EngezBackups (visible in the Files app), Engez needs \"All Files Access\".\n\nTap Continue → find Engez → enable the toggle.'**
   String get backupStoragePermissionDesc;
 
   /// No description provided for @continueBtn.

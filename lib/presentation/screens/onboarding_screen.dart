@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:engez/core/backup/backup_model.dart';
 import 'package:engez/core/backup/backup_service.dart';
@@ -125,7 +126,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         );
       }
     } catch (e) {
-      if (mounted) _showSnack('${AppLocalizations.of(context).restoreFailed}: $e', isError: true);
+      if (mounted)
+        _showSnack(
+          '${AppLocalizations.of(context).restoreFailed}: $e',
+          isError: true,
+        );
       setState(() => _isRestoring = false);
     }
   }
@@ -133,8 +138,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   String _fmtDate(DateTime dt) {
     final local = dt.toLocal();
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${local.day} ${months[local.month - 1]} ${local.year}';
   }
@@ -172,25 +187,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SvgPicture.asset(
-                        'assets/images/logo.svg',
-                        width: AppW.w60,
-                        height: AppH.h60,
-                      ),
-                      SizedBox(width: AppW.w16),
-                      Text(
-                        'Engez',
-                        style: TextStyle(
-                          fontSize: AppSp.sp28,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                    ],
+                  Image.asset(
+                    'assets/images/onboarding_logo.png',
+                    width: AppW.w250,
                   ),
-                  SizedBox(height: AppH.h118),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -218,12 +218,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                   ),
                   SizedBox(height: AppH.h24),
-                  SvgPicture.asset(
-                    'assets/images/onboard_image.svg',
-                    width: AppW.w215,
-                    height: AppH.h204,
+                  Container(
+                    width: AppW.w200,
+                    height: AppH.h200,
+                    decoration: BoxDecoration(
+                      color: cs.onInverseSurface,
+                      borderRadius: BorderRadius.circular(AppR.r500),
+                    ),
+                    child: Lottie.asset(
+                      'assets/lottie/to_do.json',
+                      width: AppW.w250,
+                      height: AppH.h250,
+                    ),
                   ),
-                  SizedBox(height: AppH.h28),
                   SizedBox(
                     width: double.infinity,
                     child: Column(
@@ -239,6 +246,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         SizedBox(height: AppH.h8),
                         TextFormField(
                           controller: controller,
+                          onFieldSubmitted: (_) {
+                            FocusScope.of(context).unfocus();
+                          },
                           decoration: InputDecoration(
                             hintText: l.onboardingNameHint,
                           ),
@@ -268,6 +278,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 jsonEncode(user.toJson()),
                               );
                               if (context.mounted) {
+                                FocusScope.of(context).unfocus();
+
                                 Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
@@ -295,8 +307,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         SizedBox(
                           width: double.infinity,
                           child: OutlinedButton.icon(
-                            onPressed:
-                                _isRestoring ? null : _restoreFromBackup,
+                            onPressed: _isRestoring ? null : _restoreFromBackup,
                             icon: _isRestoring
                                 ? SizedBox(
                                     width: 16,

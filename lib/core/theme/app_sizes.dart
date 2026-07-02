@@ -93,4 +93,6 @@ class AppR {
   static double get r30 => 30.r;
   static double get r35 => 35.r;
   static double get r50 => 50.r;
+  static double get r100 => 100.r;
+  static double get r500 => 500.r;
 }

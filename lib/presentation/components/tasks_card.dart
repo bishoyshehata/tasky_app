@@ -3,6 +3,7 @@ import 'package:engez/data/models/task_model.dart';
 import 'package:engez/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'dart:async';
 
 class TaskCard extends StatefulWidget {
   const TaskCard({
@@ -42,6 +43,37 @@ class TaskCard extends StatefulWidget {
 }
 
 class _TaskCardState extends State<TaskCard> {
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startTimerIfNeeded();
+  }
+
+  @override
+  void didUpdateWidget(TaskCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _startTimerIfNeeded();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _startTimerIfNeeded() {
+    _timer?.cancel();
+    if (widget.task.reminderEnabled && widget.task.reminderDate != null) {
+      _timer = Timer.periodic(const Duration(seconds: 10), (timer) {
+        if (mounted) {
+          setState(() {});
+        }
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;

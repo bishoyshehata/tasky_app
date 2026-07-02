@@ -20,12 +20,14 @@ class ProfileScreen extends StatefulWidget {
   final VoidCallback onUserChanged;
   final List<TaskModel> tasks;
   final ValueChanged<List<TaskModel>> onTasksChanged;
+  final UserModel? userModel;
 
   const ProfileScreen({
     super.key,
     required this.onUserChanged,
     required this.tasks,
     required this.onTasksChanged,
+    required this.userModel,
   });
 
   @override
@@ -33,23 +35,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  UserModel? userModel;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadData();
-  }
-
-  Future<void> _loadData() async {
-    final prefs = await SharedPreferences.getInstance();
-    final userJson = prefs.getString('user');
-    if (userJson != null) {
-      setState(() {
-        userModel = UserModel.fromJson(jsonDecode(userJson));
-      });
-    }
-  }
+  // ── No local userModel, rely on widget.userModel ──────────
 
   @override
   Widget build(BuildContext context) {
@@ -57,13 +43,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final l = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        centerTitle: false,
-        title: Text(l.profileTitle),
-      ),
+      appBar: AppBar(centerTitle: false, title: Text(l.profileTitle)),
       body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: AppW.w24, vertical: AppH.h24),
+        padding: EdgeInsets.only(
+          left: AppW.w24,
+          right: AppW.w24,
+          bottom: AppH.h24,
+        ),
         child: Column(
           children: [
             // ── Avatar ─────────────────────────────────────────
@@ -78,9 +64,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     border: Border.all(color: Colors.transparent, width: 2),
                   ),
                   child: ClipOval(
-                    child: (userModel?.profileImageBytes != null)
+                    child: (widget.userModel?.profileImageBytes != null)
                         ? Image.memory(
-                            userModel!.profileImageBytes!,
+                            widget.userModel!.profileImageBytes!,
+                            key: ValueKey(widget.userModel!.profileImageBase64),
                             fit: BoxFit.cover,
                           )
                         : Icon(
@@ -104,11 +91,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ],
             ),
-            SizedBox(height: AppH.h24),
+            SizedBox(height: AppH.h14),
 
             // ── Identity ────────────────────────────────────────
             Text(
-              userModel?.name ?? '',
+              widget.userModel?.name ?? '',
               style: TextStyle(
                 fontSize: AppSp.sp24,
                 fontWeight: FontWeight.w600,
@@ -117,14 +104,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             SizedBox(height: AppH.h8),
             Text(
-              userModel?.motivationQuote ?? '',
+              widget.userModel?.motivationQuote ?? '',
               style: TextStyle(
                 color: colorScheme.onSurfaceVariant,
                 fontSize: AppSp.sp14,
                 fontWeight: FontWeight.w300,
               ),
             ),
-            SizedBox(height: AppH.h40),
+            SizedBox(height: AppH.h10),
 
             // ── Section Label ───────────────────────────────────
             Align(
@@ -152,7 +139,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   MaterialPageRoute(builder: (context) => UserDetailsScreen()),
                 );
                 if (result != null) {
-                  _loadData();
                   widget.onUserChanged();
                 }
               },
@@ -176,9 +162,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
               context: context,
               icon: Icons.backup_outlined,
               title: l.menuBackupRestore,
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const BackupRestoreScreen()),
-              ),
+              onTap: () async {
+                await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const BackupRestoreScreen(),
+                  ),
+                );
+                // Refresh profile data when returning from Backup/Restore
+                widget.onUserChanged();
+              },
             ),
             _buildMenuItem(
               context: context,
@@ -243,7 +235,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 await prefs.remove('user');
                 if (context.mounted) {
                   Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (context) => SplashScreen()),
+                    MaterialPageRoute(
+                      builder: (context) => const SplashScreen(),
+                    ),
                   );
                 }
               },
@@ -311,10 +305,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (image == null) return;
     final bytes = await image.readAsBytes();
     final base64Str = base64Encode(bytes);
-    setState(() {
-      userModel = userModel!.copyWith(profileImageBase64: base64Str);
-    });
-    await _saveUserData();
+
+    // Save locally to preferences
+    final updatedUser = (widget.userModel ?? UserModel(name: '')).copyWith(
+      profileImageBase64: base64Str,
+    );
+    await _saveUserData(updatedUser);
+
+    // Notify parent to refresh user
     widget.onUserChanged();
   }
 
@@ -323,10 +321,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (image == null) return;
     final bytes = await image.readAsBytes();
     final base64Str = base64Encode(bytes);
-    setState(() {
-      userModel = userModel!.copyWith(profileImageBase64: base64Str);
-    });
-    await _saveUserData();
+
+    // Save locally to preferences
+    final updatedUser = (widget.userModel ?? UserModel(name: '')).copyWith(
+      profileImageBase64: base64Str,
+    );
+    await _saveUserData(updatedUser);
+
+    // Notify parent to refresh user
     widget.onUserChanged();
   }
 
@@ -372,9 +374,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Future<void> _saveUserData() async {
-    if (userModel == null) return;
+  Future<void> _saveUserData(UserModel updated) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('user', jsonEncode(userModel!.toJson()));
+    await prefs.setString('user', jsonEncode(updated.toJson()));
   }
 }

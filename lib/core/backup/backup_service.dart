@@ -26,27 +26,48 @@ class BackupService {
   // ── Export ──────────────────────────────────────────────────
 
   /// Reads all tasks from storage, builds a versioned BackupModel,
-  /// writes it to a temp file, then opens the system share sheet.
+  /// and saves it. On iOS, it prompts the user to select a location using FilePicker
+  /// to save outside the sandbox. On Android, it opens the share sheet.
   Future<void> exportAndShare() async {
     final tasks = await _readAllTasks();
     final user = await _readUser();
     final backup = BackupModel.create(tasks: tasks, user: user);
     final jsonString = backup.toJsonString();
-
-    final tempDir = await getTemporaryDirectory();
     final dateStr = DateFormat('yyyy_MM_dd').format(DateTime.now());
-    final file = File('${tempDir.path}/tasky_backup_$dateStr.json');
-    await file.writeAsString(jsonString, encoding: utf8);
+    final fileName = 'engez_backup_$dateStr.json';
 
-    await Share.shareXFiles(
-      [XFile(file.path, mimeType: 'application/json')],
-      subject: 'Tasky Backup – $dateStr',
-    );
+    if (Platform.isIOS || Platform.isMacOS) {
+      // Use FilePicker on iOS to allow user to pick a location (e.g., iCloud, On My iPhone)
+      // This saves the file outside the app sandbox, preventing deletion on app uninstall.
+      final result = await FilePicker.saveFile(
+        dialogTitle: 'Save Backup',
+        fileName: fileName,
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+        bytes: utf8.encode(jsonString),
+      );
+
+      if (result == null) {
+        // User canceled
+        return;
+      }
+    } else {
+      // On Android, use Share sheet
+      final tempDir = await getTemporaryDirectory();
+      final file = File('${tempDir.path}/$fileName');
+      await file.writeAsString(jsonString, encoding: utf8);
+
+      await Share.shareXFiles([
+        XFile(file.path, mimeType: 'application/json'),
+      ], subject: 'Engez Backup – $dateStr');
+    }
 
     // Save last manual backup timestamp
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
-        'last_manual_backup_at', DateTime.now().toIso8601String());
+      'last_manual_backup_at',
+      DateTime.now().toIso8601String(),
+    );
   }
 
   // ── Import ──────────────────────────────────────────────────
@@ -78,13 +99,16 @@ class BackupService {
     try {
       jsonData = jsonDecode(content) as Map<String, dynamic>;
     } catch (_) {
-      throw const BackupServiceException('The selected file is not valid JSON.');
+      throw const BackupServiceException(
+        'The selected file is not valid JSON.',
+      );
     }
 
     final validation = BackupValidator.validate(jsonData);
     if (!validation.isValid) {
       throw BackupServiceException(
-          validation.message ?? 'Invalid backup file.');
+        validation.message ?? 'Invalid backup file.',
+      );
     }
 
     final model = BackupModel.fromJson(jsonData);
@@ -100,7 +124,9 @@ class BackupService {
   /// - [replace]: clears current tasks, saves imported ones.
   /// - [merge]: keeps existing tasks, adds new (skips duplicate IDs).
   Future<void> applyRestore(
-      BackupPreview preview, RestoreStrategy strategy) async {
+    BackupPreview preview,
+    RestoreStrategy strategy,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     final importedTasks = preview.model.tasks;
 
@@ -120,8 +146,9 @@ class BackupService {
       case RestoreStrategy.merge:
         final existing = await _readAllTasks();
         final existingIds = existing.map((t) => t.id).toSet();
-        final newOnly =
-            importedTasks.where((t) => !existingIds.contains(t.id)).toList();
+        final newOnly = importedTasks
+            .where((t) => !existingIds.contains(t.id))
+            .toList();
         finalTasks = [...existing, ...newOnly];
         break;
     }
@@ -149,7 +176,7 @@ class BackupService {
   // ── Silent Auto Backup ──────────────────────────────────────
 
   /// Writes a silent backup to the visible external storage under
-  /// `Android/data/com.bsh.tasky/files/TaskyBackups/`.
+  /// `Android/data/app.fikrasoft.engez/files/EngezBackups/`.
   ///
   /// Keeps at most [maxCopies] files — oldest is deleted when the limit
   /// is exceeded.
@@ -164,21 +191,21 @@ class BackupService {
     if (Platform.isAndroid) {
       // Prefer the public root directory (visible in Files app like WhatsApp).
       // Requires MANAGE_EXTERNAL_STORAGE on Android 11+.
-      final hasFullAccess =
-          await Permission.manageExternalStorage.isGranted;
+      final hasFullAccess = await Permission.manageExternalStorage.isGranted;
       if (hasFullAccess) {
-        backupDir = Directory('/storage/emulated/0/TaskyBackups');
+        backupDir = Directory('/storage/emulated/0/EngezBackups');
       } else {
         // Fall back to app-private external dir (always accessible).
         final extDir = await getExternalStorageDirectory();
         backupDir = extDir != null
-            ? Directory('${extDir.path}/TaskyBackups')
+            ? Directory('${extDir.path}/EngezBackups')
             : Directory(
-                '${(await getApplicationDocumentsDirectory()).path}/TaskyBackups');
+                '${(await getApplicationDocumentsDirectory()).path}/EngezBackups',
+              );
       }
     } else {
       final docDir = await getApplicationDocumentsDirectory();
-      backupDir = Directory('${docDir.path}/TaskyBackups');
+      backupDir = Directory('${docDir.path}/EngezBackups');
     }
 
     if (!await backupDir.exists()) {
@@ -186,12 +213,15 @@ class BackupService {
     }
 
     // ── Rotate: keep only (maxCopies - 1) existing files ─────
-    final existing = backupDir
-        .listSync()
-        .whereType<File>()
-        .where((f) => f.path.endsWith('.json'))
-        .toList()
-      ..sort((a, b) => a.lastModifiedSync().compareTo(b.lastModifiedSync()));
+    final existing =
+        backupDir
+            .listSync()
+            .whereType<File>()
+            .where((f) => f.path.endsWith('.json'))
+            .toList()
+          ..sort(
+            (a, b) => a.lastModifiedSync().compareTo(b.lastModifiedSync()),
+          );
 
     while (existing.length >= maxCopies) {
       final oldest = existing.removeAt(0);
@@ -201,12 +231,14 @@ class BackupService {
 
     // ── Write new file ────────────────────────────────────────
     final stamp = DateFormat('yyyy_MM_dd_HH_mm').format(DateTime.now());
-    final file = File('${backupDir.path}/tasky_backup_$stamp.json');
+    final file = File('${backupDir.path}/engez_backup_$stamp.json');
     await file.writeAsString(jsonString, encoding: utf8);
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
-        'last_auto_backup_at', DateTime.now().toIso8601String());
+      'last_auto_backup_at',
+      DateTime.now().toIso8601String(),
+    );
     await prefs.setString('last_auto_backup_path', file.path);
 
     debugPrint('📦 [Backup] Auto backup saved to: ${file.path}');

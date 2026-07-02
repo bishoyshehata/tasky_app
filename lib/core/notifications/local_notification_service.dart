@@ -4,18 +4,20 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:engez/data/models/task_model.dart';
+import 'package:engez/data/models/alarm_sound_model.dart';
 import 'package:engez/main.dart';
 import 'package:engez/presentation/screens/alarm_screen.dart';
 import 'package:engez/presentation/screens/main_navigation_screen.dart';
 import 'package:flutter/services.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import 'dart:io';
 
 import 'notification_logger.dart';
 import 'notification_permission.dart';
 import 'notification_service.dart';
 
-const _pickerChannel = MethodChannel('com.bsh.tasky/ringtone_picker');
+const _pickerChannel = MethodChannel('app.fikrasoft.engez/ringtone_picker');
 
 @pragma('vm:entry-point')
 void _onBackgroundNotificationResponse(NotificationResponse response) async {
@@ -43,13 +45,17 @@ void _onBackgroundNotificationResponse(NotificationResponse response) async {
   final plugin = FlutterLocalNotificationsPlugin();
 
   if (response.actionId == 'stop') {
-    await _pickerChannel.invokeMethod('stopRingtone');
+    if (Platform.isAndroid) {
+      await _pickerChannel.invokeMethod('stopRingtone');
+    }
     await plugin.cancel(notifId);
     return;
   }
 
   if (response.actionId == 'snooze') {
-    await _pickerChannel.invokeMethod('stopRingtone');
+    if (Platform.isAndroid) {
+      await _pickerChannel.invokeMethod('stopRingtone');
+    }
     await plugin.cancel(notifId);
     await LocalNotificationService.snoozeTaskInStorage(taskId);
   }
@@ -61,7 +67,7 @@ class LocalNotificationService implements NotificationService {
   LocalNotificationService._();
   static final LocalNotificationService instance = LocalNotificationService._();
 
-  static const _channelIdBase = 'tasky_alarms_v3';
+  static const _channelIdBase = 'engez_alarms_v3';
   static const _channelName = 'Task Reminders';
   static const _channelDescription = 'Scheduled reminders for your tasks';
 
@@ -74,24 +80,22 @@ class LocalNotificationService implements NotificationService {
   tz.TZDateTime _toTZ(DateTime dt) => tz.TZDateTime.from(dt, tz.local);
 
   Future<NotificationDetails> _getDetails(String alarmSoundData) async {
-    // alarmSoundData format: "URI|NAME" or just "default"
-    String uri = 'default';
-    if (alarmSoundData.contains('|')) {
-      uri = alarmSoundData.split('|')[0];
-    } else {
-      uri = alarmSoundData;
-    }
+    final soundModel = AlarmSoundModel.fromKey(alarmSoundData);
 
-    String channelId = '${_channelIdBase}_${uri.hashCode}';
+    String channelId = '${_channelIdBase}_${soundModel.uri.hashCode}';
 
     AndroidNotificationSound? sound;
     bool playSound = true;
-    if (uri != 'default') {
-      if (uri.startsWith('content://')) {
-        sound = UriAndroidNotificationSound(uri);
-      } else {
-        playSound = false;
+
+    if (soundModel.type == AlarmSoundType.system) {
+      sound = UriAndroidNotificationSound(soundModel.uri);
+    } else if (soundModel.type == AlarmSoundType.custom) {
+      String contentUri = soundModel.uri;
+      if (soundModel.uri.contains('/files/')) {
+        final relativePath = soundModel.uri.split('/files/').last;
+        contentUri = 'content://app.fikrasoft.engez.fileprovider/files/$relativePath';
       }
+      sound = UriAndroidNotificationSound(contentUri);
     }
 
     // Dynamically create this specific channel to bypass Android limits
@@ -113,6 +117,7 @@ class LocalNotificationService implements NotificationService {
       );
     }
 
+
     return NotificationDetails(
       android: AndroidNotificationDetails(
         channelId,
@@ -128,11 +133,11 @@ class LocalNotificationService implements NotificationService {
         category: AndroidNotificationCategory.alarm,
         audioAttributesUsage: AudioAttributesUsage.alarm,
       ),
-      iOS: const DarwinNotificationDetails(
+      iOS: DarwinNotificationDetails(
         presentAlert: true,
         presentBadge: true,
         presentSound: true,
-        interruptionLevel: InterruptionLevel.critical,
+        interruptionLevel: InterruptionLevel.active,
       ),
     );
   }
@@ -147,7 +152,7 @@ class LocalNotificationService implements NotificationService {
     tz.setLocalLocation(tz.getLocation(localTz));
 
     // 2 — Plugin init settings
-    const android = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const android = AndroidInitializationSettings('notification_icon');
     const ios = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,
@@ -305,13 +310,17 @@ class LocalNotificationService implements NotificationService {
     final plugin = FlutterLocalNotificationsPlugin();
 
     if (response.actionId == 'stop') {
-      await _pickerChannel.invokeMethod('stopRingtone');
+      if (Platform.isAndroid) {
+        await _pickerChannel.invokeMethod('stopRingtone');
+      }
       await plugin.cancel(notifId);
       return;
     }
 
     if (response.actionId == 'snooze') {
-      await _pickerChannel.invokeMethod('stopRingtone');
+      if (Platform.isAndroid) {
+        await _pickerChannel.invokeMethod('stopRingtone');
+      }
       await plugin.cancel(notifId);
       await snoozeTaskInStorage(taskId);
       return;
@@ -328,11 +337,15 @@ class LocalNotificationService implements NotificationService {
           snoozeDuration: snoozeDuration,
           onStop: () async {
             await plugin.cancel(notifId);
-            await _pickerChannel.invokeMethod('stopRingtone');
+            if (Platform.isAndroid) {
+              await _pickerChannel.invokeMethod('stopRingtone');
+            }
           },
           onSnooze: () async {
             await plugin.cancel(notifId);
-            await _pickerChannel.invokeMethod('stopRingtone');
+            if (Platform.isAndroid) {
+              await _pickerChannel.invokeMethod('stopRingtone');
+            }
             await snoozeTaskInStorage(taskId);
           },
         ),
@@ -359,6 +372,7 @@ class LocalNotificationService implements NotificationService {
       final updatedTask = task.copyWith(
         reminderDate: snoozeDate,
         reminderEnabled: true,
+        dateTime: snoozeDate.toIso8601String(),
       );
 
       tasks[index] = updatedTask;
@@ -372,8 +386,7 @@ class LocalNotificationService implements NotificationService {
       await LocalNotificationService.instance.schedule(updatedTask);
 
       // Trigger global refresh so any open UI updates immediately
-      MainNavigationScreen.refreshTrigger.value =
-          !MainNavigationScreen.refreshTrigger.value;
+      MainNavigationScreen.refresh();
     }
   }
 }

@@ -1,4 +1,4 @@
-package com.bsh.tasky
+package app.fikrasoft.engez
 
 import android.content.ContentValues
 import android.provider.MediaStore
@@ -15,7 +15,7 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
-    private val CHANNEL = "com.bsh.tasky/ringtone_picker"
+    private val CHANNEL = "app.fikrasoft.engez/ringtone_picker"
     private var pendingResult: MethodChannel.Result? = null
     private val RINGTONE_PICKER_REQUEST_CODE = 999
     private var ringtonePlayer: Ringtone? = null

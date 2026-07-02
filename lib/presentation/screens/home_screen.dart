@@ -55,11 +55,23 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     CircleAvatar(
                       radius: AppR.r25,
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.primaryContainer,
                       backgroundImage:
                           (widget.userModel?.profileImageBytes != null)
                           ? MemoryImage(widget.userModel!.profileImageBytes!)
-                          : const AssetImage('assets/images/file.jpg')
-                                as ImageProvider,
+                          : null,
+                      child: (widget.userModel?.profileImageBytes != null)
+                          ? null
+                          : Image.asset(
+                              'assets/images/logo500.png',
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onPrimaryFixed,
+                              width: AppW.w32,
+                              height: AppH.h32,
+                            ),
                     ),
                     SizedBox(width: AppW.w4),
                     SizedBox(
@@ -104,10 +116,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
 
                 SizedBox(height: AppH.h20),
-                Text(
-                  l.homeTagline1,
-                  style: TextStyle(fontSize: AppSp.sp24),
-                ),
+                Text(l.homeTagline1, style: TextStyle(fontSize: AppSp.sp24)),
                 Row(
                   children: [
                     Text(

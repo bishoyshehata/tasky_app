@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// ─────────────────────────────────────────────
-///  Tasky – Centralised Color Palette
+///  Engez – Centralised Color Palette
 /// ─────────────────────────────────────────────
 ///
 /// Dark colours are extracted from the existing app design.

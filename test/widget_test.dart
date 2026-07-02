@@ -1,30 +1,30 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:engez/main.dart';
+import 'package:engez/data/models/alarm_sound_model.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const EngezApp());
+  group('AlarmSoundModel Tests', () {
+    test('Default sound model parsing from key', () {
+      final model = AlarmSoundModel.fromKey('default');
+      expect(model.type, AlarmSoundType.defaultSound);
+      expect(model.uri, 'default');
+      expect(model.title, 'Default');
+    });
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    test('Custom sound model serialization and parsing', () {
+      final original = AlarmSoundModel(
+        type: AlarmSoundType.custom,
+        uri: 'some/path/to/file.mp3',
+        fileName: 'file.mp3',
+        title: 'Custom Melody',
+      );
+      final key = original.toKey();
+      expect(key, 'custom|some/path/to/file.mp3|file.mp3|Custom Melody');
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+      final parsed = AlarmSoundModel.fromKey(key);
+      expect(parsed.type, AlarmSoundType.custom);
+      expect(parsed.uri, 'some/path/to/file.mp3');
+      expect(parsed.fileName, 'file.mp3');
+      expect(parsed.title, 'Custom Melody');
+    });
   });
 }

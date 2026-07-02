@@ -97,10 +97,17 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
       await _createUseCase.execute();
       if (mounted) {
         _loadSettings(); // refresh last backup date
-        _showSnack(AppLocalizations.of(context).backupSuccessful, isError: false);
+        _showSnack(
+          AppLocalizations.of(context).backupSuccessful,
+          isError: false,
+        );
       }
     } catch (e) {
-      if (mounted) _showSnack('${AppLocalizations.of(context).backupFailed}: $e', isError: true);
+      if (mounted)
+        _showSnack(
+          '${AppLocalizations.of(context).backupFailed}: $e',
+          isError: true,
+        );
     } finally {
       if (mounted) setState(() => _isExporting = false);
     }
@@ -287,7 +294,10 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
               ),
               Text(
                 sub,
-                style: TextStyle(fontSize: AppSp.sp11, color: cs.onSurfaceVariant),
+                style: TextStyle(
+                  fontSize: AppSp.sp11,
+                  color: cs.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -332,7 +342,10 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
                   ),
                   Text(
                     subtitle,
-                    style: TextStyle(color: cs.onSurfaceVariant, fontSize: AppSp.sp12),
+                    style: TextStyle(
+                      color: cs.onSurfaceVariant,
+                      fontSize: AppSp.sp12,
+                    ),
                   ),
                 ],
               ),
@@ -396,7 +409,11 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
         );
       }
     } catch (e) {
-      if (mounted) _showSnack('${AppLocalizations.of(context).restoreFailed}: $e', isError: true);
+      if (mounted)
+        _showSnack(
+          '${AppLocalizations.of(context).restoreFailed}: $e',
+          isError: true,
+        );
     }
   }
 
@@ -420,10 +437,17 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
       await BackupService().writeSilentBackup();
       await _loadSettings();
       if (mounted && !silent) {
-        _showSnack(AppLocalizations.of(context).backupSuccessful, isError: false);
+        _showSnack(
+          AppLocalizations.of(context).backupSuccessful,
+          isError: false,
+        );
       }
     } catch (e) {
-      if (mounted) _showSnack('${AppLocalizations.of(context).backupFailed}: $e', isError: true);
+      if (mounted)
+        _showSnack(
+          '${AppLocalizations.of(context).backupFailed}: $e',
+          isError: true,
+        );
     } finally {
       if (mounted) setState(() => _isRunningAutoBackup = false);
     }
@@ -436,9 +460,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l.backupStoragePermissionTitle),
-        content: Text(
-          l.backupStoragePermissionDesc,
-        ),
+        content: Text(l.backupStoragePermissionDesc),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -515,7 +537,9 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.upload_outlined),
-                  label: Text(_isExporting ? l.onboardingRestoring : l.backupNow),
+                  label: Text(
+                    _isExporting ? l.onboardingRestoring : l.backupNow,
+                  ),
                   style: FilledButton.styleFrom(
                     padding: EdgeInsets.symmetric(vertical: AppH.h14),
                     shape: RoundedRectangleBorder(
@@ -566,182 +590,207 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
             SizedBox(height: AppH.h24),
 
             // ── Auto Backup ────────────────────────────────
-            _sectionHeader(l.autoBackup),
-            SizedBox(height: AppH.h12),
-            _card(cs, [
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l.autoBackup,
-                          style: TextStyle(
-                            fontSize: AppSp.sp15,
-                            fontWeight: FontWeight.w500,
-                            color: cs.onSurface,
-                          ),
+            Platform.isAndroid
+                ? Column(
+                    children: [
+                      _sectionHeader(l.autoBackup),
+                      SizedBox(height: AppH.h12),
+                      _card(cs, [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    l.autoBackup,
+                                    style: TextStyle(
+                                      fontSize: AppSp.sp15,
+                                      fontWeight: FontWeight.w500,
+                                      color: cs.onSurface,
+                                    ),
+                                  ),
+                                  SizedBox(height: AppH.h2),
+                                  Text(
+                                    'Automatically saves a local backup',
+                                    style: TextStyle(
+                                      fontSize: AppSp.sp12,
+                                      color: cs.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Switch(
+                              value: _autoEnabled,
+                              onChanged: _onToggleAuto,
+                            ),
+                          ],
                         ),
-                        SizedBox(height: AppH.h2),
-                        Text(
-                          'Automatically saves a local backup',
-                          style: TextStyle(
-                            fontSize: AppSp.sp12,
-                            color: cs.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Switch(value: _autoEnabled, onChanged: _onToggleAuto),
-                ],
-              ),
-              // ── Storage Access Banner ────────────────────
-              if (Platform.isAndroid) ...[
-                SizedBox(height: AppH.h12),
-                GestureDetector(
-                  onTap: _hasFullStorageAccess
-                      ? null
-                      : _requestFullStorageAccess,
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: AppW.w12,
-                      vertical: AppH.h8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: cs.primaryContainer.withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(AppR.r10),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.folder_open_rounded,
-                          size: AppSp.sp16,
-                          color: cs.primary,
-                        ),
-                        SizedBox(width: AppW.w8),
-                        Expanded(
-                          child: Text(
-                            l.backupAutoBanner,
-                            style: TextStyle(
-                              fontSize: AppSp.sp12,
-                              color: cs.onPrimaryContainer,
-                              fontWeight: FontWeight.w500,
+                        // ── Storage Access Banner ────────────────────
+                        if (Platform.isAndroid) ...[
+                          SizedBox(height: AppH.h12),
+                          GestureDetector(
+                            onTap: _hasFullStorageAccess
+                                ? null
+                                : _requestFullStorageAccess,
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: AppW.w12,
+                                vertical: AppH.h8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: cs.primaryContainer.withValues(
+                                  alpha: 0.5,
+                                ),
+                                borderRadius: BorderRadius.circular(AppR.r10),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.folder_open_rounded,
+                                    size: AppSp.sp16,
+                                    color: cs.primary,
+                                  ),
+                                  SizedBox(width: AppW.w8),
+                                  Expanded(
+                                    child: Text(
+                                      l.backupAutoBanner,
+                                      style: TextStyle(
+                                        fontSize: AppSp.sp12,
+                                        color: cs.onPrimaryContainer,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-              if (_autoEnabled) ...[
-                const Divider(height: 24),
-                Text(
-                  l.backupFreq,
-                  style: TextStyle(
-                    fontSize: AppSp.sp13,
-                    fontWeight: FontWeight.w500,
-                    color: cs.onSurface,
-                  ),
-                ),
-                SizedBox(height: AppH.h10),
-                Wrap(
-                  spacing: 8,
-                  children: AutoBackupManager.frequencyOptions.map((days) {
-                    final selected = _autoFrequency == days;
-                    return ChoiceChip(
-                      label: Text(_frequencyLabel(days, l)),
-                      selected: selected,
-                      onSelected: (_) => _onFrequencyChanged(days),
-                      selectedColor: cs.primaryContainer,
-                      labelStyle: TextStyle(
-                        color: selected
-                            ? cs.onPrimaryContainer
-                            : cs.onSurfaceVariant,
-                        fontWeight: selected
-                            ? FontWeight.w600
-                            : FontWeight.w400,
-                      ),
-                    );
-                  }).toList(),
-                ),
-                SizedBox(height: AppH.h12),
-                _infoRow(
-                  cs,
-                  icon: Icons.schedule_outlined,
-                  label: l.lastBackup,
-                  value: _lastAutoBackup != null
-                      ? DateFormat(
-                          'dd MMM yyyy • hh:mm a',
-                        ).format(_lastAutoBackup!.toLocal())
-                      : l.never,
-                ),
-                SizedBox(height: AppH.h12),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: _isRunningAutoBackup ? null : _runAutoBackupNow,
-                    icon: _isRunningAutoBackup
-                        ? SizedBox(
-                            width: AppW.w14,
-                            height: AppH.h14,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Icon(Icons.play_arrow_rounded, size: AppSp.sp18),
-                    label: Text(
-                      _isRunningAutoBackup ? l.onboardingRestoring : l.backupNow,
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: AppH.h12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppR.r10),
-                      ),
-                    ),
-                  ),
-                ),
-                if (_lastAutoBackupPath != null) ...[
-                  SizedBox(height: AppH.h12),
-                  Container(
-                    padding: EdgeInsets.all(AppW.w12),
-                    decoration: BoxDecoration(
-                      color: cs.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(AppR.r10),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(
-                          Icons.folder_outlined,
-                          size: AppSp.sp16,
-                          color: cs.primary,
-                        ),
-                        SizedBox(width: AppW.w8),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                l.backupSavedLocal,
-                                style: TextStyle(
-                                  fontSize: AppSp.sp11,
-                                  color: cs.onSurfaceVariant,
-                                  fontWeight: FontWeight.w500,
+                        ],
+                        if (_autoEnabled) ...[
+                          const Divider(height: 24),
+                          Text(
+                            l.backupFreq,
+                            style: TextStyle(
+                              fontSize: AppSp.sp13,
+                              fontWeight: FontWeight.w500,
+                              color: cs.onSurface,
+                            ),
+                          ),
+                          SizedBox(height: AppH.h10),
+                          Wrap(
+                            spacing: 8,
+                            children: AutoBackupManager.frequencyOptions.map((
+                              days,
+                            ) {
+                              final selected = _autoFrequency == days;
+                              return ChoiceChip(
+                                label: Text(_frequencyLabel(days, l)),
+                                selected: selected,
+                                onSelected: (_) => _onFrequencyChanged(days),
+                                selectedColor: cs.primaryContainer,
+                                labelStyle: TextStyle(
+                                  color: selected
+                                      ? cs.onPrimaryContainer
+                                      : cs.onSurfaceVariant,
+                                  fontWeight: selected
+                                      ? FontWeight.w600
+                                      : FontWeight.w400,
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                          SizedBox(height: AppH.h12),
+                          _infoRow(
+                            cs,
+                            icon: Icons.schedule_outlined,
+                            label: l.lastBackup,
+                            value: _lastAutoBackup != null
+                                ? DateFormat(
+                                    'dd MMM yyyy • hh:mm a',
+                                  ).format(_lastAutoBackup!.toLocal())
+                                : l.never,
+                          ),
+                          SizedBox(height: AppH.h12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: _isRunningAutoBackup
+                                  ? null
+                                  : _runAutoBackupNow,
+                              icon: _isRunningAutoBackup
+                                  ? SizedBox(
+                                      width: AppW.w14,
+                                      height: AppH.h14,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : Icon(
+                                      Icons.play_arrow_rounded,
+                                      size: AppSp.sp18,
+                                    ),
+                              label: Text(
+                                _isRunningAutoBackup
+                                    ? l.onboardingRestoring
+                                    : l.backupNow,
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                padding: EdgeInsets.symmetric(
+                                  vertical: AppH.h12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(AppR.r10),
                                 ),
                               ),
-                              SizedBox(height: AppH.h2),
-                            ],
+                            ),
                           ),
-                        ),
-                        SizedBox(width: AppW.w6),
-                      ],
-                    ),
-                  ),
-                ],
-              ],
-            ]),
-            SizedBox(height: AppH.h32),
+                          if (_lastAutoBackupPath != null) ...[
+                            SizedBox(height: AppH.h12),
+                            Container(
+                              padding: EdgeInsets.all(AppW.w12),
+                              decoration: BoxDecoration(
+                                color: cs.surfaceContainerHighest,
+                                borderRadius: BorderRadius.circular(AppR.r10),
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Icon(
+                                    Icons.folder_outlined,
+                                    size: AppSp.sp16,
+                                    color: cs.primary,
+                                  ),
+                                  SizedBox(width: AppW.w8),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          l.backupSavedLocal,
+                                          style: TextStyle(
+                                            fontSize: AppSp.sp11,
+                                            color: cs.onSurfaceVariant,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        SizedBox(height: AppH.h2),
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(width: AppW.w6),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
+                      ]),
+                      SizedBox(height: AppH.h32),
+                    ],
+                  )
+                : SizedBox.shrink(),
           ],
         ),
       ),
@@ -760,7 +809,9 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
   Widget _card(ColorScheme cs, List<Widget> children) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(AppW.w18), // Let's add AppW.w18 instead of fallback
+      padding: EdgeInsets.all(
+        AppW.w18,
+      ), // Let's add AppW.w18 instead of fallback
       decoration: BoxDecoration(
         color: cs.surface,
         borderRadius: BorderRadius.circular(AppR.r16),

@@ -125,7 +125,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         );
       }
     } catch (e) {
-      if (mounted) _showSnack('${AppLocalizations.of(context).restoreFailed}: $e', isError: true);
+      if (mounted)
+        _showSnack(
+          '${AppLocalizations.of(context).restoreFailed}: $e',
+          isError: true,
+        );
       setState(() => _isRestoring = false);
     }
   }
@@ -133,8 +137,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   String _fmtDate(DateTime dt) {
     final local = dt.toLocal();
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${local.day} ${months[local.month - 1]} ${local.year}';
   }
@@ -239,6 +253,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         SizedBox(height: AppH.h8),
                         TextFormField(
                           controller: controller,
+                          onFieldSubmitted: (_) {
+                            FocusScope.of(context).unfocus();
+                          },
                           decoration: InputDecoration(
                             hintText: l.onboardingNameHint,
                           ),
@@ -268,6 +285,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 jsonEncode(user.toJson()),
                               );
                               if (context.mounted) {
+                                FocusScope.of(context).unfocus();
+
                                 Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
@@ -295,8 +314,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         SizedBox(
                           width: double.infinity,
                           child: OutlinedButton.icon(
-                            onPressed:
-                                _isRestoring ? null : _restoreFromBackup,
+                            onPressed: _isRestoring ? null : _restoreFromBackup,
                             icon: _isRestoring
                                 ? SizedBox(
                                     width: 16,

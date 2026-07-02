@@ -53,6 +53,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   void _onGlobalRefresh() {
     if (mounted) {
+      _loadUser();
       _loadTasksAndReschedule();
     }
   }
@@ -239,6 +240,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             tasks: tasks,
             onUserChanged: _loadUser,
             onTasksChanged: _onTasksChanged,
+            userModel: userModel,
           ),
         ],
       ),

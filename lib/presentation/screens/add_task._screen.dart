@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:engez/data/models/task_model.dart';
-import 'package:engez/data/models/alarm_sound_model.dart';
-import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_system_ringtones/flutter_system_ringtones.dart';
-import 'package:audioplayers/audioplayers.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:engez/core/theme/app_sizes.dart';
 import 'package:engez/l10n/app_localizations.dart';
 
@@ -23,40 +19,6 @@ class AddTaskScreen extends StatefulWidget {
 
 class _AddTaskScreenState extends State<AddTaskScreen> {
   static const _pickerChannel = MethodChannel('app.fikrasoft.engez/ringtone_picker');
-  final AudioPlayer _audioPlayer = AudioPlayer();
-  Future<String> _getRealIosPath(String savedPath, String name) async {
-    if (Platform.isIOS) {
-      final libDir = await getLibraryDirectory();
-      final safeName = name.replaceAll(RegExp(r'[^a-zA-Z0-9.\-_]'), '_');
-      return '${libDir.path}/Sounds/$safeName';
-    }
-    return savedPath;
-  }
-
-  Future<T?> _safeInvokeMethod<T>(String method, [dynamic arguments]) async {
-    if (Platform.isAndroid) {
-      try {
-        return await _pickerChannel.invokeMethod<T>(method, arguments);
-      } catch (e) {
-        debugPrint('MethodChannel error: $e');
-      }
-    } else if (Platform.isIOS) {
-      try {
-        if (method == 'playRingtone') {
-          final uri = arguments?['uri'] as String?;
-          if (uri != null && uri != 'default') {
-            await _audioPlayer.stop();
-            await _audioPlayer.play(DeviceFileSource(uri));
-          }
-        } else if (method == 'stopRingtone') {
-          await _audioPlayer.stop();
-        }
-      } catch (e) {
-        debugPrint('AudioPlayer error: $e');
-      }
-    }
-    return null;
-  }
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
@@ -95,10 +57,11 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     });
   }
 
-  Future<void> _saveCustomSound(String soundKey) async {
+  Future<void> _saveCustomSound(String uri, String name) async {
     final prefs = await SharedPreferences.getInstance();
-    if (!_customSounds.contains(soundKey)) {
-      _customSounds.add(soundKey);
+    final item = '$uri|$name';
+    if (!_customSounds.contains(item)) {
+      _customSounds.add(item);
       await prefs.setStringList('custom_user_sounds', _customSounds);
       setState(() {});
     }
@@ -134,7 +97,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     _descFocus.dispose();
     _nameController.dispose();
     _descController.dispose();
-    _audioPlayer.dispose();
     super.dispose();
   }
 
@@ -142,30 +104,17 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   Future<void> _pickReminder() async {
     final now = DateTime.now();
 
-    final initialDate = _reminderDate ?? now.add(const Duration(hours: 1));
-    final firstDate = _reminderDate != null && _reminderDate!.isBefore(now)
-        ? _reminderDate!
-        : now;
-    final limitFuture = now.add(const Duration(days: 365));
-    final lastDate = _reminderDate != null && _reminderDate!.isAfter(limitFuture)
-        ? _reminderDate!
-        : limitFuture;
-
     final date = await showDatePicker(
       context: context,
-      initialDate: initialDate,
-      firstDate: firstDate,
-      lastDate: lastDate,
+      initialDate: now.add(const Duration(hours: 1)),
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 365)),
     );
     if (date == null || !mounted) return;
 
-    final initialTime = _reminderDate != null
-        ? TimeOfDay.fromDateTime(_reminderDate!)
-        : TimeOfDay.fromDateTime(now.add(const Duration(hours: 1)));
-
     final time = await showTimePicker(
       context: context,
-      initialTime: initialTime,
+      initialTime: TimeOfDay.fromDateTime(now.add(const Duration(hours: 1))),
     );
     if (time == null || !mounted) return;
 
@@ -273,72 +222,37 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                     onTap: () async {
                       try {
                         final result = await FilePicker.pickFiles(
-                          type: FileType.custom,
-                          allowedExtensions: [
-                            'mp3',
-                            'wav',
-                            'm4a',
-                            'aac',
-                            'ogg',
-                          ],
+                          type: FileType.audio,
                         );
                         if (result != null &&
                             result.files.single.path != null) {
                           final path = result.files.single.path!;
-                          var name = result.files.single.name;
+                          final name = result.files.single.name;
 
                           String finalPath = path;
-                          if (Platform.isAndroid) {
-                            final appDir = await getApplicationSupportDirectory();
-                            final soundsDir = Directory('${appDir.path}/Sounds');
-                            if (!await soundsDir.exists()) {
-                              await soundsDir.create(recursive: true);
-                            }
-                            final safeName = name.replaceAll(
-                              RegExp(r'[^a-zA-Z0-9.\-_]'),
-                              '_',
-                            );
-                            final newPath = '${soundsDir.path}/$safeName';
-                            await File(path).copy(newPath);
-                            finalPath = newPath;
-                            name = safeName;
-                          } else if (Platform.isIOS) {
-                            final safeName = name.replaceAll(
-                              RegExp(r'[^a-zA-Z0-9.\-_]'),
-                              '_',
-                            );
-                            final String? wavPath = await const MethodChannel(
-                                    'app.fikrasoft.engez/audio_converter')
-                                .invokeMethod<String>('convertToWav', {
-                              'sourcePath': path,
-                              'destFileName': safeName,
-                            });
-                            if (wavPath != null) {
-                              finalPath = wavPath;
-                              name = wavPath.split('/').last;
-                            } else {
-                              throw Exception('Audio conversion failed');
+                          if (Theme.of(context).platform ==
+                              TargetPlatform.android) {
+                            final String? systemUri = await _pickerChannel
+                                .invokeMethod('saveAudioToSystem', {
+                                  'path': path,
+                                  'title': name.split('.').first,
+                                });
+                            if (systemUri != null) {
+                              finalPath = systemUri;
                             }
                           }
 
-                          final soundModel = AlarmSoundModel(
-                            type: AlarmSoundType.custom,
-                            uri: finalPath,
-                            fileName: name,
-                            title: name.split('.').first,
-                          );
-                          final soundKey = soundModel.toKey();
+                          final soundKey = '$finalPath|$name';
 
-                          await _saveCustomSound(soundKey);
+                          await _saveCustomSound(finalPath, name);
                           setSheetState(() {
                             tempSelectedSound = soundKey;
                           });
-                          await _safeInvokeMethod('playRingtone', {
+                          await _pickerChannel.invokeMethod('playRingtone', {
                             'uri': finalPath,
                           });
                         }
                       } catch (e) {
-                        if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
@@ -357,6 +271,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                       itemBuilder: (context, index) {
                         // 1. Default Notification
                         if (index == 0) {
+                          final isSelected = tempSelectedSound == 'default';
                           return ListTile(
                             leading: Radio<String>(
                               value: 'default',
@@ -367,7 +282,9 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                                   setSheetState(() {
                                     tempSelectedSound = val;
                                   });
-                                  await _safeInvokeMethod('stopRingtone');
+                                  await _pickerChannel.invokeMethod(
+                                    'stopRingtone',
+                                  );
                                 }
                               },
                             ),
@@ -378,21 +295,21 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                               setSheetState(() {
                                 tempSelectedSound = 'default';
                               });
-                              await _safeInvokeMethod('stopRingtone');
+                              await _pickerChannel.invokeMethod('stopRingtone');
                             },
                           );
                         }
 
                         // 2. Custom Sounds
                         if (index <= _customSounds.length) {
-                          final customSoundKey = _customSounds[index - 1];
-                          final sound = AlarmSoundModel.fromKey(customSoundKey);
-                          final path = sound.uri;
-                          final name = sound.title;
+                          final customSound = _customSounds[index - 1];
+                          final parts = customSound.split('|');
+                          final path = parts[0];
+                          final name = parts[1];
 
                           return ListTile(
                             leading: Radio<String>(
-                              value: customSoundKey,
+                              value: customSound,
                               groupValue: tempSelectedSound,
                               activeColor: colorScheme.primary,
                               onChanged: (val) async {
@@ -400,10 +317,10 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                                   setSheetState(() {
                                     tempSelectedSound = val;
                                   });
-                                  final realPath = await _getRealIosPath(path, sound.fileName ?? name);
-                                  await _safeInvokeMethod('playRingtone', {
-                                    'uri': realPath,
-                                  });
+                                  await _pickerChannel.invokeMethod(
+                                    'playRingtone',
+                                    {'uri': path},
+                                  );
                                 }
                               },
                             ),
@@ -414,23 +331,23 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                                 color: Colors.red,
                               ),
                               onPressed: () async {
-                                await _deleteCustomSound(customSoundKey);
+                                await _deleteCustomSound(customSound);
                                 setSheetState(() {
-                                  if (tempSelectedSound == customSoundKey) {
+                                  if (tempSelectedSound == customSound) {
                                     tempSelectedSound = 'default';
-                                    _safeInvokeMethod('stopRingtone');
+                                    _pickerChannel.invokeMethod('stopRingtone');
                                   }
                                 });
                               },
                             ),
                             onTap: () async {
                               setSheetState(() {
-                                tempSelectedSound = customSoundKey;
+                                tempSelectedSound = customSound;
                               });
-                              final realPath = await _getRealIosPath(path, sound.fileName ?? name);
-                              await _safeInvokeMethod('playRingtone', {
-                                'uri': realPath,
-                              });
+                              await _pickerChannel.invokeMethod(
+                                'playRingtone',
+                                {'uri': path},
+                              );
                             },
                           );
                         }
@@ -438,12 +355,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                         // 3. System Sounds
                         final soundIndex = index - _customSounds.length - 1;
                         final sound = systemSounds[soundIndex];
-                        final soundModel = AlarmSoundModel(
-                          type: AlarmSoundType.system,
-                          uri: sound.uri,
-                          title: sound.title,
-                        );
-                        final soundKey = soundModel.toKey();
+                        final soundKey = '${sound.uri}|${sound.title}';
 
                         return ListTile(
                           leading: Radio<String>(
@@ -455,9 +367,10 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                                 setSheetState(() {
                                   tempSelectedSound = val;
                                 });
-                                await _safeInvokeMethod('playRingtone', {
-                                  'uri': sound.uri,
-                                });
+                                await _pickerChannel.invokeMethod(
+                                  'playRingtone',
+                                  {'uri': sound.uri},
+                                );
                               }
                             },
                           ),
@@ -466,7 +379,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                             setSheetState(() {
                               tempSelectedSound = soundKey;
                             });
-                            await _safeInvokeMethod('playRingtone', {
+                            await _pickerChannel.invokeMethod('playRingtone', {
                               'uri': sound.uri,
                             });
                           },
@@ -484,7 +397,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                           _alarmSound = tempSelectedSound;
                         });
                         await _saveSelectedSound(tempSelectedSound);
-                        if (!context.mounted) return;
                         Navigator.pop(context);
                       },
                       style: ElevatedButton.styleFrom(
@@ -509,7 +421,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
         );
       },
     ).whenComplete(() async {
-      await _safeInvokeMethod('stopRingtone');
+      await _pickerChannel.invokeMethod('stopRingtone');
     });
   }
 
@@ -718,9 +630,9 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                                         children: [
                                           Expanded(
                                             child: Text(
-                                              AlarmSoundModel.fromKey(_alarmSound).type == AlarmSoundType.defaultSound
-                                                  ? l.defaultNotification
-                                                  : AlarmSoundModel.fromKey(_alarmSound).title,
+                                              _alarmSound.contains('|')
+                                                  ? _alarmSound.split('|')[1]
+                                                  : l.defaultNotification,
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                             ),
@@ -838,17 +750,12 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
           reminderEnabled: _reminderEnabled,
           alarmSound: _alarmSound,
           snoozeDuration: _snoozeDuration,
-          dateTime: _reminderEnabled && _reminderDate != null
-              ? _reminderDate!.toIso8601String()
-              : DateTime.now().toIso8601String(),
         ) ??
         TaskModel(
           taskName: _nameController.text.trim(),
           taskDescription: _descController.text.trim(),
           isHighPriority: _isHighPriority,
-          dateTime: _reminderEnabled && _reminderDate != null
-              ? _reminderDate!.toIso8601String()
-              : DateTime.now().toIso8601String(),
+          dateTime: DateTime.now().toIso8601String(),
           reminderDate: _reminderEnabled ? _reminderDate : null,
           reminderEnabled: _reminderEnabled,
           alarmSound: _alarmSound,

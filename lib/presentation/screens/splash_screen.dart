@@ -49,11 +49,17 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset(
-              'assets/images/splash2.png',
-              width: AppW.w300,
-              height: AppH.h300,
-            ),
+            Theme.of(context).brightness == Brightness.light
+                ? Image.asset(
+                    'assets/images/splashwm.png',
+                    width: AppW.w300,
+                    height: AppH.h300,
+                  )
+                : Image.asset(
+                    'assets/images/splash2.png',
+                    width: AppW.w300,
+                    height: AppH.h300,
+                  ),
             SizedBox(height: AppH.h24),
           ],
         ),

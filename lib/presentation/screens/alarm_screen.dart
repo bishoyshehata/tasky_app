@@ -6,8 +6,6 @@ import 'package:flutter/services.dart';
 import 'dart:io';
 import 'package:engez/core/theme/app_sizes.dart';
 import 'package:engez/l10n/app_localizations.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:engez/data/models/alarm_sound_model.dart';
 
 class AlarmScreen extends StatefulWidget {
   final String taskId;
@@ -15,8 +13,8 @@ class AlarmScreen extends StatefulWidget {
   final String description;
   final String alarmSound;
   final int snoozeDuration;
-  final Future<void> Function() onSnooze;
-  final Future<void> Function() onStop;
+  final VoidCallback onSnooze;
+  final VoidCallback onStop;
 
   const AlarmScreen({
     super.key,
@@ -36,7 +34,7 @@ class AlarmScreen extends StatefulWidget {
 class _AlarmScreenState extends State<AlarmScreen>
     with SingleTickerProviderStateMixin {
   static const _pickerChannel = MethodChannel('app.fikrasoft.engez/ringtone_picker');
-  
+
   late AnimationController _controller;
   late Animation<double> _animation;
   final AudioPlayer _audioPlayer = AudioPlayer();
@@ -50,45 +48,34 @@ class _AlarmScreenState extends State<AlarmScreen>
       duration: const Duration(seconds: 2),
       vsync: this,
     )..repeat(reverse: true);
-    
-    _animation = Tween<double>(begin: 1.0, end: 1.2).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-  }
 
-  Future<String> _getRealIosPath(String savedPath, String name) async {
-    if (Platform.isIOS) {
-      final libDir = await getLibraryDirectory();
-      final safeName = name.replaceAll(RegExp(r'[^a-zA-Z0-9.\-_]'), '_');
-      return '${libDir.path}/Sounds/$safeName';
-    }
-    return savedPath;
+    _animation = Tween<double>(
+      begin: 1.0,
+      end: 1.2,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   Future<void> _playAlarmSound() async {
-    final soundModel = AlarmSoundModel.fromKey(widget.alarmSound);
-    if (soundModel.type == AlarmSoundType.defaultSound) {
-      FlutterRingtonePlayer().playAlarm(looping: true, asAlarm: true);
-    } else {
+    final soundData = widget.alarmSound;
+    if (soundData.contains('|')) {
+      final uri = soundData.split('|')[0];
       if (Platform.isAndroid) {
         try {
-          await _pickerChannel.invokeMethod('playRingtone', {'uri': soundModel.uri});
+          await _pickerChannel.invokeMethod('playRingtone', {'uri': uri});
         } catch (e) {
           FlutterRingtonePlayer().playAlarm(looping: true, asAlarm: true);
         }
-      } else if (Platform.isIOS) {
-        if (soundModel.type == AlarmSoundType.custom) {
-          try {
-            final realPath = await _getRealIosPath(soundModel.uri, soundModel.fileName ?? soundModel.title);
-            await _audioPlayer.setReleaseMode(ReleaseMode.loop);
-            await _audioPlayer.play(DeviceFileSource(realPath));
-          } catch (e) {
-            FlutterRingtonePlayer().playAlarm(looping: true, asAlarm: true);
-          }
-        } else {
+      } else {
+        try {
+          await _audioPlayer.setReleaseMode(ReleaseMode.loop);
+          await _audioPlayer.play(DeviceFileSource(uri));
+        } catch (e) {
           FlutterRingtonePlayer().playAlarm(looping: true, asAlarm: true);
         }
       }
+    } else {
+      // Play default system alarm
+      FlutterRingtonePlayer().playAlarm(looping: true, asAlarm: true);
     }
   }
 
@@ -108,20 +95,16 @@ class _AlarmScreenState extends State<AlarmScreen>
     super.dispose();
   }
 
-  void _stop() async {
+  void _stop() {
     _stopRingtone();
-    await widget.onStop();
-    if (mounted) {
-      Navigator.of(context).pop();
-    }
+    widget.onStop();
+    Navigator.of(context).pop();
   }
 
-  void _snooze() async {
+  void _snooze() {
     _stopRingtone();
-    await widget.onSnooze();
-    if (mounted) {
-      Navigator.of(context).pop();
-    }
+    widget.onSnooze();
+    Navigator.of(context).pop();
   }
 
   @override
@@ -136,7 +119,7 @@ class _AlarmScreenState extends State<AlarmScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Spacer(),
-            
+
             // Pulsing Alarm Icon
             ScaleTransition(
               scale: _animation,
@@ -153,9 +136,9 @@ class _AlarmScreenState extends State<AlarmScreen>
                 ),
               ),
             ),
-            
+
             SizedBox(height: AppH.h40),
-            
+
             // Current Time
             Text(
               DateFormat('h:mm a').format(DateTime.now()),
@@ -165,9 +148,9 @@ class _AlarmScreenState extends State<AlarmScreen>
                 color: colorScheme.onSurface,
               ),
             ),
-            
+
             SizedBox(height: AppH.h20),
-            
+
             // Task Title
             Padding(
               padding: EdgeInsets.symmetric(horizontal: AppW.w24),
@@ -181,9 +164,9 @@ class _AlarmScreenState extends State<AlarmScreen>
                 ),
               ),
             ),
-            
+
             SizedBox(height: AppH.h12),
-            
+
             // Task Description
             if (widget.description.isNotEmpty)
               Padding(
@@ -197,12 +180,15 @@ class _AlarmScreenState extends State<AlarmScreen>
                   ),
                 ),
               ),
-              
+
             const Spacer(),
-            
+
             // Action Buttons
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: AppW.w24, vertical: AppH.h32),
+              padding: EdgeInsets.symmetric(
+                horizontal: AppW.w24,
+                vertical: AppH.h32,
+              ),
               child: Row(
                 children: [
                   Expanded(
@@ -217,7 +203,10 @@ class _AlarmScreenState extends State<AlarmScreen>
                       ),
                       child: Text(
                         '${l.alarmSnooze} (${widget.snoozeDuration}m)',
-                        style: TextStyle(fontSize: AppSp.sp18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: AppSp.sp18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
@@ -235,7 +224,10 @@ class _AlarmScreenState extends State<AlarmScreen>
                       ),
                       child: Text(
                         l.alarmStop,
-                        style: TextStyle(fontSize: AppSp.sp18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: AppSp.sp18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),

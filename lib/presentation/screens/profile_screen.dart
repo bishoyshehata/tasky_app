@@ -241,7 +241,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   );
                 }
               },
-              isDestructive: true,
+              isDestructive: false,
             ),
           ],
         ),

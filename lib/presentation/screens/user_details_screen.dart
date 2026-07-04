@@ -72,7 +72,10 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                 children: [
                   Text(
                     l.userDetailsName,
-                    style: TextStyle(fontSize: AppSp.sp18, fontWeight: FontWeight.w400),
+                    style: TextStyle(
+                      fontSize: AppSp.sp18,
+                      fontWeight: FontWeight.w400,
+                    ),
                   ),
                   SizedBox(height: AppH.h6),
                   TextFormField(
@@ -87,7 +90,10 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                   SizedBox(height: AppH.h12),
                   Text(
                     l.userDetailsQuote,
-                    style: TextStyle(fontSize: AppSp.sp18, fontWeight: FontWeight.w400),
+                    style: TextStyle(
+                      fontSize: AppSp.sp18,
+                      fontWeight: FontWeight.w400,
+                    ),
                   ),
                   SizedBox(height: AppH.h6),
                   TextFormField(
@@ -97,15 +103,14 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                     controller: quoteController,
                     decoration: InputDecoration(
                       hintText:
-                          userModel?.motivationQuote ??
-                          l.userDetailsQuoteHint,
+                          userModel?.motivationQuote ?? l.userDetailsQuoteHint,
                     ),
                   ),
                 ],
               ),
             ),
           ),
-          ElevatedButton.icon(
+          ElevatedButton(
             onPressed: _isButtonEnabled
                 ? () async {
                     final user = UserModel(
@@ -121,16 +126,21 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                     await prefs.setString('user', jsonEncode(user.toJson()));
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(l.userDetailsSave),
-                        ),
+                        SnackBar(content: Text(l.userDetailsSave)),
                       );
                       Navigator.pop(context, user);
                     }
                   }
                 : null,
-            label: Text(l.userDetailsSave, style: TextStyle(fontSize: AppSp.sp14)),
-            style: ElevatedButton.styleFrom(fixedSize: Size(AppW.w300 + AppW.w40, AppH.h40)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              disabledBackgroundColor: Colors.grey,
+              fixedSize: Size(AppW.w300 + AppW.w40, AppH.h40),
+            ),
+            child: Text(
+              l.userDetailsSave,
+              style: TextStyle(fontSize: AppSp.sp14),
+            ),
           ),
           SizedBox(height: AppH.h34),
         ],

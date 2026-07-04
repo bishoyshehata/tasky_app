@@ -131,7 +131,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
 
-                SizedBox(height: AppH.h100),
+                SizedBox(height: AppH.h20),
                 if (widget.tasks.isEmpty)
                   SizedBox(
                     width: MediaQuery.of(context).size.width,

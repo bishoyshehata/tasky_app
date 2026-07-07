@@ -634,8 +634,9 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                         color: selected
                             ? cs.onPrimaryContainer
                             : cs.onSurfaceVariant,
-                        fontWeight:
-                            selected ? FontWeight.w600 : FontWeight.w400,
+                        fontWeight: selected
+                            ? FontWeight.w600
+                            : FontWeight.w400,
                       ),
                     );
                   }).toList(),
@@ -664,7 +665,9 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                           )
                         : Icon(Icons.play_arrow_rounded, size: AppSp.sp18),
                     label: Text(
-                      _isRunningAutoBackup ? l.onboardingRestoring : l.backupNow,
+                      _isRunningAutoBackup
+                          ? l.onboardingRestoring
+                          : l.backupNow,
                     ),
                     style: OutlinedButton.styleFrom(
                       padding: EdgeInsets.symmetric(vertical: AppH.h12),
@@ -759,9 +762,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
           decoration: BoxDecoration(
             color: cs.errorContainer.withValues(alpha: 0.35),
             borderRadius: BorderRadius.circular(AppR.r10),
-            border: Border.all(
-              color: cs.error.withValues(alpha: 0.3),
-            ),
+            border: Border.all(color: cs.error.withValues(alpha: 0.3)),
           ),
           child: Row(
             children: [

@@ -276,5 +276,11 @@
   "continueBtn": "Continue",
   "@continueBtn": {},
   "errorPickingFile": "Error picking file",
-  "@errorPickingFile": {}
+  "@errorPickingFile": {},
+  "micPermissionTitle": "Microphone Permission Required",
+  "@micPermissionTitle": {},
+  "micPermissionDesc": "Voice input requires microphone access. Please allow microphone permission from the app settings, then return to continue.",
+  "@micPermissionDesc": {},
+  "openSettings": "Open Settings",
+  "@openSettings": {}
 }

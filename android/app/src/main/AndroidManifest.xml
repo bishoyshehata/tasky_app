@@ -15,7 +15,7 @@
     <!-- For Alarm Full Screen Intent -->
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
-    
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <!-- Optional: needed to keep the screen on during the alarm -->
     <uses-permission android:name="android.permission.DISABLE_KEYGUARD"/>
 

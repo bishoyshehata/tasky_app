@@ -871,6 +871,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Error picking file'**
   String get errorPickingFile;
+
+  /// No description provided for @micPermissionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone Permission Required'**
+  String get micPermissionTitle;
+
+  /// No description provided for @micPermissionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice input requires microphone access. Please allow microphone permission from the app settings, then return to continue.'**
+  String get micPermissionDesc;
+
+  /// No description provided for @openSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings'**
+  String get openSettings;
 }
 
 class _AppLocalizationsDelegate

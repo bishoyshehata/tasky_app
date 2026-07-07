@@ -416,4 +416,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorPickingFile => 'Error picking file';
+
+  @override
+  String get micPermissionTitle => 'Microphone Permission Required';
+
+  @override
+  String get micPermissionDesc =>
+      'Voice input requires microphone access. Please allow microphone permission from the app settings, then return to continue.';
+
+  @override
+  String get openSettings => 'Open Settings';
 }

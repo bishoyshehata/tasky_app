@@ -1,12 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:engez/core/backup/auto_backup_manager.dart';
 import 'package:engez/core/backup/backup_model.dart';
 import 'package:engez/core/backup/backup_service.dart';
+import 'package:engez/core/backup/saf_backup_channel.dart';
 import 'package:engez/domain/usecases/create_backup_use_case.dart';
 import 'package:engez/domain/usecases/restore_backup_use_case.dart';
 import 'package:engez/l10n/app_localizations.dart';
@@ -20,8 +19,7 @@ class BackupRestoreScreen extends StatefulWidget {
   State<BackupRestoreScreen> createState() => _BackupRestoreScreenState();
 }
 
-class _BackupRestoreScreenState extends State<BackupRestoreScreen>
-    with WidgetsBindingObserver {
+class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
   final _backupService = BackupService();
   late final _createUseCase = CreateBackupUseCase(_backupService);
   late final _restoreUseCase = RestoreBackupUseCase(_backupService);
@@ -29,46 +27,20 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
   bool _isExporting = false;
   bool _isImporting = false;
   bool _isRunningAutoBackup = false;
+  bool _isPickingFolder = false;
   bool _autoEnabled = false;
-  bool _hasFullStorageAccess = false;
-  bool _waitingForPermission = false;
   int _autoFrequency = 1;
   DateTime? _lastManualBackup;
   DateTime? _lastAutoBackup;
   String? _lastAutoBackupPath;
 
+  // SAF state — only relevant on Android
+  String? _savedFolderUri;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     _loadSettings();
-    _checkStoragePermission();
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  /// Called when app resumes (e.g. user returns from Settings).
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && _waitingForPermission) {
-      _waitingForPermission = false;
-      _checkStoragePermission().then((_) {
-        if (_hasFullStorageAccess) _runAutoBackupNow();
-      });
-    }
-  }
-
-  Future<void> _checkStoragePermission() async {
-    if (!Platform.isAndroid) {
-      if (mounted) setState(() => _hasFullStorageAccess = true);
-      return;
-    }
-    final granted = await Permission.manageExternalStorage.isGranted;
-    if (mounted) setState(() => _hasFullStorageAccess = granted);
   }
 
   Future<void> _loadSettings() async {
@@ -77,7 +49,10 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
     final lastManual = await AutoBackupManager.getLastManualBackupAt();
     final lastAuto = await AutoBackupManager.getLastBackupAt();
     final lastPath = await AutoBackupManager.getLastBackupPath();
-    await _checkStoragePermission();
+    final folderUri = Platform.isAndroid
+        ? await SafBackupChannel.getSavedFolderUri()
+        : null;
+
     if (mounted) {
       setState(() {
         _autoEnabled = enabled;
@@ -85,6 +60,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
         _lastManualBackup = lastManual;
         _lastAutoBackup = lastAuto;
         _lastAutoBackupPath = lastPath;
+        _savedFolderUri = folderUri;
       });
     }
   }
@@ -96,7 +72,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
     try {
       await _createUseCase.execute();
       if (mounted) {
-        _loadSettings(); // refresh last backup date
+        _loadSettings();
         _showSnack(
           AppLocalizations.of(context).backupSuccessful,
           isError: false,
@@ -157,7 +133,6 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Handle bar
             Center(
               child: Container(
                 width: AppW.w40,
@@ -169,8 +144,6 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
                 ),
               ),
             ),
-
-            // Header
             Row(
               children: [
                 Container(
@@ -208,8 +181,6 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
               ],
             ),
             SizedBox(height: AppH.h20),
-
-            // Stats
             Container(
               padding: EdgeInsets.all(AppW.w16),
               decoration: BoxDecoration(
@@ -235,8 +206,6 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
               ),
             ),
             SizedBox(height: AppH.h24),
-
-            // Merge
             _strategyButton(
               ctx: ctx,
               icon: Icons.merge_outlined,
@@ -246,8 +215,6 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
               onTap: () => _applyRestore(ctx, preview, RestoreStrategy.merge),
             ),
             SizedBox(height: AppH.h10),
-
-            // Replace
             _strategyButton(
               ctx: ctx,
               icon: Icons.swap_horiz_rounded,
@@ -257,8 +224,6 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
               onTap: () => _confirmReplace(ctx, preview, l),
             ),
             SizedBox(height: AppH.h10),
-
-            // Cancel
             TextButton(
               onPressed: () => Navigator.pop(ctx),
               style: TextButton.styleFrom(
@@ -397,7 +362,6 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
 
     try {
       await _restoreUseCase.apply(preview, strategy);
-      // Trigger global UI refresh
       MainNavigationScreen.refreshTrigger.value =
           !MainNavigationScreen.refreshTrigger.value;
       if (mounted) {
@@ -422,14 +386,38 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
   Future<void> _onToggleAuto(bool value) async {
     await AutoBackupManager.setEnabled(value);
     setState(() => _autoEnabled = value);
-    if (value) await _runAutoBackupNow(silent: true);
+    if (value && _savedFolderUri != null) {
+      await _runAutoBackupNow(silent: true);
+    }
+  }
+
+  /// Opens the SAF folder picker. On success, stores the URI and optionally
+  /// runs a first backup immediately.
+  Future<void> _pickFolder({bool runBackupAfter = false}) async {
+    setState(() => _isPickingFolder = true);
+    try {
+      final uri = await SafBackupChannel.openFolderPicker();
+      if (uri != null && mounted) {
+        setState(() => _savedFolderUri = uri);
+        if (runBackupAfter) {
+          await _runAutoBackupNow(silent: true);
+        } else {
+          _showSnack(
+            AppLocalizations.of(context).backupSuccessful,
+            isError: false,
+          );
+        }
+      }
+    } finally {
+      if (mounted) setState(() => _isPickingFolder = false);
+    }
   }
 
   Future<void> _runAutoBackupNow({bool silent = false}) async {
-    // On Android, prefer public storage — request permission if not yet granted.
-    if (Platform.isAndroid && !_hasFullStorageAccess) {
-      await _requestFullStorageAccess();
-      return; // Will auto-resume via didChangeAppLifecycleState once granted.
+    // On Android: if no folder is chosen yet, open picker first.
+    if (Platform.isAndroid && _savedFolderUri == null) {
+      await _pickFolder(runBackupAfter: true);
+      return;
     }
 
     setState(() => _isRunningAutoBackup = true);
@@ -442,6 +430,12 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
           isError: false,
         );
       }
+    } on NoFolderChosenException {
+      // The folder URI was cleared externally; ask again
+      if (mounted) {
+        setState(() => _savedFolderUri = null);
+        await _pickFolder(runBackupAfter: true);
+      }
     } catch (e) {
       if (mounted)
         _showSnack(
@@ -450,34 +444,6 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
         );
     } finally {
       if (mounted) setState(() => _isRunningAutoBackup = false);
-    }
-  }
-
-  /// Shows an explanation dialog then redirects to the All Files Access screen.
-  Future<void> _requestFullStorageAccess() async {
-    final l = AppLocalizations.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l.backupStoragePermissionTitle),
-        content: Text(l.backupStoragePermissionDesc),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l.continueBtn),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true && mounted) {
-      setState(() => _waitingForPermission = true);
-      await Permission.manageExternalStorage.request();
-      // App will resume → didChangeAppLifecycleState handles the rest.
     }
   }
 
@@ -491,6 +457,20 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
       1 => l.backupFreqDay,
       _ => l.backupFreqDays(days),
     };
+  }
+
+  // ── SAF: display a short human-readable folder name ──────────
+
+  /// Extracts a display name from a SAF tree URI.
+  /// e.g. "content://...primary%3ADownloads%2FEngezBackups" → "Downloads/EngezBackups"
+  String _folderDisplayName(String uri) {
+    try {
+      final decoded = Uri.decodeComponent(uri);
+      final match = RegExp(r'primary:(.+)$').firstMatch(decoded);
+      return match?.group(1) ?? uri;
+    } catch (_) {
+      return uri;
+    }
   }
 
   // ── Build ───────────────────────────────────────────────────
@@ -590,188 +570,233 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
             SizedBox(height: AppH.h24),
 
             // ── Auto Backup ────────────────────────────────
-            // _sectionHeader(l.autoBackup),
-            // SizedBox(height: AppH.h12),
-            // _card(cs, [
-            //   Row(
-            //     children: [
-            //       Expanded(
-            //         child: Column(
-            //           crossAxisAlignment: CrossAxisAlignment.start,
-            //           children: [
-            //             Text(
-            //               l.autoBackup,
-            //               style: TextStyle(
-            //                 fontSize: AppSp.sp15,
-            //                 fontWeight: FontWeight.w500,
-            //                 color: cs.onSurface,
-            //               ),
-            //             ),
-            //             SizedBox(height: AppH.h2),
-            //             Text(
-            //               'Automatically saves a local backup',
-            //               style: TextStyle(
-            //                 fontSize: AppSp.sp12,
-            //                 color: cs.onSurfaceVariant,
-            //               ),
-            //             ),
-            //           ],
-            //         ),
-            //       ),
-            //       Switch(value: _autoEnabled, onChanged: _onToggleAuto),
-            //     ],
-            //   ),
-            //   // ── Storage Access Banner ────────────────────
-            //   if (Platform.isAndroid) ...[
-            //     SizedBox(height: AppH.h12),
-            //     GestureDetector(
-            //       onTap: _hasFullStorageAccess
-            //           ? null
-            //           : _requestFullStorageAccess,
-            //       child: Container(
-            //         padding: EdgeInsets.symmetric(
-            //           horizontal: AppW.w12,
-            //           vertical: AppH.h8,
-            //         ),
-            //         decoration: BoxDecoration(
-            //           color: cs.primaryContainer.withValues(alpha: 0.5),
-            //           borderRadius: BorderRadius.circular(AppR.r10),
-            //         ),
-            //         child: Row(
-            //           children: [
-            //             Icon(
-            //               Icons.folder_open_rounded,
-            //               size: AppSp.sp16,
-            //               color: cs.primary,
-            //             ),
-            //             SizedBox(width: AppW.w8),
-            //             Expanded(
-            //               child: Text(
-            //                 l.backupAutoBanner,
-            //                 style: TextStyle(
-            //                   fontSize: AppSp.sp12,
-            //                   color: cs.onPrimaryContainer,
-            //                   fontWeight: FontWeight.w500,
-            //                 ),
-            //               ),
-            //             ),
-            //           ],
-            //         ),
-            //       ),
-            //     ),
-            //   ],
-            //   if (_autoEnabled) ...[
-            //     const Divider(height: 24),
-            //     Text(
-            //       l.backupFreq,
-            //       style: TextStyle(
-            //         fontSize: AppSp.sp13,
-            //         fontWeight: FontWeight.w500,
-            //         color: cs.onSurface,
-            //       ),
-            //     ),
-            //     SizedBox(height: AppH.h10),
-            //     Wrap(
-            //       spacing: 8,
-            //       children: AutoBackupManager.frequencyOptions.map((days) {
-            //         final selected = _autoFrequency == days;
-            //         return ChoiceChip(
-            //           label: Text(_frequencyLabel(days, l)),
-            //           selected: selected,
-            //           onSelected: (_) => _onFrequencyChanged(days),
-            //           selectedColor: cs.primaryContainer,
-            //           labelStyle: TextStyle(
-            //             color: selected
-            //                 ? cs.onPrimaryContainer
-            //                 : cs.onSurfaceVariant,
-            //             fontWeight: selected
-            //                 ? FontWeight.w600
-            //                 : FontWeight.w400,
-            //           ),
-            //         );
-            //       }).toList(),
-            //     ),
-            //     SizedBox(height: AppH.h12),
-            //     _infoRow(
-            //       cs,
-            //       icon: Icons.schedule_outlined,
-            //       label: l.lastBackup,
-            //       value: _lastAutoBackup != null
-            //           ? DateFormat(
-            //               'dd MMM yyyy • hh:mm a',
-            //             ).format(_lastAutoBackup!.toLocal())
-            //           : l.never,
-            //     ),
-            //     SizedBox(height: AppH.h12),
-            //     SizedBox(
-            //       width: double.infinity,
-            //       child: OutlinedButton.icon(
-            //         onPressed: _isRunningAutoBackup ? null : _runAutoBackupNow,
-            //         icon: _isRunningAutoBackup
-            //             ? SizedBox(
-            //                 width: AppW.w14,
-            //                 height: AppH.h14,
-            //                 child: CircularProgressIndicator(strokeWidth: 2),
-            //               )
-            //             : Icon(Icons.play_arrow_rounded, size: AppSp.sp18),
-            //         label: Text(
-            //           _isRunningAutoBackup
-            //               ? l.onboardingRestoring
-            //               : l.backupNow,
-            //         ),
-            //         style: OutlinedButton.styleFrom(
-            //           padding: EdgeInsets.symmetric(vertical: AppH.h12),
-            //           shape: RoundedRectangleBorder(
-            //             borderRadius: BorderRadius.circular(AppR.r10),
-            //           ),
-            //         ),
-            //       ),
-            //     ),
-            //     if (_lastAutoBackupPath != null) ...[
-            //       SizedBox(height: AppH.h12),
-            //       Container(
-            //         padding: EdgeInsets.all(AppW.w12),
-            //         decoration: BoxDecoration(
-            //           color: cs.surfaceContainerHighest,
-            //           borderRadius: BorderRadius.circular(AppR.r10),
-            //         ),
-            //         child: Row(
-            //           crossAxisAlignment: CrossAxisAlignment.start,
-            //           children: [
-            //             Icon(
-            //               Icons.folder_outlined,
-            //               size: AppSp.sp16,
-            //               color: cs.primary,
-            //             ),
-            //             SizedBox(width: AppW.w8),
-            //             Expanded(
-            //               child: Column(
-            //                 crossAxisAlignment: CrossAxisAlignment.start,
-            //                 children: [
-            //                   Text(
-            //                     l.backupSavedLocal,
-            //                     style: TextStyle(
-            //                       fontSize: AppSp.sp11,
-            //                       color: cs.onSurfaceVariant,
-            //                       fontWeight: FontWeight.w500,
-            //                     ),
-            //                   ),
-            //                   SizedBox(height: AppH.h2),
-            //                 ],
-            //               ),
-            //             ),
-            //             SizedBox(width: AppW.w6),
-            //           ],
-            //         ),
-            //       ),
-            //     ],
-            //   ],
-            // ]),
-            // SizedBox(height: AppH.h32),
+            _sectionHeader(l.autoBackup),
+            SizedBox(height: AppH.h12),
+            _card(cs, [
+              // Toggle row
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l.autoBackup,
+                          style: TextStyle(
+                            fontSize: AppSp.sp15,
+                            fontWeight: FontWeight.w500,
+                            color: cs.onSurface,
+                          ),
+                        ),
+                        SizedBox(height: AppH.h2),
+                        Text(
+                          'Saves backups automatically to a folder you choose',
+                          style: TextStyle(
+                            fontSize: AppSp.sp12,
+                            color: cs.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Switch(value: _autoEnabled, onChanged: _onToggleAuto),
+                ],
+              ),
+
+              // ── SAF folder status banner (Android only) ──
+              if (Platform.isAndroid) ...[
+                SizedBox(height: AppH.h12),
+                _safFolderBanner(cs, l),
+              ],
+
+              // ── Frequency & run controls (when enabled) ──
+              if (_autoEnabled) ...[
+                const Divider(height: 24),
+                Text(
+                  l.backupFreq,
+                  style: TextStyle(
+                    fontSize: AppSp.sp13,
+                    fontWeight: FontWeight.w500,
+                    color: cs.onSurface,
+                  ),
+                ),
+                SizedBox(height: AppH.h10),
+                Wrap(
+                  spacing: 8,
+                  children: AutoBackupManager.frequencyOptions.map((days) {
+                    final selected = _autoFrequency == days;
+                    return ChoiceChip(
+                      label: Text(_frequencyLabel(days, l)),
+                      selected: selected,
+                      onSelected: (_) => _onFrequencyChanged(days),
+                      selectedColor: cs.primaryContainer,
+                      labelStyle: TextStyle(
+                        color: selected
+                            ? cs.onPrimaryContainer
+                            : cs.onSurfaceVariant,
+                        fontWeight:
+                            selected ? FontWeight.w600 : FontWeight.w400,
+                      ),
+                    );
+                  }).toList(),
+                ),
+                SizedBox(height: AppH.h12),
+                _infoRow(
+                  cs,
+                  icon: Icons.schedule_outlined,
+                  label: l.lastBackup,
+                  value: _lastAutoBackup != null
+                      ? DateFormat(
+                          'dd MMM yyyy • hh:mm a',
+                        ).format(_lastAutoBackup!.toLocal())
+                      : l.never,
+                ),
+                SizedBox(height: AppH.h12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: _isRunningAutoBackup ? null : _runAutoBackupNow,
+                    icon: _isRunningAutoBackup
+                        ? SizedBox(
+                            width: AppW.w14,
+                            height: AppH.h14,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Icon(Icons.play_arrow_rounded, size: AppSp.sp18),
+                    label: Text(
+                      _isRunningAutoBackup ? l.onboardingRestoring : l.backupNow,
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: AppH.h12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppR.r10),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ]),
+            SizedBox(height: AppH.h32),
           ],
         ),
       ),
     );
+  }
+
+  // ── SAF folder banner widget ─────────────────────────────────
+
+  Widget _safFolderBanner(ColorScheme cs, AppLocalizations l) {
+    final hasFolder = _savedFolderUri != null;
+
+    if (hasFolder) {
+      // ── Folder chosen: show path + change button ───────────
+      return Container(
+        padding: EdgeInsets.all(AppW.w12),
+        decoration: BoxDecoration(
+          color: cs.primaryContainer.withValues(alpha: 0.45),
+          borderRadius: BorderRadius.circular(AppR.r10),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.folder_open_rounded,
+              size: AppSp.sp18,
+              color: cs.primary,
+            ),
+            SizedBox(width: AppW.w8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Backup folder',
+                    style: TextStyle(
+                      fontSize: AppSp.sp11,
+                      color: cs.onSurfaceVariant,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  SizedBox(height: AppH.h2),
+                  Text(
+                    _folderDisplayName(_savedFolderUri!),
+                    style: TextStyle(
+                      fontSize: AppSp.sp12,
+                      color: cs.onPrimaryContainer,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(width: AppW.w8),
+            TextButton(
+              onPressed: _isPickingFolder ? null : () => _pickFolder(),
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppW.w10,
+                  vertical: AppH.h4,
+                ),
+                minimumSize: Size.zero,
+              ),
+              child: Text(
+                'Change',
+                style: TextStyle(fontSize: AppSp.sp12, color: cs.primary),
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      // ── No folder chosen: prompt ────────────────────────────
+      return GestureDetector(
+        onTap: _isPickingFolder ? null : () => _pickFolder(),
+        child: Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: AppW.w12,
+            vertical: AppH.h10,
+          ),
+          decoration: BoxDecoration(
+            color: cs.errorContainer.withValues(alpha: 0.35),
+            borderRadius: BorderRadius.circular(AppR.r10),
+            border: Border.all(
+              color: cs.error.withValues(alpha: 0.3),
+            ),
+          ),
+          child: Row(
+            children: [
+              _isPickingFolder
+                  ? SizedBox(
+                      width: AppW.w16,
+                      height: AppH.h16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Icon(
+                      Icons.folder_off_outlined,
+                      size: AppSp.sp16,
+                      color: cs.error,
+                    ),
+              SizedBox(width: AppW.w8),
+              Expanded(
+                child: Text(
+                  'Tap to choose a backup folder',
+                  style: TextStyle(
+                    fontSize: AppSp.sp12,
+                    color: cs.onErrorContainer,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: AppSp.sp12,
+                color: cs.error,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
   }
 
   // ── Helpers ─────────────────────────────────────────────────
@@ -786,9 +811,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen>
   Widget _card(ColorScheme cs, List<Widget> children) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(
-        AppW.w18,
-      ), // Let's add AppW.w18 instead of fallback
+      padding: EdgeInsets.all(AppW.w18),
       decoration: BoxDecoration(
         color: cs.surface,
         borderRadius: BorderRadius.circular(AppR.r16),

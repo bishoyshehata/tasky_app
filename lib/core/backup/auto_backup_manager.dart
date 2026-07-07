@@ -1,6 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'backup_service.dart';
+import 'saf_backup_channel.dart';
 
 /// Manages auto-backup configuration and triggers.
 /// Settings stored in SharedPreferences:
@@ -61,6 +62,8 @@ class AutoBackupManager {
 
   /// Call this on app start and after task changes.
   /// Performs a silent backup if auto-backup is enabled and the interval has elapsed.
+  ///
+  /// Silently skips if the user has not yet chosen a SAF folder.
   static Future<void> checkAndRun() async {
     final enabled = await isEnabled();
     if (!enabled) return;
@@ -80,6 +83,9 @@ class AutoBackupManager {
 
     try {
       await BackupService().writeSilentBackup();
+    } on NoFolderChosenException {
+      // User hasn't selected a SAF folder yet — skip silently.
+      // They will be prompted next time they open the Backup screen.
     } catch (e) {
       // Silent failure — don't interrupt the user
     }

@@ -62,4 +62,6 @@ dependencies {
     // Required for core library desugaring (flutter_local_notifications)
     // Note: group changed from com.android.tools.build → com.android.tools in AGP 8.x
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+    // Required for DocumentFile API (Storage Access Framework)
+    implementation("androidx.documentfile:documentfile:1.0.1")
 }

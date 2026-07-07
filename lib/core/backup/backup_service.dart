@@ -5,7 +5,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:engez/core/notifications/local_notification_service.dart';
@@ -14,6 +13,7 @@ import 'package:engez/data/models/user_model.dart';
 
 import 'backup_model.dart';
 import 'backup_validator.dart';
+import 'saf_backup_channel.dart';
 
 class BackupServiceException implements Exception {
   final String message;
@@ -173,76 +173,74 @@ class BackupService {
     }
   }
 
-  // ── Silent Auto Backup ──────────────────────────────────────
+  // ── Silent Auto Backup (SAF) ─────────────────────────────────
 
-  /// Writes a silent backup to the visible external storage under
-  /// `Android/data/app.fikrasoft.engez/files/EngezBackups/`.
+  /// Writes a silent backup to the user-chosen SAF folder.
   ///
-  /// Keeps at most [maxCopies] files — oldest is deleted when the limit
-  /// is exceeded.
+  /// On Android, uses [SafBackupChannel.writeSilentBackup] which writes
+  /// via the DocumentFile API — no MANAGE_EXTERNAL_STORAGE needed.
+  ///
+  /// Throws [NoFolderChosenException] if the user has not yet picked a folder.
+  /// Keeps at most [maxCopies] files in the target folder.
+  ///
+  /// Returns the created file's document URI string.
   Future<String> writeSilentBackup({int maxCopies = 3}) async {
     final tasks = await _readAllTasks();
     final user = await _readUser();
     final backup = BackupModel.create(tasks: tasks, user: user);
     final jsonString = backup.toJsonString();
 
-    // ── Resolve destination folder ────────────────────────────
-    Directory backupDir;
     if (Platform.isAndroid) {
-      // Prefer the public root directory (visible in Files app like WhatsApp).
-      // Requires MANAGE_EXTERNAL_STORAGE on Android 11+.
-      final hasFullAccess = await Permission.manageExternalStorage.isGranted;
-      if (hasFullAccess) {
-        backupDir = Directory('/storage/emulated/0/EngezBackups');
-      } else {
-        // Fall back to app-private external dir (always accessible).
-        final extDir = await getExternalStorageDirectory();
-        backupDir = extDir != null
-            ? Directory('${extDir.path}/EngezBackups')
-            : Directory(
-                '${(await getApplicationDocumentsDirectory()).path}/EngezBackups',
-              );
-      }
+      // ── Android: use Storage Access Framework ───────────────
+      final fileUri = await SafBackupChannel.writeSilentBackup(
+        jsonContent: jsonString,
+        maxCopies: maxCopies,
+      );
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        'last_auto_backup_at',
+        DateTime.now().toIso8601String(),
+      );
+      await prefs.setString('last_auto_backup_path', fileUri);
+
+      debugPrint('📦 [SAF Backup] Saved to: $fileUri');
+      return fileUri;
     } else {
+      // ── iOS / macOS: app documents directory ─────────────────
       final docDir = await getApplicationDocumentsDirectory();
-      backupDir = Directory('${docDir.path}/EngezBackups');
+      final backupDir = Directory('${docDir.path}/EngezBackups');
+      if (!await backupDir.exists()) {
+        await backupDir.create(recursive: true);
+      }
+
+      final existing = backupDir
+          .listSync()
+          .whereType<File>()
+          .where((f) => f.path.endsWith('.json'))
+          .toList()
+        ..sort((a, b) => a.lastModifiedSync().compareTo(b.lastModifiedSync()));
+
+      while (existing.length >= maxCopies) {
+        final oldest = existing.removeAt(0);
+        await oldest.delete();
+        debugPrint('🗑️ [Backup] Deleted old backup: ${oldest.path}');
+      }
+
+      final stamp = DateFormat('yyyy_MM_dd_HH_mm').format(DateTime.now());
+      final file = File('${backupDir.path}/engez_backup_$stamp.json');
+      await file.writeAsString(jsonString, encoding: utf8);
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        'last_auto_backup_at',
+        DateTime.now().toIso8601String(),
+      );
+      await prefs.setString('last_auto_backup_path', file.path);
+
+      debugPrint('📦 [Backup] Auto backup saved to: ${file.path}');
+      return file.path;
     }
-
-    if (!await backupDir.exists()) {
-      await backupDir.create(recursive: true);
-    }
-
-    // ── Rotate: keep only (maxCopies - 1) existing files ─────
-    final existing =
-        backupDir
-            .listSync()
-            .whereType<File>()
-            .where((f) => f.path.endsWith('.json'))
-            .toList()
-          ..sort(
-            (a, b) => a.lastModifiedSync().compareTo(b.lastModifiedSync()),
-          );
-
-    while (existing.length >= maxCopies) {
-      final oldest = existing.removeAt(0);
-      await oldest.delete();
-      debugPrint('🗑️ [Backup] Deleted old backup: ${oldest.path}');
-    }
-
-    // ── Write new file ────────────────────────────────────────
-    final stamp = DateFormat('yyyy_MM_dd_HH_mm').format(DateTime.now());
-    final file = File('${backupDir.path}/engez_backup_$stamp.json');
-    await file.writeAsString(jsonString, encoding: utf8);
-
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      'last_auto_backup_at',
-      DateTime.now().toIso8601String(),
-    );
-    await prefs.setString('last_auto_backup_path', file.path);
-
-    debugPrint('📦 [Backup] Auto backup saved to: ${file.path}');
-    return file.path;
   }
 
   // ── Helpers ─────────────────────────────────────────────────

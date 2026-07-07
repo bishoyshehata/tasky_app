@@ -6,12 +6,10 @@ import 'package:file_picker/file_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_system_ringtones/flutter_system_ringtones.dart';
 import 'package:engez/core/theme/app_sizes.dart';
-import 'package:engez/presentation/widgets/mic_permission_dialog.dart';
-import 'package:engez/core/voice/voice_input_controller.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:engez/core/voice/reminder_date_parser.dart';
 import 'package:engez/l10n/app_localizations.dart';
 import 'package:engez/presentation/widgets/mic_button.dart';
+import 'package:engez/presentation/widgets/voice_input_bottom_sheet.dart';
 
 enum VoiceField { title, description }
 
@@ -40,10 +38,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   List<String> _customSounds = [];
 
   // ── Voice state ──────────────────────────────────────────────
-  final VoiceInputController _voice = VoiceInputController(localeId: 'ar-EG');
-  bool _isListening = false;
-  bool _isPushToTalk = false;
-  VoiceField? _activeVoiceField;
   ParsedReminder? _detectedReminder;
 
   @override
@@ -68,7 +62,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     _descFocus.dispose();
     _nameController.dispose();
     _descController.dispose();
-    _voice.dispose();
     super.dispose();
   }
 
@@ -110,73 +103,77 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
 
   // ── Voice input ──────────────────────────────────────────────
 
-  void _onVoiceResult(String words, {required bool isFinal}) {
-    final controller = _activeVoiceField == VoiceField.description ? _descController : _nameController;
-    setState(() { controller.text = words; });
-    controller.selection = TextSelection.fromPosition(
-      TextPosition(offset: words.length),
+  Future<void> _openVoiceInputBottomSheet(VoiceField targetField, {bool initialPushToTalk = false}) async {
+    final localeId = Localizations.localeOf(context).languageCode == 'ar' ? 'ar-EG' : 'en-US';
+    final title = targetField == VoiceField.title
+        ? (Localizations.localeOf(context).languageCode == 'ar' ? 'إدخال عنوان المهمة صوتياً' : 'Voice Input Task Title')
+        : (Localizations.localeOf(context).languageCode == 'ar' ? 'إدخال وصف المهمة صوتياً' : 'Voice Input Task Description');
+
+    final result = await VoiceInputBottomSheet.show(
+      context,
+      title: title,
+      initialPushToTalk: false, // always until silence
+      localeId: localeId,
     );
-    if (isFinal && words.isNotEmpty && _activeVoiceField == VoiceField.title) {
-      final parsed = ReminderDateParser.parse(words);
-      if (parsed.hasReminder) {
-        setState(() {
-          _detectedReminder = parsed;
-          _reminderDate = parsed.dateTime;
-          _reminderEnabled = true;
-        });
+
+    if (result != null && result.isNotEmpty && mounted) {
+      if (targetField == VoiceField.title) {
+        final parsed = ReminderDateParser.parse(result);
+
+        // Fill Title (Never overwrite user's manual edits: if not empty, append)
+        if (_nameController.text.trim().isEmpty) {
+          _nameController.text = parsed.cleanedTitle;
+        } else {
+          _nameController.text = '${_nameController.text} ${parsed.cleanedTitle}'.trim();
+        }
+        _nameController.selection = TextSelection.fromPosition(
+          TextPosition(offset: _nameController.text.length),
+        );
+
+        // Fill Task Description (Never overwrite user's manual edits: if not empty, append)
+        if (parsed.cleanedDescription != null && parsed.cleanedDescription!.isNotEmpty) {
+          if (_descController.text.trim().isEmpty) {
+            _descController.text = parsed.cleanedDescription!;
+          } else {
+            _descController.text = '${_descController.text} ${parsed.cleanedDescription}'.trim();
+          }
+          _descController.selection = TextSelection.fromPosition(
+            TextPosition(offset: _descController.text.length),
+          );
+        }
+
+        // Fill Reminder Date & Time (if user hasn't set one manually)
+        if (parsed.hasReminder && _reminderDate == null) {
+          setState(() {
+            _detectedReminder = parsed;
+            _reminderDate = parsed.dateTime;
+            _reminderEnabled = true;
+          });
+        }
+      } else {
+        // Voice input triggered from Description field
+        final parsed = ReminderDateParser.parse(result);
+
+        // Fill Task Description (Never overwrite user's manual edits: if not empty, append)
+        if (_descController.text.trim().isEmpty) {
+          _descController.text = parsed.cleanedTitle; // The main clean text goes to description
+        } else {
+          _descController.text = '${_descController.text} ${parsed.cleanedTitle}'.trim();
+        }
+        _descController.selection = TextSelection.fromPosition(
+          TextPosition(offset: _descController.text.length),
+        );
+
+        // Fill Reminder Date & Time (if user hasn't set one manually)
+        if (parsed.hasReminder && _reminderDate == null) {
+          setState(() {
+            _detectedReminder = parsed;
+            _reminderDate = parsed.dateTime;
+            _reminderEnabled = true;
+          });
+        }
       }
     }
-    if (isFinal) {
-      setState(() { _isListening = false; _isPushToTalk = false; _activeVoiceField = null; });
-    }
-  }
-
-  void _onVoiceStateChanged(VoiceInputState state) {
-    setState(() => _isListening = state == VoiceInputState.listening);
-  }
-
-  void _onVoiceError(String msg, {bool isPermissionPermanentlyDenied = false}) async {
-    final wasPushToTalk = _isPushToTalk;
-    final wasField = _activeVoiceField;
-    setState(() { _isListening = false; _isPushToTalk = false; });
-    if (!mounted) return;
-
-    if (isPermissionPermanentlyDenied && wasField != null) {
-      final granted = await showDialog<bool>(
-        context: context,
-        builder: (_) => const MicPermissionDialog(),
-      );
-      if (granted == true && mounted) {
-        _startVoice(wasField, pushToTalk: wasPushToTalk);
-      }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(msg),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Theme.of(context).colorScheme.error,
-      ));
-    }
-  }
-
-  Future<void> _startVoice(VoiceField field, {bool pushToTalk = false}) async {
-    if (_isListening) return;
-    setState(() { 
-      _isPushToTalk = pushToTalk; 
-      _activeVoiceField = field;
-      _detectedReminder = null; 
-    });
-    await _voice.startListening(
-      onResult: _onVoiceResult,
-      onStateChanged: _onVoiceStateChanged,
-      onError: _onVoiceError,
-      pushToTalk: pushToTalk,
-    );
-  }
-
-  Future<void> _stopVoice() async {
-    if (!_isListening) return;
-    await _voice.stopListening();
-    setState(() { _isListening = false; _isPushToTalk = false; _activeVoiceField = null; });
   }
 
   // ── Reminder picker ──────────────────────────────────────────
@@ -342,34 +339,14 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   decoration: InputDecoration(
                     hintText: '${l.taskNameHint} ',
                     suffixIcon: MicButton(
-                      isListening: _isListening && _activeVoiceField == VoiceField.title,
+                      isListening: false,
                       semanticLabel: 'Voice input for task title',
-                      onTap: () => (_isListening && _activeVoiceField == VoiceField.title) ? _stopVoice() : _startVoice(VoiceField.title),
-                      onLongPressStart: () => _startVoice(VoiceField.title, pushToTalk: true),
-                      onLongPressEnd: () { if (_isPushToTalk && _activeVoiceField == VoiceField.title) _stopVoice(); },
+                      onTap: () => _openVoiceInputBottomSheet(VoiceField.title, initialPushToTalk: false),
+                      onLongPressStart: () => _openVoiceInputBottomSheet(VoiceField.title, initialPushToTalk: true),
+                      onLongPressEnd: () {},
                     ),
                   ),
                   validator: (v) => (v?.trim().isEmpty ?? true) ? l.taskNameRequired : null,
-                ),
-
-                // ── Listening indicator ───────────────────────
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 250),
-                  child: (_isListening && _activeVoiceField == VoiceField.title)
-                      ? Padding(
-                          key: const ValueKey('listening_title'),
-                          padding: EdgeInsets.only(top: AppH.h6),
-                          child: Row(children: [
-                            SizedBox(width: AppW.w4),
-                            Icon(Icons.graphic_eq, size: AppSp.sp14, color: cs.error),
-                            SizedBox(width: AppW.w4),
-                            Text(
-                              _isPushToTalk ? 'اضغط إيقاف عند الانتهاء…' : 'جاري الاستماع…',
-                              style: TextStyle(fontSize: AppSp.sp12, color: cs.error, fontWeight: FontWeight.w500),
-                            ),
-                          ]),
-                        )
-                      : const SizedBox.shrink(key: ValueKey('idle')),
                 ),
 
                 // ── Detected reminder card ────────────────────
@@ -404,36 +381,16 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           MicButton(
-                            isListening: _isListening && _activeVoiceField == VoiceField.description,
+                            isListening: false,
                             semanticLabel: 'Voice input for task description',
-                            onTap: () => (_isListening && _activeVoiceField == VoiceField.description) ? _stopVoice() : _startVoice(VoiceField.description),
-                            onLongPressStart: () => _startVoice(VoiceField.description, pushToTalk: true),
-                            onLongPressEnd: () { if (_isPushToTalk && _activeVoiceField == VoiceField.description) _stopVoice(); },
+                            onTap: () => _openVoiceInputBottomSheet(VoiceField.description, initialPushToTalk: false),
+                            onLongPressStart: () => _openVoiceInputBottomSheet(VoiceField.description, initialPushToTalk: true),
+                            onLongPressEnd: () {},
                           ),
                         ],
                       ),
                     ),
                   ),
-                ),
-                
-                // ── Listening indicator ───────────────────────
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 250),
-                  child: (_isListening && _activeVoiceField == VoiceField.description)
-                      ? Padding(
-                          key: const ValueKey('listening_desc'),
-                          padding: EdgeInsets.only(top: AppH.h6),
-                          child: Row(children: [
-                            SizedBox(width: AppW.w4),
-                            Icon(Icons.graphic_eq, size: AppSp.sp14, color: cs.error),
-                            SizedBox(width: AppW.w4),
-                            Text(
-                              _isPushToTalk ? 'اضغط إيقاف عند الانتهاء…' : 'جاري الاستماع…',
-                              style: TextStyle(fontSize: AppSp.sp12, color: cs.error, fontWeight: FontWeight.w500),
-                            ),
-                          ]),
-                        )
-                      : const SizedBox.shrink(key: ValueKey('idle')),
                 ),
 
                 SizedBox(height: AppH.h20),
@@ -527,7 +484,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
 
             // ── Save Button ────────────────────────────────────
             ElevatedButton.icon(
-              onPressed: _isListening ? null : _submit,
+              onPressed: _submit,
               label: Text(
                 widget.taskToEdit == null ? l.taskAddButton : l.taskUpdateButton,
                 style: TextStyle(fontSize: AppSp.sp14),

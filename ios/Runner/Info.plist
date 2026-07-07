@@ -55,6 +55,10 @@
 		<string>This app needs permission to save photos.</string>
 		<key>NSAppleMusicUsageDescription</key>
 		<string>This app needs access to your media library to select custom alarm sounds.</string>
+		<key>NSMicrophoneUsageDescription</key>
+		<string>Engez requires access to the microphone to record tasks using voice input.</string>
+		<key>NSSpeechRecognitionUsageDescription</key>
+		<string>Engez requires speech recognition permission to convert your voice to text.</string>
 		<key>UIStatusBarHidden</key>
 		<false/>
 	</dict>
